@@ -114,14 +114,28 @@ const GameBoard: React.FC = () => {
       />
       
       {/* Game State Text */}
-      <div className="mt-8 text-center text-sm text-gray-500">
+      <div className="mt-8 text-center text-sm">
         {phase === 'game_over' ? (
-          <p className="font-bold text-lg">Game Over!</p>
+          <div className="bg-red-900/30 p-4 rounded-lg border border-red-700 max-w-md mx-auto">
+            <p className="font-bold text-lg text-red-500 animate-pulse mb-2">CONNECTION TERMINATED</p>
+            <p className="text-red-400 font-mono">System error: 0x00DE4D</p>
+            <p className="text-red-400 mt-2">All network connections have been severed. Reboot required.</p>
+          </div>
         ) : (
-          <p>
-            {phase === 'action' && 'Play action cards or end action phase.'}
-            {phase === 'buy' && 'Buy cards from the market or end buy phase.'}
-          </p>
+          <div className="bg-gray-800/50 p-4 rounded-lg border border-cyan-900 max-w-md mx-auto">
+            <div className="text-cyan-400 font-mono flex items-center justify-center mb-2">
+              <span className="inline-block w-2 h-2 bg-cyan-500 rounded-full mr-2 animate-pulse"></span>
+              SYSTEM STATUS: ACTIVE - {phase.toUpperCase()} PHASE
+            </div>
+            <p className="text-cyan-300 font-mono">
+              {phase === 'action' && 'DIRECTIVE: Deploy programs or terminate action protocol.'}
+              {phase === 'buy' && 'DIRECTIVE: Acquire assets from marketplace or terminate transaction protocol.'}
+            </p>
+            <div className="mt-3 flex justify-between text-xs text-cyan-700 font-mono">
+              <span>NET ID: {Math.floor(Math.random() * 1000000).toString(16).padStart(6, '0')}</span>
+              <span>ENCRYPTION: ACTIVE</span>
+            </div>
+          </div>
         )}
       </div>
     </div>
