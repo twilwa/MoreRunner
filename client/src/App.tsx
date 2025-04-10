@@ -53,8 +53,11 @@ function App() {
         setAIThinking({
           isThinking: true,
           actionType: 'playing',
-          message: 'SENTINEL AI is analyzing action options...'
+          message: 'analyzing action options...'
         });
+        
+        // Add thinking message to the system log
+        addLogMessage('SENTINEL AI is analyzing action options...');
         
         setTimeout(() => {
           const aiPlayer = gameState.players[gameState.activePlayerIndex];
@@ -83,8 +86,11 @@ function App() {
         setAIThinking({
           isThinking: true,
           actionType: 'buying',
-          message: 'SENTINEL AI is calculating purchases...'
+          message: 'calculating purchases...'
         });
+        
+        // Add thinking message to the system log
+        addLogMessage('SENTINEL AI is calculating purchases...');
         
         setTimeout(() => {
           const aiPlayer = gameState.players[gameState.activePlayerIndex];
@@ -123,6 +129,9 @@ function App() {
       else {
         // For any other phase, just end it
         setTimeout(() => {
+          if (currentPhase === 'cleanup') {
+            addLogMessage('SENTINEL AI ends turn.');
+          }
           endPhase();
         }, 500);
       }
@@ -142,16 +151,7 @@ function App() {
       ) : (
         <div className="relative">
           <GameBoard />
-          
-          {/* AI thinking indicator */}
-          {aiThinking.isThinking && (
-            <div className="fixed top-4 right-4 bg-gray-800 border border-cyan-700 p-3 rounded-md shadow-lg z-50">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2 animate-pulse"></div>
-                <p className="text-yellow-400 font-mono text-sm">{aiThinking.message}</p>
-              </div>
-            </div>
-          )}
+
           
           {/* Game over overlay with restart button */}
           {gameState?.phase === 'game_over' && (

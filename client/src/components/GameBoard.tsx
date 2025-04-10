@@ -320,6 +320,17 @@ const GameBoard: React.FC = () => {
                   onViewDeck={handleViewDeck}
                 />
               </div>
+              
+              {/* Active Programs */}
+              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <h2 className="text-lg font-semibold mb-2 text-cyan-400">ACTIVE PROGRAMS</h2>
+                <Hand 
+                  cards={activePlayer.inPlay} 
+                  onCardClick={() => {}}
+                  canPlayCards={false}
+                  title="In Play"
+                />
+              </div>
             </div>
             
             {/* Middle column - Market */}
@@ -363,17 +374,6 @@ const GameBoard: React.FC = () => {
                   cards={activePlayer.hand} 
                   onCardClick={handlePlayCard}
                   canPlayCards={canPlayCards}
-                />
-              </div>
-              
-              {/* Player in-play cards */}
-              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <h2 className="text-lg font-semibold mb-2 text-cyan-400">ACTIVE PROGRAMS</h2>
-                <Hand 
-                  cards={activePlayer.inPlay} 
-                  onCardClick={() => {}}
-                  canPlayCards={false}
-                  title="In Play"
                 />
               </div>
             </div>
