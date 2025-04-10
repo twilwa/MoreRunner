@@ -44,7 +44,7 @@ const GameBoard: React.FC = () => {
   const [selectedCardTargets, setSelectedCardTargets] = useState<CardTarget[]>([]);
   
   // State for mobile layout
-  const [activeTab, setActiveTab] = useState<'opponent' | 'market' | 'hand'>('hand');
+  const [activeTab, setActiveTab] = useState<'opponent' | 'market' | 'hand' | 'programs'>('hand');
   
   // Only show game if state is initialized and in playing phase
   if (!gameState || phase !== 'playing') {
@@ -200,6 +200,16 @@ const GameBoard: React.FC = () => {
               />
             </div>
             
+            {/* Opponent active programs */}
+            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+              <h2 className="text-lg font-semibold mb-2 text-cyan-400">OPPONENT PROGRAMS</h2>
+              <Hand 
+                cards={otherPlayer.inPlay} 
+                onCardClick={() => {}}
+                canPlayCards={false}
+              />
+            </div>
+            
             {/* Game logs */}
             <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 h-64 overflow-y-auto">
               <h2 className="text-lg font-semibold mb-2 text-cyan-400">SYSTEM LOG</h2>
@@ -222,6 +232,33 @@ const GameBoard: React.FC = () => {
             </div>
           </div>
         );
+      case 'programs':
+        return (
+          <div className="space-y-4">
+            {/* Player's active programs */}
+            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+              <h2 className="text-lg font-semibold mb-2 text-cyan-400">YOUR ACTIVE PROGRAMS</h2>
+              <p className="text-sm text-cyan-600 mb-3">Installed programs with ongoing effects</p>
+              <Hand 
+                cards={activePlayer.inPlay} 
+                onCardClick={() => {}}
+                canPlayCards={false}
+              />
+            </div>
+            
+            {/* Opponent's active programs */}
+            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+              <h2 className="text-lg font-semibold mb-2 text-orange-400">OPPONENT PROGRAMS</h2>
+              <p className="text-sm text-orange-600 mb-3">Threat assessment required</p>
+              <Hand 
+                cards={otherPlayer.inPlay} 
+                onCardClick={() => {}}
+                canPlayCards={false}
+              />
+            </div>
+          </div>
+        );
+      
       case 'hand':
       default:
         return (
@@ -251,17 +288,6 @@ const GameBoard: React.FC = () => {
                 cards={activePlayer.hand} 
                 onCardClick={handlePlayCard}
                 canPlayCards={canPlayCards}
-              />
-            </div>
-            
-            {/* Player in-play cards */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <h2 className="text-lg font-semibold mb-2 text-cyan-400">ACTIVE PROGRAMS</h2>
-              <Hand 
-                cards={activePlayer.inPlay} 
-                onCardClick={() => {}}
-                canPlayCards={false}
-                title="In Play"
               />
             </div>
           </div>
@@ -311,6 +337,16 @@ const GameBoard: React.FC = () => {
                   isActive={!isPlayerTurn}
                   turnNumber={gameState.turnNumber}
                   phase={gameState.phase}
+                />
+              </div>
+              
+              {/* Opponent active programs */}
+              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <h2 className="text-lg font-semibold mb-2 text-orange-400">OPPONENT PROGRAMS</h2>
+                <Hand 
+                  cards={otherPlayer.inPlay} 
+                  onCardClick={() => {}}
+                  canPlayCards={false}
                 />
               </div>
               
@@ -415,6 +451,13 @@ const GameBoard: React.FC = () => {
           >
             <div className="text-xl mb-1">👐</div>
             <div className="text-xs">HAND</div>
+          </button>
+          <button
+            onClick={() => { setActiveTab('programs'); }}
+            className={`flex-1 py-4 px-2 text-center ${activeTab === 'programs' ? 'bg-cyan-900 text-white' : 'text-cyan-500'}`}
+          >
+            <div className="text-xl mb-1">💻</div>
+            <div className="text-xs">PROGRAMS</div>
           </button>
           <button
             onClick={() => { setActiveTab('market'); }}
