@@ -262,24 +262,24 @@ const GameBoard: React.FC = () => {
   };
   
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-200 pb-24 md:pb-4 overflow-y-auto">
+    <div className="h-screen bg-gray-900 text-gray-200 overflow-y-auto overflow-x-hidden">
       {/* Sound toggle */}
       <button 
         onClick={toggleMute}
-        className="fixed top-4 right-4 text-cyan-400 hover:text-cyan-300 z-10 w-10 h-10 flex items-center justify-center bg-gray-800/80 rounded-full"
+        className="fixed top-4 right-4 text-cyan-400 hover:text-cyan-300 z-50 w-10 h-10 flex items-center justify-center bg-gray-800/80 rounded-full"
       >
         {isMuted ? '🔇' : '🔊'}
       </button>
       
-      <div className="container mx-auto max-w-screen-xl">
-        <header className="sticky top-0 z-10 bg-gray-900 p-4 mb-6 text-center">
+      <div className="container mx-auto max-w-screen-xl pb-24 md:pb-6">
+        <header className="sticky top-0 z-40 bg-gray-900/95 backdrop-blur-sm p-4 mb-4 text-center shadow-md">
           <h1 className="text-3xl font-bold text-cyan-400 tracking-wide">NETRUNNER</h1>
           <div className="mt-2 text-sm text-cyan-600">TURN {gameState.turnNumber} • {gameState.phase.toUpperCase()} PHASE</div>
         </header>
         
         {/* Current Location - Full width on desktop and mobile */}
-        <div className="p-4">
-          <h2 className="text-xl font-bold text-cyan-400 mb-3">CURRENT LOCATION</h2>
+        <div className="p-4 md:max-h-[300px] md:overflow-y-auto">
+          <h2 className="text-xl font-bold text-cyan-400 mb-3 md:sticky md:top-0 md:bg-gray-900 md:pb-2">CURRENT LOCATION</h2>
           <LocationCard 
             location={locationDeck?.currentLocation || null}
             onDrawNextLocation={drawLocation}
@@ -290,9 +290,9 @@ const GameBoard: React.FC = () => {
         </div>
         
         {/* Desktop layout - 3 columns */}
-        <div className="hidden md:grid md:grid-cols-3 gap-6 p-4">
+        <div className="hidden md:grid md:grid-cols-3 gap-4 p-4 max-h-[calc(100vh-350px)] overflow-y-auto">
           {/* Left column - Opponent & Logs */}
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-full">
             {/* Opponent info */}
             <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
               <Player 
@@ -304,14 +304,14 @@ const GameBoard: React.FC = () => {
             </div>
             
             {/* Game logs */}
-            <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 h-64 overflow-y-auto">
+            <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 h-[calc(100%-120px)] overflow-y-auto">
               <h2 className="text-lg font-semibold mb-2 text-cyan-400">SYSTEM LOG</h2>
               <GameLog logs={gameState.logs} />
             </div>
           </div>
           
           {/* Middle column - Market & Actions */}
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-full overflow-y-auto">
             {/* Market */}
             <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
               <h2 className="text-lg font-semibold mb-2 text-cyan-400">DATAMARKET</h2>
@@ -344,7 +344,7 @@ const GameBoard: React.FC = () => {
           </div>
           
           {/* Right column - Player & Hand */}
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-full overflow-y-auto">
             {/* Player info */}
             <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
               <Player 
