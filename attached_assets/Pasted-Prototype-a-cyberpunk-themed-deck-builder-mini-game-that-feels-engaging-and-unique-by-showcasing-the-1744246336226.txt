@@ -1,0 +1,70 @@
+Prototype a cyberpunk-themed deck-builder mini-game that feels engaging and unique by showcasing the following features from indie PvP deckbuilding research:
+
+
+Core loop inspired by roguelike deckbuilders (like Balatro and Slay the Spire):
+
+Players start with a small basic deck.
+They build and refine this deck during the run by acquiring new cards from semi-randomized market/offers that refresh after combat or turns.
+Supports procedural/bursting synergies: some runs feel broken, some fail fast — replay value.
+
+Cyberpunk flavor:
+
+Cards represent hacks, programs, cyberware, or street-level actions, not just generic spells.
+Include hidden information or asymmetric play inspired by Netrunner — e.g., some face-down 'server' cards or bluff elements [roguebasin.com].
+Optionally, factions like corps, street gangs, or runners shaping card keywords and combos [weheartgames.itch.io].
+
+Unusual/innovative features to showcase:
+
+Deck culling/trashing AND deck fusing:
+
+Ability to trash weak cards mid-run (to streamline the deck).
+Ability to fuse/synthesize two cards into a more powerful hybrid occasionally — inspired by SolForge Fusion’s deck mixing.
+Alternating or action-point turn structure:
+
+Don't just do solo solitaire.
+Simulate 2 players alternating quick actions (e.g., reveal bluff card, hack, counter-hack) to avoid downtime.
+Include at least one interactive element—like an attack/disrupt card (discard, “trace”, corrupt), or face-down install/trap bluff.
+Synergy engine focus:
+
+Use keywords/tags (e.g., "Virus", "Weapon", "Stealth", "ICE") that combo with each other.
+Some cards act as payoffs for many of a keyword ("Gain +2 power for every Virus you’ve played") to encourage pursuit of themed engines during the run.
+Shared or draft market mechanics:
+
+Cards appear in a procedural market/draft row.
+Buying removes it and denies it to the other player.
+Refresh between turns or on buy to keep the market dynamic.
+Element of push-your-luck:
+
+Inspired by cyberpunk “danger zones,” allow players to risk drawing more cards at a cost (taking “trace” damage or chance of detection).
+
+Additional inspiration (optional):
+
+Faction reputation or influence: your choices lean toward corp or underground, which could unlock or block certain cards/offers.
+Procedurally-generate a dystopian city grid or virtual net, and nodes unlock new cards or market refreshes.
+
+Deliverable:
+
+Implement in Python or JavaScript.
+
+A simple text-based or console game (no fancy UI needed).
+
+Two players compete head-to-head or simulate a single player run with deck growth, synergy build-up, trashing, and at least some direct interaction (attack/bluff/denial).
+
+Demonstrate the interesting mechanics above around synergy, bluff, disruptive cards, deck culling, and cyberpunk theme.
+
+Why this is especially suited:
+
+Balatro-like “run-based” add/trash deck-building with crazy synergy potential.
+
+Cyberpunk flavor and bluff / asymmetric info echoes Netrunner.
+
+PvP/draft aspects and unusual deck manipulation (trashing, fusing)
+
+Emphasis on fast turns, meaningful choices and player interaction, rather than solitaire.
+
+Sample seed notes you could add to the prompt:
+
+“Think of it as a cross between Balatro, Netrunner, and a cyberpunk roguelike: quick runs with decks that grow crazy, bluffing attacks, hacker vs corp themes, and cool keyword combos.”
+
+
+This focused prompt should help the agent prototype a really novel piece — testing unusual mechanisms rather than a generic Magic clone, while embracing that fast, flashy, almost slot-machine quality that Balatro captures.

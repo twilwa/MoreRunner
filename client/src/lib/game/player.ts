@@ -7,10 +7,17 @@ export interface Player {
   hand: Card[];
   discard: Card[];
   inPlay: Card[];
-  coins: number;
+  credits: number;  // Renamed from coins to credits for cyberpunk theme
   actions: number;
   buys: number;
   health: number;
+  factionReputation: {  // New field for tracking faction reputation
+    Corp: number;      // 0-100 reputation with Corporations
+    Runner: number;    // 0-100 reputation with Netrunners
+    Street: number;    // 0-100 reputation with Street gangs
+  };
+  installedCards: Card[];  // Permanent card installations
+  faceDownCards: Card[];   // Traps and ambushes
 }
 
 // Create a new player with starting deck
@@ -22,10 +29,17 @@ export function createPlayer(id: string, name: string): Player {
     hand: [],
     discard: [],
     inPlay: [],
-    coins: 0,
+    credits: 0,
     actions: 0,
     buys: 0,
-    health: 10 // Starting health
+    health: 10, // Starting health
+    factionReputation: {
+      Corp: 50,   // Neutral starting reputation
+      Runner: 50,
+      Street: 50
+    },
+    installedCards: [],
+    faceDownCards: []
   };
 }
 
@@ -99,14 +113,23 @@ export function playCard(player: Player, cardIndex: number): { player: Player, p
   
   if (cardIndex >= 0 && cardIndex < updatedPlayer.hand.length) {
     const card = updatedPlayer.hand[cardIndex];
-    updatedPlayer.inPlay.push(card);
+    
+    // Handle different card types
+    if (card.cardType === 'Install') {
+      updatedPlayer.installedCards.push(card);
+    } else if (card.cardType === 'Trap' && card.isFaceDown) {
+      updatedPlayer.faceDownCards.push(card);
+    } else {
+      updatedPlayer.inPlay.push(card);
+    }
+    
     updatedPlayer.hand = updatedPlayer.hand.filter((_, i) => i !== cardIndex);
     
     // Apply card effects
     for (const effect of card.effects) {
       switch (effect.type) {
-        case 'gain_resources':
-          updatedPlayer.coins += effect.value;
+        case 'gain_credits':
+          updatedPlayer.credits += effect.value;
           break;
         case 'gain_action':
           updatedPlayer.actions += effect.value;
@@ -131,10 +154,15 @@ export function playCard(player: Player, cardIndex: number): { player: Player, p
 export function buyCard(player: Player, card: Card): Player {
   const updatedPlayer = { ...player };
   
-  if (updatedPlayer.coins >= card.cost && updatedPlayer.buys > 0) {
-    updatedPlayer.coins -= card.cost;
+  if (updatedPlayer.credits >= card.cost && updatedPlayer.buys > 0) {
+    updatedPlayer.credits -= card.cost;
     updatedPlayer.buys -= 1;
     updatedPlayer.discard.push({ ...card }); // Add to discard pile
+    
+    // Adjust faction reputation based on card purchased
+    if (card.faction !== 'Neutral') {
+      updatedPlayer.factionReputation[card.faction] += 2; // Small increase in reputation
+    }
   }
   
   return updatedPlayer;
