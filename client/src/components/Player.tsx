@@ -6,9 +6,10 @@ interface PlayerProps {
   isActive: boolean;
   turnNumber: number;
   phase: string;
+  onViewDeck?: () => void;
 }
 
-const Player: React.FC<PlayerProps> = ({ player, isActive, turnNumber, phase }) => {
+const Player: React.FC<PlayerProps> = ({ player, isActive, turnNumber, phase, onViewDeck }) => {
   // Function to calculate total cards in player's possession
   const totalCards = () => {
     return player.deck.length + player.hand.length + player.discard.length + player.inPlay.length;
@@ -35,8 +36,18 @@ const Player: React.FC<PlayerProps> = ({ player, isActive, turnNumber, phase }) 
             {player.name}
           </h3>
         </div>
-        <div className="text-xs text-gray-400">
-          {isActive ? `${phase} PHASE` : 'WAITING'}
+        <div className="flex items-center gap-2">
+          {onViewDeck && (
+            <button 
+              onClick={onViewDeck}
+              className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-cyan-300 border border-gray-600"
+            >
+              View Deck
+            </button>
+          )}
+          <div className="text-xs text-gray-400">
+            {isActive ? `${phase} PHASE` : 'WAITING'}
+          </div>
         </div>
       </div>
       

@@ -44,10 +44,10 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   
   switch (currentPhase) {
     case 'action':
-      buttonText = 'END ACTION PHASE';
+      buttonText = 'EXECUTE';
       actionDescription = 'TAP CARDS IN HAND to play them and gain advantages';
       buttonColor = 'from-green-800 to-green-900 hover:from-green-700 hover:to-green-800 border-green-700';
-      phaseIndicator = 'ACTION PHASE: Play cards';
+      phaseIndicator = 'ACTION PHASE: Queue cards, then execute';
       break;
     case 'buy':
       buttonText = 'END BUY PHASE';
