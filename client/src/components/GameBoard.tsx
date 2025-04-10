@@ -206,8 +206,8 @@ const GameBoard: React.FC = () => {
             {/* Game logs */}
             <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-1 shadow-xl border border-gray-700/50">
               <h2 className="text-lg font-semibold p-4 border-b border-gray-700/50 text-cyan-400">SYSTEM LOG</h2>
-              <div className="p-4 h-64 overflow-y-auto">
-                <GameLog logs={gameState.logs} />
+              <div className="p-4">
+                <GameLog logs={gameState.logs.slice(-5)} />
               </div>
             </div>
           </div>
@@ -276,7 +276,7 @@ const GameBoard: React.FC = () => {
   };
   
   return (
-    <div className="h-screen bg-gray-900 text-gray-200 overflow-y-auto overflow-x-hidden">
+    <div className="min-h-screen bg-gray-900 text-gray-200 overflow-y-auto overflow-x-hidden">
       {/* Sound toggle */}
       <button 
         onClick={toggleMute}
@@ -286,7 +286,7 @@ const GameBoard: React.FC = () => {
       </button>
       
       <div className="max-w-screen-2xl mx-auto pb-24 md:pb-6">
-        <header className="sticky top-0 z-40 bg-gray-900/95 backdrop-blur-sm py-6 px-8 mb-6 text-center shadow-lg">
+        <header className="sticky top-0 z-40 bg-gray-900/95 backdrop-blur-sm py-4 px-8 mb-6 text-center shadow-lg">
           <h1 className="text-4xl font-bold text-cyan-400 tracking-wide">NETRUNNER</h1>
           <div className="mt-2 text-sm text-cyan-600 font-mono">TURN {gameState.turnNumber} • {gameState.phase.toUpperCase()} PHASE</div>
         </header>
@@ -296,7 +296,7 @@ const GameBoard: React.FC = () => {
           <div className="md:w-1/3 md:pr-6 p-4">
             <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-1 shadow-xl border border-gray-700/50">
               <h2 className="text-2xl font-bold text-cyan-400 p-4 border-b border-gray-700/50">CURRENT LOCATION</h2>
-              <div className="p-4 max-h-[calc(100vh-350px)] overflow-y-auto">
+              <div className="p-4">
                 <LocationCard 
                   location={locationDeck?.currentLocation || null}
                   onDrawNextLocation={drawLocation}
@@ -311,7 +311,7 @@ const GameBoard: React.FC = () => {
           {/* Right side - Game content */}
           <div className="md:w-2/3 md:pl-6">
             {/* Desktop layout - 2 columns */}
-            <div className="hidden md:grid md:grid-cols-2 gap-6 p-4 max-h-[calc(100vh-220px)] overflow-y-auto">
+            <div className="hidden md:grid md:grid-cols-2 gap-6 p-4">
               {/* Left column - Game Info */}
               <div className="space-y-6 max-h-full">
                 {/* Opponent info */}
@@ -330,8 +330,8 @@ const GameBoard: React.FC = () => {
                 {/* Game logs */}
                 <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-1 shadow-xl border border-gray-700/50">
                   <h2 className="text-lg font-semibold p-4 border-b border-gray-700/50 text-cyan-400">SYSTEM LOG</h2>
-                  <div className="p-4 h-[calc(100%-120px)] overflow-y-auto">
-                    <GameLog logs={gameState.logs} />
+                  <div className="p-4">
+                    <GameLog logs={gameState.logs.slice(-5)} />
                   </div>
                 </div>
                 
