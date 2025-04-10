@@ -8,7 +8,6 @@ import Player from './Player';
 import ActionButtons from './ActionButtons';
 import GameLog from './GameLog';
 import DeckViewer from './DeckViewer';
-import CardConfirmationModal from './CardConfirmationModal';
 import LocationCard from './LocationCard';
 import ResourceActions from './ResourceActions';
 import { Card as CardType } from '../lib/game/cards';
@@ -30,7 +29,11 @@ const GameBoard: React.FC = () => {
     addLogMessage,
     drawLocation,
     drawCard,
-    gainCredit
+    gainCredit,
+    queueCard,
+    returnQueuedCard,
+    reorderQueuedCards,
+    executeQueuedCards
   } = useDeckBuilder();
   const { phase } = useGame();
   const { toggleMute, isMuted } = useAudio();
@@ -92,50 +95,39 @@ const GameBoard: React.FC = () => {
     return targets;
   };
   
-  // Open confirmation modal for playing a card
-  const openCardConfirmation = (cardIndex: number) => {
-    // Only show confirmation for cards that can be played
+  // Handlers for game actions
+  const handleQueueCard = (cardIndex: number) => {
+    // Queue a card for the action phase
     if (isPlayerTurn && gameState.phase === 'action' && activePlayer.actions > 0) {
-      setSelectedCardIndex(cardIndex);
-      setIsCardConfirmOpen(true);
+      queueCard(cardIndex);
     } else {
-      // Show why the card can't be played
+      // Show why the card can't be queued
       if (!isPlayerTurn) {
-        addLogMessage('Cannot play cards during opponent\'s turn.');
+        addLogMessage('Cannot queue cards during opponent\'s turn.');
       } else if (gameState.phase !== 'action') {
-        addLogMessage(`Cannot play cards during ${gameState.phase} phase.`);
+        addLogMessage(`Cannot queue cards during ${gameState.phase} phase.`);
       } else if (activePlayer.actions <= 0) {
         addLogMessage('No actions remaining. End the action phase.');
       }
     }
   };
   
-  // Handle card play confirmation
-  const handleCardPlayConfirm = (targets: CardTarget[]) => {
-    if (selectedCardIndex !== null) {
-      // Play the card with the selected targets
-      playCard(selectedCardIndex);
-      
-      // Add log message with targeting information
-      const cardName = activePlayer.hand[selectedCardIndex]?.name || 'Unknown card';
-      if (targets.length > 0) {
-        const targetNames = targets.map(t => t.name).join(', ');
-        addLogMessage(`You played ${cardName} targeting ${targetNames}.`);
-      } else {
-        addLogMessage(`You played ${cardName}.`);
-      }
-      
-      // Reset the confirmation state
-      setIsCardConfirmOpen(false);
-      setSelectedCardIndex(null);
-      setSelectedCardTargets([]);
+  // Handle clicking a card in the queue to return it to hand
+  const handleReturnQueuedCard = (cardIndex: number) => {
+    if (isPlayerTurn && gameState.phase === 'action') {
+      returnQueuedCard(cardIndex);
+    } else {
+      addLogMessage('Cannot modify queue during opponent\'s turn or outside action phase.');
     }
   };
   
-  // Handlers for game actions
-  const handlePlayCard = (cardIndex: number) => {
-    // Instead of immediately playing, open confirmation
-    openCardConfirmation(cardIndex);
+  // Execute all queued cards in order when ending the action phase
+  const handleExecuteQueuedCards = () => {
+    if (isPlayerTurn && gameState.phase === 'action') {
+      if (activePlayer.inPlay.length > 0) {
+        executeQueuedCards();
+      }
+    }
   };
   
   const handleBuyCard = (cardIndex: number) => {
@@ -250,7 +242,7 @@ const GameBoard: React.FC = () => {
               </div>
               <Hand 
                 cards={activePlayer.hand} 
-                onCardClick={handlePlayCard}
+                onCardClick={handleQueueCard}
                 canPlayCards={canPlayCards}
               />
             </div>
@@ -372,7 +364,7 @@ const GameBoard: React.FC = () => {
                 </div>
                 <Hand 
                   cards={activePlayer.hand} 
-                  onCardClick={handlePlayCard}
+                  onCardClick={handleQueueCard}
                   canPlayCards={canPlayCards}
                 />
               </div>
@@ -431,17 +423,7 @@ const GameBoard: React.FC = () => {
         playerDeck={activePlayer.deck}
         playerDiscard={activePlayer.discard}
       />
-      
-      {/* Card Confirmation Modal */}
-      <CardConfirmationModal 
-        isOpen={isCardConfirmOpen}
-        card={getSelectedCard()}
-        onClose={() => setIsCardConfirmOpen(false)}
-        onConfirm={handleCardPlayConfirm}
-        possibleTargets={getPossibleTargets()}
-        playerName={activePlayer.name}
-        opponentName={otherPlayer.name}
-      />
+
     </div>
   );
 };
