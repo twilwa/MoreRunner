@@ -357,9 +357,17 @@ const GameBoard: React.FC = () => {
                 />
               </div>
               
-              {/* Player hand */}
+              {/* Player hand with compact resource actions */}
               <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <h2 className="text-lg font-semibold mb-2 text-cyan-400">YOUR HAND</h2>
+                <div className="flex justify-between items-center mb-2">
+                  <h2 className="text-lg font-semibold text-cyan-400">YOUR HAND</h2>
+                  <ResourceActions
+                    onDrawCard={drawCard}
+                    onGainCredit={gainCredit}
+                    isPlayerTurn={isPlayerTurn}
+                    compact={true}
+                  />
+                </div>
                 <Hand 
                   cards={activePlayer.hand} 
                   onCardClick={handlePlayCard}
