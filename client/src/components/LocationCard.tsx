@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Location, LocationThreat } from '../lib/game/location';
 
 interface LocationCardProps {
@@ -16,6 +16,8 @@ const LocationCard: React.FC<LocationCardProps> = ({
   hasFoundObjective,
   hasReachedExit
 }) => {
+  const [selectedThreat, setSelectedThreat] = useState<number | null>(null);
+  
   if (!location) {
     return (
       <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 text-center">
@@ -64,22 +66,51 @@ const LocationCard: React.FC<LocationCardProps> = ({
     }
   };
 
+  // Handle clicking on a threat
+  const handleThreatClick = (index: number) => {
+    if (selectedThreat === index) {
+      setSelectedThreat(null); // Toggle off if clicking the same threat
+    } else {
+      setSelectedThreat(index); // Select the new threat
+    }
+  };
+
   // Render a threat item
   const renderThreat = (threat: LocationThreat, index: number) => {
+    const isSelected = selectedThreat === index;
+    
     return (
-      <div key={index} className="bg-gray-800 rounded p-2 mb-2 last:mb-0">
+      <div 
+        key={index} 
+        className={`bg-gray-800 rounded p-2 mb-2 last:mb-0 cursor-pointer transition-all duration-200
+          ${isSelected ? 'border border-cyan-600 scale-105 shadow-lg' : 'hover:bg-gray-750'}`}
+        onClick={() => handleThreatClick(index)}
+      >
         <div className="flex justify-between items-center">
           <div className="font-bold text-sm">{threat.name}</div>
           <div className="flex space-x-2">
             <span className="px-2 py-0.5 bg-orange-900 text-orange-100 rounded text-xs">
-              Danger: {threat.dangerLevel}
+              ATK: {threat.dangerLevel}
             </span>
             <span className="px-2 py-0.5 bg-blue-900 text-blue-100 rounded text-xs">
-              Defense: {threat.defenseValue}
+              DEF: {threat.defenseValue}
             </span>
           </div>
         </div>
         <p className="text-xs text-gray-400 mt-1">{threat.description}</p>
+        
+        {isSelected && (
+          <div className="mt-2 p-2 bg-gray-700/50 rounded text-xs grid grid-cols-2 gap-2">
+            <div className="flex flex-col">
+              <span className="text-cyan-400">Attack Value</span>
+              <span className="text-lg font-mono">{threat.dangerLevel}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-cyan-400">Defense Value</span>
+              <span className="text-lg font-mono">{threat.defenseValue}</span>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -124,10 +155,10 @@ const LocationCard: React.FC<LocationCardProps> = ({
       <div className="p-3">
         <p className="text-sm text-gray-300 mb-3">{location.description}</p>
 
-        {/* Threats section */}
+        {/* Entities section */}
         {location.threats.length > 0 && (
           <div className="mb-3">
-            <h3 className="text-sm font-semibold mb-2 text-red-400">SECURITY THREATS:</h3>
+            <h3 className="text-sm font-semibold mb-2 text-cyan-400">IN LOCATION:</h3>
             <div className="space-y-2">
               {location.threats.map((threat, index) => renderThreat(threat, index))}
             </div>

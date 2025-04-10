@@ -236,9 +236,17 @@ const GameBoard: React.FC = () => {
               />
             </div>
             
-            {/* Player hand */}
+            {/* Player hand with compact resource actions */}
             <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <h2 className="text-lg font-semibold mb-2 text-cyan-400">YOUR HAND</h2>
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-lg font-semibold text-cyan-400">YOUR HAND</h2>
+                <ResourceActions
+                  onDrawCard={drawCard}
+                  onGainCredit={gainCredit}
+                  isPlayerTurn={isPlayerTurn}
+                  compact={true}
+                />
+              </div>
               <Hand 
                 cards={activePlayer.hand} 
                 onCardClick={handlePlayCard}
@@ -311,9 +319,19 @@ const GameBoard: React.FC = () => {
                 <h2 className="text-lg font-semibold mb-2 text-cyan-400">SYSTEM LOG</h2>
                 <GameLog logs={gameState.logs} />
               </div>
+              
+              {/* Action buttons */}
+              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <ActionButtons 
+                  onEndPhase={handleEndPhase}
+                  currentPhase={gameState.phase}
+                  isPlayerTurn={isPlayerTurn}
+                  onViewDeck={handleViewDeck}
+                />
+              </div>
             </div>
             
-            {/* Middle column - Market & Actions */}
+            {/* Middle column - Market */}
             <div className="space-y-4">
               {/* Market */}
               <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
@@ -323,25 +341,6 @@ const GameBoard: React.FC = () => {
                   onCardClick={handleBuyCard}
                   canBuyCards={canBuyCards}
                   playerCoins={activePlayer.credits}
-                />
-              </div>
-              
-              {/* Resource Actions */}
-              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <ResourceActions
-                  onDrawCard={drawCard}
-                  onGainCredit={gainCredit}
-                  isPlayerTurn={isPlayerTurn}
-                />
-              </div>
-              
-              {/* Action buttons */}
-              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <ActionButtons 
-                  onEndPhase={handleEndPhase}
-                  currentPhase={gameState.phase}
-                  isPlayerTurn={isPlayerTurn}
-                  onViewDeck={handleViewDeck}
                 />
               </div>
             </div>
@@ -385,15 +384,6 @@ const GameBoard: React.FC = () => {
           <div className="md:hidden px-2">
             {/* Tab content */}
             {renderTabContent()}
-            
-            {/* Resource Actions for mobile */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 mt-4">
-              <ResourceActions
-                onDrawCard={drawCard}
-                onGainCredit={gainCredit}
-                isPlayerTurn={isPlayerTurn}
-              />
-            </div>
             
             {/* Action buttons always visible on mobile */}
             <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 mt-4 mb-20">
