@@ -181,6 +181,7 @@ const GameBoard: React.FC = () => {
                 onDragEnd={handleDragEnd}
                 canPlayCards={gameState.phase === 'action' && isPlayerTurn}
                 title="Drag to reorder • Click to return to hand"
+                isQueue={true}
               />
             </div>
           </div>
@@ -241,6 +242,7 @@ const GameBoard: React.FC = () => {
                 onDragEnd={handleDragEnd}
                 canPlayCards={gameState.phase === 'action' && isPlayerTurn}
                 title="Drag to reorder • Click to return to hand"
+                isQueue={true}
               />
             </div>
           </div>
@@ -308,6 +310,7 @@ const GameBoard: React.FC = () => {
                   onDragEnd={handleDragEnd}
                   canPlayCards={gameState.phase === 'action' && isPlayerTurn}
                   title="Drag to reorder • Click to return to hand"
+                  isQueue={true}
                 />
               </div>
             </div>
