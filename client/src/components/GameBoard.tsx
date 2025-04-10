@@ -12,6 +12,7 @@ import DeckViewer from './DeckViewer';
 import LocationCard from './LocationCard';
 import ResourceActions from './ResourceActions';
 import DraggableHand from './DraggableHand';
+import ExecuteButton from './ExecuteButton';
 import { Card as CardType } from '../lib/game/cards';
 
 
@@ -174,7 +175,16 @@ const GameBoard: React.FC = () => {
 
             {/* Player queued cards (Active Programs) */}
             <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <h2 className="text-lg font-semibold mb-2 text-cyan-400">ACTIVE PROGRAMS</h2>
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-lg font-semibold text-cyan-400">ACTIVE PROGRAMS</h2>
+                {gameState.phase === 'action' && isPlayerTurn && (
+                  <ExecuteButton 
+                    onExecute={handleExecuteQueuedCards}
+                    disabled={!isPlayerTurn || gameState.phase !== 'action'}
+                    count={activePlayer.inPlay.length}
+                  />
+                )}
+              </div>
               <div className="min-h-[140px] relative w-full overflow-hidden">
                 <div className="w-full pr-2">
                   <DraggableHand 
@@ -239,7 +249,16 @@ const GameBoard: React.FC = () => {
             
             {/* Player queued cards (Active Programs) */}
             <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <h2 className="text-lg font-semibold mb-2 text-cyan-400">ACTIVE PROGRAMS</h2>
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-lg font-semibold text-cyan-400">ACTIVE PROGRAMS</h2>
+                {gameState.phase === 'action' && isPlayerTurn && (
+                  <ExecuteButton 
+                    onExecute={handleExecuteQueuedCards}
+                    disabled={!isPlayerTurn || gameState.phase !== 'action'}
+                    count={activePlayer.inPlay.length}
+                  />
+                )}
+              </div>
               <div className="min-h-[140px] relative w-full overflow-hidden">
                 <div className="w-full pr-2">
                   <DraggableHand 
@@ -289,68 +308,14 @@ const GameBoard: React.FC = () => {
             />
           </div>
           
-          {/* Desktop layout - 3 columns */}
-          <div className="hidden md:grid md:grid-cols-3 gap-6 p-4">
-            {/* Left column - Game Logs & Actions */}
-            <div className="space-y-4">
+          {/* Desktop layout - New structure with wider Active Programs */}
+          <div className="hidden md:grid md:grid-cols-12 gap-6 p-4">
+            {/* Left column - System Log and Hand (6 cols) */}
+            <div className="col-span-6 space-y-4">
               {/* Game logs */}
               <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 h-64 overflow-y-auto">
                 <h2 className="text-lg font-semibold mb-2 text-cyan-400">SYSTEM LOG</h2>
                 <GameLog logs={gameState.logs} />
-              </div>
-              
-              {/* Action buttons */}
-              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <ActionButtons 
-                  onEndPhase={handleEndPhase}
-                  currentPhase={gameState.phase}
-                  isPlayerTurn={isPlayerTurn}
-                  onViewDeck={handleViewDeck}
-                />
-              </div>
-              
-              {/* Active Programs */}
-              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <h2 className="text-lg font-semibold mb-2 text-cyan-400">ACTIVE PROGRAMS</h2>
-                <div className="min-h-[140px] relative w-full overflow-hidden">
-                  <div className="w-full pr-2">
-                    <DraggableHand 
-                      cards={activePlayer.inPlay} 
-                      onCardClick={handleReturnQueuedCard}
-                      onDragEnd={handleDragEnd}
-                      canPlayCards={gameState.phase === 'action' && isPlayerTurn}
-                      title="Drag to reorder • Click to return to hand"
-                      isQueue={true}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Middle column - Market */}
-            <div className="space-y-4">
-              {/* Market */}
-              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <h2 className="text-lg font-semibold mb-2 text-cyan-400">DATAMARKET</h2>
-                <Market 
-                  market={gameState.market} 
-                  onCardClick={handleBuyCard}
-                  canBuyCards={canBuyCards}
-                  playerCoins={activePlayer.credits}
-                />
-              </div>
-            </div>
-            
-            {/* Right column - Player & Hand */}
-            <div className="space-y-4">
-              {/* Player info */}
-              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <Player 
-                  player={activePlayer} 
-                  isActive={isPlayerTurn}
-                  turnNumber={gameState.turnNumber}
-                  phase={gameState.phase}
-                />
               </div>
               
               {/* Player hand with compact resource actions */}
@@ -371,6 +336,69 @@ const GameBoard: React.FC = () => {
                 />
               </div>
             </div>
+            
+            {/* Right area - Market and Player (6 cols) */}
+            <div className="col-span-6 space-y-4">
+              {/* Player info with View Deck button */}
+              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <Player 
+                  player={activePlayer} 
+                  isActive={isPlayerTurn}
+                  turnNumber={gameState.turnNumber}
+                  phase={gameState.phase}
+                  onViewDeck={handleViewDeck}
+                />
+              </div>
+              
+              {/* Market */}
+              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <h2 className="text-lg font-semibold mb-2 text-cyan-400">DATAMARKET</h2>
+                <Market 
+                  market={gameState.market} 
+                  onCardClick={handleBuyCard}
+                  canBuyCards={canBuyCards}
+                  playerCoins={activePlayer.credits}
+                />
+              </div>
+              
+              {/* Phase change buttons */}
+              {gameState.phase !== 'action' && (
+                <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                  <ActionButtons 
+                    onEndPhase={handleEndPhase}
+                    currentPhase={gameState.phase}
+                    isPlayerTurn={isPlayerTurn}
+                    onViewDeck={handleViewDeck}
+                  />
+                </div>
+              )}
+            </div>
+            
+            {/* Active Programs - Full width for better visualization */}
+            <div className="col-span-12 bg-gray-800 rounded-lg p-4 border border-gray-700">
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="text-lg font-semibold text-cyan-400">ACTIVE PROGRAMS</h2>
+                {gameState.phase === 'action' && isPlayerTurn && (
+                  <ExecuteButton 
+                    onExecute={handleExecuteQueuedCards}
+                    disabled={!isPlayerTurn || gameState.phase !== 'action'}
+                    count={activePlayer.inPlay.length}
+                  />
+                )}
+              </div>
+              <div className="min-h-[170px] relative w-full overflow-hidden">
+                <div className="w-full pr-2">
+                  <DraggableHand 
+                    cards={activePlayer.inPlay} 
+                    onCardClick={handleReturnQueuedCard}
+                    onDragEnd={handleDragEnd}
+                    canPlayCards={gameState.phase === 'action' && isPlayerTurn}
+                    title="Drag to reorder • Click to return to hand"
+                    isQueue={true}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
           
           {/* Mobile layout - Tabs */}
@@ -380,12 +408,29 @@ const GameBoard: React.FC = () => {
             
             {/* Action buttons always visible on mobile */}
             <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 mt-4 mb-20">
-              <ActionButtons 
-                onEndPhase={handleEndPhase}
-                currentPhase={gameState.phase}
-                isPlayerTurn={isPlayerTurn}
-                onViewDeck={handleViewDeck}
-              />
+              {gameState.phase === 'action' && isPlayerTurn ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center mb-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse mr-2"></div>
+                    <h3 className="text-green-400 font-bold tracking-wider text-sm">ACTION PHASE: Queue cards, then execute</h3>
+                  </div>
+                  
+                  <p className="text-sm text-green-300 text-center font-mono mb-4">TAP CARDS IN HAND to play them and gain advantages</p>
+                  
+                  <ExecuteButton 
+                    onExecute={handleExecuteQueuedCards}
+                    disabled={!isPlayerTurn}
+                    count={activePlayer.inPlay.length}
+                  />
+                </div>
+              ) : (
+                <ActionButtons 
+                  onEndPhase={handleEndPhase}
+                  currentPhase={gameState.phase}
+                  isPlayerTurn={isPlayerTurn}
+                  onViewDeck={handleViewDeck}
+                />
+              )}
             </div>
           </div>
         </div>
