@@ -23,20 +23,21 @@ const DraggableHand: React.FC<DraggableHandProps> = ({
   // Calculate a scale factor for cards when there are many in the queue
   const getCardScale = (totalCards: number, index: number) => {
     // No scaling needed for small number of cards
-    if (totalCards <= 4) return 1;
+    if (totalCards <= 5) return 1;
     
-    // Scale slightly smaller as we add more cards
-    const baseScale = Math.max(0.85, 1 - (totalCards * 0.03));
+    // Scale slightly smaller as we add more cards, but keep minimum size reasonable
+    const baseScale = Math.max(0.9, 1 - (totalCards * 0.02));
     return baseScale;
   };
   
   // Calculate card overlap for queue mode
   const getCardOffset = (totalCards: number, index: number) => {
     // No offset needed for small number of cards
-    if (totalCards <= 4) return 0;
+    if (totalCards <= 5) return 0;
     
     // Increasing overlap for more cards, expressed as negative margin
-    return `-${Math.min(40, totalCards * 5)}px`;
+    // More cards = more overlap, but capped at reasonable amount
+    return `-${Math.min(30, (totalCards - 5) * 8)}px`;
   };
   
   return (
@@ -47,7 +48,7 @@ const DraggableHand: React.FC<DraggableHandProps> = ({
         <Droppable droppableId="cards" direction="horizontal">
           {(provided) => (
             <div 
-              className={`flex ${isQueue ? 'flex-row overflow-x-auto py-2' : 'flex-wrap'} gap-2 min-h-[120px] ${isQueue ? 'w-full' : ''}`}
+              className={`flex flex-row ${isQueue ? 'overflow-x-auto py-2 w-full flex-nowrap' : 'flex-wrap'} gap-2 ${isQueue ? 'min-h-[100px]' : 'min-h-[120px]'}`}
               {...provided.droppableProps}
               ref={provided.innerRef}
             >
