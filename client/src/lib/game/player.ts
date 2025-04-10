@@ -145,7 +145,10 @@ export function playCard(player: Player, cardIndex: number): { player: Player, p
           // Push your luck mechanic - chance of damage for extra cards
           for (let i = 0; i < effect.value; i++) {
             const { player: playerAfterLuckyDraw } = drawCards(updatedPlayer, 1);
-            updatedPlayer = playerAfterLuckyDraw;
+            // Copy all properties from the new player state
+            updatedPlayer.deck = playerAfterLuckyDraw.deck;
+            updatedPlayer.hand = playerAfterLuckyDraw.hand;
+            updatedPlayer.discard = playerAfterLuckyDraw.discard;
             
             // 20% chance of taking damage per card
             if (Math.random() < 0.2) {
