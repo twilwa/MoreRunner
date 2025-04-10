@@ -14,12 +14,7 @@ import ResourceActions from './ResourceActions';
 import DraggableHand from './DraggableHand';
 import { Card as CardType } from '../lib/game/cards';
 
-// Define the target type used in card confirmation
-interface CardTarget {
-  id: string;
-  name: string;
-  type: 'player' | 'card' | 'resource';
-}
+
 
 const GameBoard: React.FC = () => {
   const { 
@@ -43,11 +38,6 @@ const GameBoard: React.FC = () => {
   // State for the DeckViewer modal
   const [isDeckViewerOpen, setIsDeckViewerOpen] = useState(false);
   
-  // State for the card confirmation modal
-  const [isCardConfirmOpen, setIsCardConfirmOpen] = useState(false);
-  const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null);
-  const [selectedCardTargets, setSelectedCardTargets] = useState<CardTarget[]>([]);
-  
   // State for mobile layout
   const [activeTab, setActiveTab] = useState<'log' | 'market' | 'hand'>('hand');
   
@@ -61,41 +51,7 @@ const GameBoard: React.FC = () => {
   const otherPlayer = gameState.players[otherPlayerIndex];
   const isPlayerTurn = gameState.activePlayerIndex === 0;
   
-  // Get the selected card (for confirmation modal)
-  const getSelectedCard = (): CardType | null => {
-    if (selectedCardIndex === null) return null;
-    return activePlayer.hand[selectedCardIndex] || null;
-  };
-  
-  // Prepare possible targets for card actions
-  const getPossibleTargets = (): CardTarget[] => {
-    const targets: CardTarget[] = [];
-    
-    // Add players as targets
-    targets.push({
-      id: `player-${activePlayer.id}`,
-      name: activePlayer.name,
-      type: 'player'
-    });
-    
-    targets.push({
-      id: `player-${otherPlayer.id}`,
-      name: otherPlayer.name,
-      type: 'player'
-    });
-    
-    // Add opponent's cards in play as targets
-    otherPlayer.inPlay.forEach((card, idx) => {
-      targets.push({
-        id: `card-opponent-${idx}`,
-        name: card.name,
-        type: 'card'
-      });
-    });
-    
-    // Return all possible targets
-    return targets;
-  };
+  // GAME ACTION HANDLERS
   
   // Handlers for game actions
   const handleQueueCard = (cardIndex: number) => {
@@ -178,6 +134,12 @@ const GameBoard: React.FC = () => {
   };
   
   const handleEndPhase = () => {
+    // Execute any queued cards first if ending action phase with cards in queue
+    if (gameState.phase === 'action' && isPlayerTurn && activePlayer.inPlay.length > 0) {
+      executeQueuedCards();
+      addLogMessage('Executing all queued programs.');
+    }
+    
     endPhase();
     
     // Add log message based on phase
@@ -210,14 +172,15 @@ const GameBoard: React.FC = () => {
               <GameLog logs={gameState.logs} />
             </div>
 
-            {/* Player in-play cards */}
+            {/* Player queued cards (Active Programs) */}
             <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
               <h2 className="text-lg font-semibold mb-2 text-cyan-400">ACTIVE PROGRAMS</h2>
-              <Hand 
+              <DraggableHand 
                 cards={activePlayer.inPlay} 
-                onCardClick={() => {}}
-                canPlayCards={false}
-                title="In Play"
+                onCardClick={handleReturnQueuedCard}
+                onDragEnd={handleDragEnd}
+                canPlayCards={gameState.phase === 'action' && isPlayerTurn}
+                title="Drag to reorder • Click to return to hand"
               />
             </div>
           </div>
@@ -269,14 +232,15 @@ const GameBoard: React.FC = () => {
               />
             </div>
             
-            {/* Player in-play cards */}
+            {/* Player queued cards (Active Programs) */}
             <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
               <h2 className="text-lg font-semibold mb-2 text-cyan-400">ACTIVE PROGRAMS</h2>
-              <Hand 
+              <DraggableHand 
                 cards={activePlayer.inPlay} 
-                onCardClick={() => {}}
-                canPlayCards={false}
-                title="In Play"
+                onCardClick={handleReturnQueuedCard}
+                onDragEnd={handleDragEnd}
+                canPlayCards={gameState.phase === 'action' && isPlayerTurn}
+                title="Drag to reorder • Click to return to hand"
               />
             </div>
           </div>
