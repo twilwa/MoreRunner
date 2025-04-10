@@ -191,19 +191,24 @@ const GameBoard: React.FC = () => {
         return (
           <div className="space-y-4">
             {/* Opponent info */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <Player 
-                player={otherPlayer} 
-                isActive={!isPlayerTurn}
-                turnNumber={gameState.turnNumber}
-                phase={gameState.phase}
-              />
+            <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-1 shadow-xl border border-gray-700/50">
+              <h2 className="text-lg font-semibold p-4 border-b border-gray-700/50 text-cyan-400">OPPONENT</h2>
+              <div className="p-4">
+                <Player 
+                  player={otherPlayer} 
+                  isActive={!isPlayerTurn}
+                  turnNumber={gameState.turnNumber}
+                  phase={gameState.phase}
+                />
+              </div>
             </div>
             
             {/* Game logs */}
-            <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 h-64 overflow-y-auto">
-              <h2 className="text-lg font-semibold mb-2 text-cyan-400">SYSTEM LOG</h2>
-              <GameLog logs={gameState.logs} />
+            <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-1 shadow-xl border border-gray-700/50">
+              <h2 className="text-lg font-semibold p-4 border-b border-gray-700/50 text-cyan-400">SYSTEM LOG</h2>
+              <div className="p-4 h-64 overflow-y-auto">
+                <GameLog logs={gameState.logs} />
+              </div>
             </div>
           </div>
         );
@@ -211,14 +216,16 @@ const GameBoard: React.FC = () => {
         return (
           <div className="space-y-4">
             {/* Market */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <h2 className="text-lg font-semibold mb-2 text-cyan-400">DATAMARKET</h2>
-              <Market 
-                market={gameState.market} 
-                onCardClick={handleBuyCard}
-                canBuyCards={canBuyCards}
-                playerCoins={activePlayer.credits}
-              />
+            <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-1 shadow-xl border border-gray-700/50">
+              <h2 className="text-lg font-semibold p-4 border-b border-gray-700/50 text-cyan-400">DATAMARKET</h2>
+              <div className="p-4">
+                <Market 
+                  market={gameState.market} 
+                  onCardClick={handleBuyCard}
+                  canBuyCards={canBuyCards}
+                  playerCoins={activePlayer.credits}
+                />
+              </div>
             </div>
           </div>
         );
@@ -227,34 +234,41 @@ const GameBoard: React.FC = () => {
         return (
           <div className="space-y-4">
             {/* Player info */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <Player 
-                player={activePlayer} 
-                isActive={isPlayerTurn}
-                turnNumber={gameState.turnNumber}
-                phase={gameState.phase}
-              />
+            <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-1 shadow-xl border border-gray-700/50">
+              <h2 className="text-lg font-semibold p-4 border-b border-gray-700/50 text-cyan-400">YOUR STATUS</h2>
+              <div className="p-4">
+                <Player 
+                  player={activePlayer} 
+                  isActive={isPlayerTurn}
+                  turnNumber={gameState.turnNumber}
+                  phase={gameState.phase}
+                />
+              </div>
             </div>
             
             {/* Player hand */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <h2 className="text-lg font-semibold mb-2 text-cyan-400">YOUR HAND</h2>
-              <Hand 
-                cards={activePlayer.hand} 
-                onCardClick={handlePlayCard}
-                canPlayCards={canPlayCards}
-              />
+            <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-1 shadow-xl border border-gray-700/50">
+              <h2 className="text-lg font-semibold p-4 border-b border-gray-700/50 text-cyan-400">YOUR HAND</h2>
+              <div className="p-4">
+                <Hand 
+                  cards={activePlayer.hand} 
+                  onCardClick={handlePlayCard}
+                  canPlayCards={canPlayCards}
+                />
+              </div>
             </div>
             
             {/* Player in-play cards */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <h2 className="text-lg font-semibold mb-2 text-cyan-400">ACTIVE PROGRAMS</h2>
-              <Hand 
-                cards={activePlayer.inPlay} 
-                onCardClick={() => {}}
-                canPlayCards={false}
-                title="In Play"
-              />
+            <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-1 shadow-xl border border-gray-700/50">
+              <h2 className="text-lg font-semibold p-4 border-b border-gray-700/50 text-cyan-400">INSTALLED PROGRAMS</h2>
+              <div className="p-4">
+                <Hand 
+                  cards={activePlayer.inPlay} 
+                  onCardClick={() => {}}
+                  canPlayCards={false}
+                  title="In Play"
+                />
+              </div>
             </div>
           </div>
         );
@@ -266,166 +280,202 @@ const GameBoard: React.FC = () => {
       {/* Sound toggle */}
       <button 
         onClick={toggleMute}
-        className="fixed top-4 right-4 text-cyan-400 hover:text-cyan-300 z-50 w-10 h-10 flex items-center justify-center bg-gray-800/80 rounded-full"
+        className="fixed top-4 right-4 text-cyan-400 hover:text-cyan-300 z-50 w-12 h-12 flex items-center justify-center bg-gray-800/80 rounded-full shadow-lg"
       >
-        {isMuted ? '🔇' : '🔊'}
+        <span className="text-xl">{isMuted ? '🔇' : '🔊'}</span>
       </button>
       
-      <div className="container mx-auto max-w-screen-xl pb-24 md:pb-6">
-        <header className="sticky top-0 z-40 bg-gray-900/95 backdrop-blur-sm p-4 mb-4 text-center shadow-md">
-          <h1 className="text-3xl font-bold text-cyan-400 tracking-wide">NETRUNNER</h1>
-          <div className="mt-2 text-sm text-cyan-600">TURN {gameState.turnNumber} • {gameState.phase.toUpperCase()} PHASE</div>
+      <div className="max-w-screen-2xl mx-auto pb-24 md:pb-6">
+        <header className="sticky top-0 z-40 bg-gray-900/95 backdrop-blur-sm py-6 px-8 mb-6 text-center shadow-lg">
+          <h1 className="text-4xl font-bold text-cyan-400 tracking-wide">NETRUNNER</h1>
+          <div className="mt-2 text-sm text-cyan-600 font-mono">TURN {gameState.turnNumber} • {gameState.phase.toUpperCase()} PHASE</div>
         </header>
         
-        {/* Current Location - Full width on desktop and mobile */}
-        <div className="p-4 md:max-h-[300px] md:overflow-y-auto">
-          <h2 className="text-xl font-bold text-cyan-400 mb-3 md:sticky md:top-0 md:bg-gray-900 md:pb-2">CURRENT LOCATION</h2>
-          <LocationCard 
-            location={locationDeck?.currentLocation || null}
-            onDrawNextLocation={drawLocation}
-            canDrawNextLocation={isPlayerTurn}
-            hasFoundObjective={locationDeck?.hasFoundObjective || false}
-            hasReachedExit={locationDeck?.hasReachedExit || false}
-          />
-        </div>
-        
-        {/* Desktop layout - 3 columns */}
-        <div className="hidden md:grid md:grid-cols-3 gap-4 p-4 max-h-[calc(100vh-350px)] overflow-y-auto">
-          {/* Left column - Opponent & Logs */}
-          <div className="space-y-4 max-h-full">
-            {/* Opponent info */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <Player 
-                player={otherPlayer} 
-                isActive={!isPlayerTurn}
-                turnNumber={gameState.turnNumber}
-                phase={gameState.phase}
-              />
-            </div>
-            
-            {/* Game logs */}
-            <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 h-[calc(100%-120px)] overflow-y-auto">
-              <h2 className="text-lg font-semibold mb-2 text-cyan-400">SYSTEM LOG</h2>
-              <GameLog logs={gameState.logs} />
+        <div className="md:flex md:px-6">
+          {/* Left side - Location */}
+          <div className="md:w-1/3 md:pr-6 p-4">
+            <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-1 shadow-xl border border-gray-700/50">
+              <h2 className="text-2xl font-bold text-cyan-400 p-4 border-b border-gray-700/50">CURRENT LOCATION</h2>
+              <div className="p-4 max-h-[calc(100vh-350px)] overflow-y-auto">
+                <LocationCard 
+                  location={locationDeck?.currentLocation || null}
+                  onDrawNextLocation={drawLocation}
+                  canDrawNextLocation={isPlayerTurn}
+                  hasFoundObjective={locationDeck?.hasFoundObjective || false}
+                  hasReachedExit={locationDeck?.hasReachedExit || false}
+                />
+              </div>
             </div>
           </div>
           
-          {/* Middle column - Market & Actions */}
-          <div className="space-y-4 max-h-full overflow-y-auto">
-            {/* Market */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <h2 className="text-lg font-semibold mb-2 text-cyan-400">DATAMARKET</h2>
-              <Market 
-                market={gameState.market} 
-                onCardClick={handleBuyCard}
-                canBuyCards={canBuyCards}
-                playerCoins={activePlayer.credits}
-              />
+          {/* Right side - Game content */}
+          <div className="md:w-2/3 md:pl-6">
+            {/* Desktop layout - 2 columns */}
+            <div className="hidden md:grid md:grid-cols-2 gap-6 p-4 max-h-[calc(100vh-220px)] overflow-y-auto">
+              {/* Left column - Game Info */}
+              <div className="space-y-6 max-h-full">
+                {/* Opponent info */}
+                <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-1 shadow-xl border border-gray-700/50">
+                  <h2 className="text-lg font-semibold p-4 border-b border-gray-700/50 text-cyan-400">OPPONENT</h2>
+                  <div className="p-4">
+                    <Player 
+                      player={otherPlayer} 
+                      isActive={!isPlayerTurn}
+                      turnNumber={gameState.turnNumber}
+                      phase={gameState.phase}
+                    />
+                  </div>
+                </div>
+                
+                {/* Game logs */}
+                <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-1 shadow-xl border border-gray-700/50">
+                  <h2 className="text-lg font-semibold p-4 border-b border-gray-700/50 text-cyan-400">SYSTEM LOG</h2>
+                  <div className="p-4 h-[calc(100%-120px)] overflow-y-auto">
+                    <GameLog logs={gameState.logs} />
+                  </div>
+                </div>
+                
+                {/* Action controls */}
+                <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-1 shadow-xl border border-gray-700/50">
+                  <h2 className="text-lg font-semibold p-4 border-b border-gray-700/50 text-cyan-400">CONTROLS</h2>
+                  <div className="p-4">
+                    <ActionButtons 
+                      onEndPhase={handleEndPhase}
+                      currentPhase={gameState.phase}
+                      isPlayerTurn={isPlayerTurn}
+                      onViewDeck={handleViewDeck}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Right column - Player & Market */}
+              <div className="space-y-6 max-h-full">
+                {/* Player info */}
+                <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-1 shadow-xl border border-gray-700/50">
+                  <h2 className="text-lg font-semibold p-4 border-b border-gray-700/50 text-cyan-400">YOUR STATUS</h2>
+                  <div className="p-4">
+                    <Player 
+                      player={activePlayer} 
+                      isActive={isPlayerTurn}
+                      turnNumber={gameState.turnNumber}
+                      phase={gameState.phase}
+                    />
+                  </div>
+                </div>
+                
+                {/* Market */}
+                <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-1 shadow-xl border border-gray-700/50">
+                  <h2 className="text-lg font-semibold p-4 border-b border-gray-700/50 text-cyan-400">DATAMARKET</h2>
+                  <div className="p-4">
+                    <Market 
+                      market={gameState.market} 
+                      onCardClick={handleBuyCard}
+                      canBuyCards={canBuyCards}
+                      playerCoins={activePlayer.credits}
+                    />
+                  </div>
+                </div>
+                
+                {/* Resource Actions */}
+                <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-1 shadow-xl border border-gray-700/50">
+                  <h2 className="text-lg font-semibold p-4 border-b border-gray-700/50 text-cyan-400">BASIC ACTIONS</h2>
+                  <div className="p-4">
+                    <ResourceActions
+                      onDrawCard={drawCard}
+                      onGainCredit={gainCredit}
+                      isPlayerTurn={isPlayerTurn}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
             
-            {/* Resource Actions */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <ResourceActions
-                onDrawCard={drawCard}
-                onGainCredit={gainCredit}
-                isPlayerTurn={isPlayerTurn}
-              />
+            {/* Cards section - full width in desktop */}
+            <div className="hidden md:block p-4">
+              <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-1 shadow-xl border border-gray-700/50">
+                <h2 className="text-xl font-bold text-cyan-400 p-4 border-b border-gray-700/50">YOUR CARDS</h2>
+                <div className="grid grid-cols-2 gap-6 p-6">
+                  {/* Player hand */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-cyan-400">HAND</h3>
+                    <Hand 
+                      cards={activePlayer.hand} 
+                      onCardClick={handlePlayCard}
+                      canPlayCards={canPlayCards}
+                    />
+                  </div>
+                  
+                  {/* Player in-play cards */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-cyan-400">INSTALLED PROGRAMS</h3>
+                    <Hand 
+                      cards={activePlayer.inPlay} 
+                      onCardClick={() => {}}
+                      canPlayCards={false}
+                      title="In Play"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
             
-            {/* Action buttons */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <ActionButtons 
-                onEndPhase={handleEndPhase}
-                currentPhase={gameState.phase}
-                isPlayerTurn={isPlayerTurn}
-                onViewDeck={handleViewDeck}
-              />
-            </div>
-          </div>
-          
-          {/* Right column - Player & Hand */}
-          <div className="space-y-4 max-h-full overflow-y-auto">
-            {/* Player info */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <Player 
-                player={activePlayer} 
-                isActive={isPlayerTurn}
-                turnNumber={gameState.turnNumber}
-                phase={gameState.phase}
-              />
-            </div>
-            
-            {/* Player hand */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <h2 className="text-lg font-semibold mb-2 text-cyan-400">YOUR HAND</h2>
-              <Hand 
-                cards={activePlayer.hand} 
-                onCardClick={handlePlayCard}
-                canPlayCards={canPlayCards}
-              />
-            </div>
-            
-            {/* Player in-play cards */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <h2 className="text-lg font-semibold mb-2 text-cyan-400">ACTIVE PROGRAMS</h2>
-              <Hand 
-                cards={activePlayer.inPlay} 
-                onCardClick={() => {}}
-                canPlayCards={false}
-                title="In Play"
-              />
-            </div>
-          </div>
-        </div>
-        
-        {/* Mobile layout - Tabs */}
-        <div className="md:hidden px-2">
-          {/* Tab content */}
-          {renderTabContent()}
-          
-          {/* Resource Actions for mobile */}
-          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 mt-4">
-            <ResourceActions
-              onDrawCard={drawCard}
-              onGainCredit={gainCredit}
-              isPlayerTurn={isPlayerTurn}
-            />
-          </div>
-          
-          {/* Action buttons always visible on mobile */}
-          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 mt-4">
-            <ActionButtons 
-              onEndPhase={handleEndPhase}
-              currentPhase={gameState.phase}
-              isPlayerTurn={isPlayerTurn}
-              onViewDeck={handleViewDeck}
-            />
-          </div>
-          
-          {/* Mobile tab navigation - Fixed at bottom */}
-          <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-cyan-900 shadow-lg z-20">
-            <div className="flex justify-around">
-              <button
-                onClick={() => { setActiveTab('hand'); }}
-                className={`flex-1 py-4 px-2 text-center ${activeTab === 'hand' ? 'bg-cyan-900 text-white' : 'text-cyan-500'}`}
-              >
-                <div className="text-xl mb-1">👐</div>
-                <div className="text-xs">HAND</div>
-              </button>
-              <button
-                onClick={() => { setActiveTab('market'); }}
-                className={`flex-1 py-4 px-2 text-center ${activeTab === 'market' ? 'bg-cyan-900 text-white' : 'text-cyan-500'}`}
-              >
-                <div className="text-xl mb-1">🛒</div>
-                <div className="text-xs">MARKET</div>
-              </button>
-              <button
-                onClick={() => { setActiveTab('opponent'); }}
-                className={`flex-1 py-4 px-2 text-center ${activeTab === 'opponent' ? 'bg-cyan-900 text-white' : 'text-cyan-500'}`}
-              >
-                <div className="text-xl mb-1">👤</div>
-                <div className="text-xs">OPPONENT</div>
-              </button>
+            {/* Mobile layout - Tabs */}
+            <div className="md:hidden px-2">
+              {/* Tab content */}
+              {renderTabContent()}
+              
+              {/* Resource Actions for mobile */}
+              <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-1 shadow-xl border border-gray-700/50 mt-4">
+                <h2 className="text-lg font-semibold p-4 border-b border-gray-700/50 text-cyan-400">BASIC ACTIONS</h2>
+                <div className="p-4">
+                  <ResourceActions
+                    onDrawCard={drawCard}
+                    onGainCredit={gainCredit}
+                    isPlayerTurn={isPlayerTurn}
+                  />
+                </div>
+              </div>
+              
+              {/* Action buttons always visible on mobile */}
+              <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-1 shadow-xl border border-gray-700/50 mt-4">
+                <h2 className="text-lg font-semibold p-4 border-b border-gray-700/50 text-cyan-400">CONTROLS</h2>
+                <div className="p-4">
+                  <ActionButtons 
+                    onEndPhase={handleEndPhase}
+                    currentPhase={gameState.phase}
+                    isPlayerTurn={isPlayerTurn}
+                    onViewDeck={handleViewDeck}
+                  />
+                </div>
+              </div>
+              
+              {/* Mobile tab navigation - Fixed at bottom */}
+              <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-cyan-900 shadow-lg z-20">
+                <div className="flex justify-around">
+                  <button
+                    onClick={() => { setActiveTab('hand'); }}
+                    className={`flex-1 py-4 px-2 text-center ${activeTab === 'hand' ? 'bg-cyan-900 text-white' : 'text-cyan-500'}`}
+                  >
+                    <div className="text-xl mb-1">👐</div>
+                    <div className="text-xs">HAND</div>
+                  </button>
+                  <button
+                    onClick={() => { setActiveTab('market'); }}
+                    className={`flex-1 py-4 px-2 text-center ${activeTab === 'market' ? 'bg-cyan-900 text-white' : 'text-cyan-500'}`}
+                  >
+                    <div className="text-xl mb-1">🛒</div>
+                    <div className="text-xs">MARKET</div>
+                  </button>
+                  <button
+                    onClick={() => { setActiveTab('opponent'); }}
+                    className={`flex-1 py-4 px-2 text-center ${activeTab === 'opponent' ? 'bg-cyan-900 text-white' : 'text-cyan-500'}`}
+                  >
+                    <div className="text-xl mb-1">👤</div>
+                    <div className="text-xs">OPPONENT</div>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
