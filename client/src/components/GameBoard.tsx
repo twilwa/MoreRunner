@@ -9,6 +9,8 @@ import ActionButtons from './ActionButtons';
 import GameLog from './GameLog';
 import DeckViewer from './DeckViewer';
 import CardConfirmationModal from './CardConfirmationModal';
+import LocationCard from './LocationCard';
+import ResourceActions from './ResourceActions';
 import { Card as CardType } from '../lib/game/cards';
 
 // Define the target type used in card confirmation
@@ -19,7 +21,17 @@ interface CardTarget {
 }
 
 const GameBoard: React.FC = () => {
-  const { gameState, playCard, buyCard, endPhase, addLogMessage } = useDeckBuilder();
+  const { 
+    gameState, 
+    locationDeck,
+    playCard, 
+    buyCard, 
+    endPhase, 
+    addLogMessage,
+    drawLocation,
+    drawCard,
+    gainCredit
+  } = useDeckBuilder();
   const { phase } = useGame();
   const { toggleMute, isMuted } = useAudio();
   
@@ -250,7 +262,7 @@ const GameBoard: React.FC = () => {
   };
   
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-200 pb-20 md:pb-4 md:p-4">
+    <div className="min-h-screen bg-gray-900 text-gray-200 pb-24 md:pb-4 overflow-y-auto">
       {/* Sound toggle */}
       <button 
         onClick={toggleMute}
@@ -259,11 +271,23 @@ const GameBoard: React.FC = () => {
         {isMuted ? '🔇' : '🔊'}
       </button>
       
-      <div className="container mx-auto">
-        <header className="mb-6 p-4 text-center">
+      <div className="container mx-auto max-w-screen-xl">
+        <header className="sticky top-0 z-10 bg-gray-900 p-4 mb-6 text-center">
           <h1 className="text-3xl font-bold text-cyan-400 tracking-wide">NETRUNNER</h1>
           <div className="mt-2 text-sm text-cyan-600">TURN {gameState.turnNumber} • {gameState.phase.toUpperCase()} PHASE</div>
         </header>
+        
+        {/* Current Location - Full width on desktop and mobile */}
+        <div className="p-4">
+          <h2 className="text-xl font-bold text-cyan-400 mb-3">CURRENT LOCATION</h2>
+          <LocationCard 
+            location={locationDeck?.currentLocation || null}
+            onDrawNextLocation={drawLocation}
+            canDrawNextLocation={isPlayerTurn}
+            hasFoundObjective={locationDeck?.hasFoundObjective || false}
+            hasReachedExit={locationDeck?.hasReachedExit || false}
+          />
+        </div>
         
         {/* Desktop layout - 3 columns */}
         <div className="hidden md:grid md:grid-cols-3 gap-6 p-4">
@@ -296,6 +320,15 @@ const GameBoard: React.FC = () => {
                 onCardClick={handleBuyCard}
                 canBuyCards={canBuyCards}
                 playerCoins={activePlayer.credits}
+              />
+            </div>
+            
+            {/* Resource Actions */}
+            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+              <ResourceActions
+                onDrawCard={drawCard}
+                onGainCredit={gainCredit}
+                isPlayerTurn={isPlayerTurn}
               />
             </div>
             
@@ -349,6 +382,15 @@ const GameBoard: React.FC = () => {
         <div className="md:hidden px-2">
           {/* Tab content */}
           {renderTabContent()}
+          
+          {/* Resource Actions for mobile */}
+          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 mt-4">
+            <ResourceActions
+              onDrawCard={drawCard}
+              onGainCredit={gainCredit}
+              isPlayerTurn={isPlayerTurn}
+            />
+          </div>
           
           {/* Action buttons always visible on mobile */}
           <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 mt-4">
