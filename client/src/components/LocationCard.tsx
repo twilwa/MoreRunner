@@ -83,7 +83,7 @@ const LocationCard: React.FC<LocationCardProps> = ({
       <div 
         key={index} 
         className={`bg-gray-800 rounded p-2 mb-2 last:mb-0 cursor-pointer transition-all duration-200
-          ${isSelected ? 'border border-cyan-600 scale-105 shadow-lg' : 'hover:bg-gray-750'}`}
+          ${isSelected ? 'border border-cyan-600' : 'hover:bg-gray-750'}`}
         onClick={() => handleThreatClick(index)}
       >
         <div className="flex justify-between items-center">
@@ -100,14 +100,23 @@ const LocationCard: React.FC<LocationCardProps> = ({
         <p className="text-xs text-gray-400 mt-1">{threat.description}</p>
         
         {isSelected && (
-          <div className="mt-2 p-2 bg-gray-700/50 rounded text-xs grid grid-cols-2 gap-2">
-            <div className="flex flex-col">
-              <span className="text-cyan-400">Attack Value</span>
-              <span className="text-lg font-mono">{threat.dangerLevel}</span>
+          <div className="mt-2 p-2 bg-gray-700/50 rounded text-xs">
+            <div className="flex space-x-6 justify-around mb-2">
+              <div className="flex flex-col items-center">
+                <span className="text-cyan-400">Attack</span>
+                <span className="text-lg font-mono text-orange-400">{threat.dangerLevel}</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-cyan-400">Defense</span>
+                <span className="text-lg font-mono text-blue-400">{threat.defenseValue}</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-cyan-400">Risk</span>
+                <span className="text-lg font-mono text-red-400">{Math.ceil(threat.dangerLevel * 0.75)}</span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-cyan-400">Defense Value</span>
-              <span className="text-lg font-mono">{threat.defenseValue}</span>
+            <div className="text-xs border-t border-gray-600 pt-1 mt-1">
+              <span className="text-gray-300 italic">Tip: Higher attack values can be countered with defense-focused cards.</span>
             </div>
           </div>
         )}
