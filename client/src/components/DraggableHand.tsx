@@ -23,21 +23,26 @@ const DraggableHand: React.FC<DraggableHandProps> = ({
   // Calculate a scale factor for cards when there are many in the queue
   const getCardScale = (totalCards: number, index: number) => {
     // No scaling needed for small number of cards
-    if (totalCards <= 5) return 1;
+    if (totalCards <= 4) return 1;
     
-    // Scale slightly smaller as we add more cards, but keep minimum size reasonable
-    const baseScale = Math.max(0.9, 1 - (totalCards * 0.02));
-    return baseScale;
+    // Progressive scaling based on number of cards
+    // The more cards we have, the smaller they get
+    if (totalCards <= 6) return 0.95;
+    if (totalCards <= 8) return 0.9;
+    if (totalCards <= 10) return 0.85;
+    return 0.8; // Minimum size for 11+ cards
   };
   
   // Calculate card overlap for queue mode
   const getCardOffset = (totalCards: number, index: number) => {
     // No offset needed for small number of cards
-    if (totalCards <= 5) return 0;
+    if (totalCards <= 4) return 0;
     
-    // Increasing overlap for more cards, expressed as negative margin
-    // More cards = more overlap, but capped at reasonable amount
-    return `-${Math.min(30, (totalCards - 5) * 8)}px`;
+    // Progressive overlapping based on total cards
+    if (totalCards <= 6) return `-${20}px`;
+    if (totalCards <= 8) return `-${30}px`;
+    if (totalCards <= 10) return `-${40}px`;
+    return `-${50}px`; // Maximum overlap for 11+ cards
   };
   
   return (
@@ -59,7 +64,7 @@ const DraggableHand: React.FC<DraggableHandProps> = ({
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
-                      className={`transition-transform duration-200 hover:scale-105 relative ${isQueue ? 'first:ml-0' : ''}`}
+                      className={`transition-all duration-200 ${isQueue ? 'hover:z-50 hover:brightness-110 hover:shadow-lg hover:shadow-cyan-900/50' : 'hover:scale-105'} relative ${isQueue ? 'first:ml-0' : ''}`}
                       style={{ 
                         ...provided.draggableProps.style,
                         transform: `${provided.draggableProps.style?.transform} scale(${getCardScale(cards.length, index)})`,

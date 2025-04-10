@@ -175,15 +175,17 @@ const GameBoard: React.FC = () => {
             {/* Player queued cards (Active Programs) */}
             <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
               <h2 className="text-lg font-semibold mb-2 text-cyan-400">ACTIVE PROGRAMS</h2>
-              <div className="min-h-[140px] relative">
-                <DraggableHand 
-                  cards={activePlayer.inPlay} 
-                  onCardClick={handleReturnQueuedCard}
-                  onDragEnd={handleDragEnd}
-                  canPlayCards={gameState.phase === 'action' && isPlayerTurn}
-                  title="Drag to reorder • Click to return to hand"
-                  isQueue={true}
-                />
+              <div className="min-h-[140px] relative w-full overflow-hidden">
+                <div className="w-full pr-2">
+                  <DraggableHand 
+                    cards={activePlayer.inPlay} 
+                    onCardClick={handleReturnQueuedCard}
+                    onDragEnd={handleDragEnd}
+                    canPlayCards={gameState.phase === 'action' && isPlayerTurn}
+                    title="Drag to reorder • Click to return to hand"
+                    isQueue={true}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -238,15 +240,17 @@ const GameBoard: React.FC = () => {
             {/* Player queued cards (Active Programs) */}
             <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
               <h2 className="text-lg font-semibold mb-2 text-cyan-400">ACTIVE PROGRAMS</h2>
-              <div className="min-h-[140px] relative">
-                <DraggableHand 
-                  cards={activePlayer.inPlay} 
-                  onCardClick={handleReturnQueuedCard}
-                  onDragEnd={handleDragEnd}
-                  canPlayCards={gameState.phase === 'action' && isPlayerTurn}
-                  title="Drag to reorder • Click to return to hand"
-                  isQueue={true}
-                />
+              <div className="min-h-[140px] relative w-full overflow-hidden">
+                <div className="w-full pr-2">
+                  <DraggableHand 
+                    cards={activePlayer.inPlay} 
+                    onCardClick={handleReturnQueuedCard}
+                    onDragEnd={handleDragEnd}
+                    canPlayCards={gameState.phase === 'action' && isPlayerTurn}
+                    title="Drag to reorder • Click to return to hand"
+                    isQueue={true}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -308,15 +312,17 @@ const GameBoard: React.FC = () => {
               {/* Active Programs */}
               <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
                 <h2 className="text-lg font-semibold mb-2 text-cyan-400">ACTIVE PROGRAMS</h2>
-                <div className="min-h-[140px] relative">
-                  <DraggableHand 
-                    cards={activePlayer.inPlay} 
-                    onCardClick={handleReturnQueuedCard}
-                    onDragEnd={handleDragEnd}
-                    canPlayCards={gameState.phase === 'action' && isPlayerTurn}
-                    title="Drag to reorder • Click to return to hand"
-                    isQueue={true}
-                  />
+                <div className="min-h-[140px] relative w-full overflow-hidden">
+                  <div className="w-full pr-2">
+                    <DraggableHand 
+                      cards={activePlayer.inPlay} 
+                      onCardClick={handleReturnQueuedCard}
+                      onDragEnd={handleDragEnd}
+                      canPlayCards={gameState.phase === 'action' && isPlayerTurn}
+                      title="Drag to reorder • Click to return to hand"
+                      isQueue={true}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
