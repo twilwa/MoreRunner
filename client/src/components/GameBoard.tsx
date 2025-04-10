@@ -8,14 +8,28 @@ import Player from './Player';
 import ActionButtons from './ActionButtons';
 import GameLog from './GameLog';
 import DeckViewer from './DeckViewer';
+import CardConfirmationModal from './CardConfirmationModal';
+import { Card as CardType } from '../lib/game/cards';
+
+// Define the target type used in card confirmation
+interface CardTarget {
+  id: string;
+  name: string;
+  type: 'player' | 'card' | 'resource';
+}
 
 const GameBoard: React.FC = () => {
   const { gameState, playCard, buyCard, endPhase, addLogMessage } = useDeckBuilder();
   const { phase } = useGame();
-  const { toggleMute, isMuted, playCardPlay, playCardBuy, playButton } = useAudio();
+  const { toggleMute, isMuted } = useAudio();
   
   // State for the DeckViewer modal
   const [isDeckViewerOpen, setIsDeckViewerOpen] = useState(false);
+  
+  // State for the card confirmation modal
+  const [isCardConfirmOpen, setIsCardConfirmOpen] = useState(false);
+  const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null);
+  const [selectedCardTargets, setSelectedCardTargets] = useState<CardTarget[]>([]);
   
   // State for mobile layout
   const [activeTab, setActiveTab] = useState<'opponent' | 'market' | 'hand'>('hand');
@@ -30,16 +44,48 @@ const GameBoard: React.FC = () => {
   const otherPlayer = gameState.players[otherPlayerIndex];
   const isPlayerTurn = gameState.activePlayerIndex === 0;
   
-  // Handlers for game actions
-  const handlePlayCard = (cardIndex: number) => {
-    // Only play if player can perform actions
+  // Get the selected card (for confirmation modal)
+  const getSelectedCard = (): CardType | null => {
+    if (selectedCardIndex === null) return null;
+    return activePlayer.hand[selectedCardIndex] || null;
+  };
+  
+  // Prepare possible targets for card actions
+  const getPossibleTargets = (): CardTarget[] => {
+    const targets: CardTarget[] = [];
+    
+    // Add players as targets
+    targets.push({
+      id: `player-${activePlayer.id}`,
+      name: activePlayer.name,
+      type: 'player'
+    });
+    
+    targets.push({
+      id: `player-${otherPlayer.id}`,
+      name: otherPlayer.name,
+      type: 'player'
+    });
+    
+    // Add opponent's cards in play as targets
+    otherPlayer.inPlay.forEach((card, idx) => {
+      targets.push({
+        id: `card-opponent-${idx}`,
+        name: card.name,
+        type: 'card'
+      });
+    });
+    
+    // Return all possible targets
+    return targets;
+  };
+  
+  // Open confirmation modal for playing a card
+  const openCardConfirmation = (cardIndex: number) => {
+    // Only show confirmation for cards that can be played
     if (isPlayerTurn && gameState.phase === 'action' && activePlayer.actions > 0) {
-      playCard(cardIndex);
-      playCardPlay();
-      
-      // Add log message
-      const cardName = activePlayer.hand[cardIndex]?.name || 'Unknown card';
-      addLogMessage(`You played ${cardName}.`);
+      setSelectedCardIndex(cardIndex);
+      setIsCardConfirmOpen(true);
     } else {
       // Show why the card can't be played
       if (!isPlayerTurn) {
@@ -52,13 +98,40 @@ const GameBoard: React.FC = () => {
     }
   };
   
+  // Handle card play confirmation
+  const handleCardPlayConfirm = (targets: CardTarget[]) => {
+    if (selectedCardIndex !== null) {
+      // Play the card with the selected targets
+      playCard(selectedCardIndex);
+      
+      // Add log message with targeting information
+      const cardName = activePlayer.hand[selectedCardIndex]?.name || 'Unknown card';
+      if (targets.length > 0) {
+        const targetNames = targets.map(t => t.name).join(', ');
+        addLogMessage(`You played ${cardName} targeting ${targetNames}.`);
+      } else {
+        addLogMessage(`You played ${cardName}.`);
+      }
+      
+      // Reset the confirmation state
+      setIsCardConfirmOpen(false);
+      setSelectedCardIndex(null);
+      setSelectedCardTargets([]);
+    }
+  };
+  
+  // Handlers for game actions
+  const handlePlayCard = (cardIndex: number) => {
+    // Instead of immediately playing, open confirmation
+    openCardConfirmation(cardIndex);
+  };
+  
   const handleBuyCard = (cardIndex: number) => {
     // Only buy if player can perform buys
     if (isPlayerTurn && gameState.phase === 'buy' && activePlayer.buys > 0) {
       const card = gameState.market.availableCards[cardIndex];
       if (card && activePlayer.credits >= card.cost) {
         buyCard(cardIndex);
-        playCardBuy();
         
         // Add log message
         const cardName = card.name || 'Unknown card';
@@ -80,7 +153,6 @@ const GameBoard: React.FC = () => {
   
   const handleEndPhase = () => {
     endPhase();
-    playButton();
     
     // Add log message based on phase
     if (gameState.phase === 'action') {
@@ -94,7 +166,6 @@ const GameBoard: React.FC = () => {
   
   const handleViewDeck = () => {
     setIsDeckViewerOpen(true);
-    playButton();
   };
   
   // Determine if player can perform actions
@@ -293,21 +364,21 @@ const GameBoard: React.FC = () => {
           <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-cyan-900 shadow-lg z-20">
             <div className="flex justify-around">
               <button
-                onClick={() => { setActiveTab('hand'); playButton(); }}
+                onClick={() => { setActiveTab('hand'); }}
                 className={`flex-1 py-4 px-2 text-center ${activeTab === 'hand' ? 'bg-cyan-900 text-white' : 'text-cyan-500'}`}
               >
                 <div className="text-xl mb-1">👐</div>
                 <div className="text-xs">HAND</div>
               </button>
               <button
-                onClick={() => { setActiveTab('market'); playButton(); }}
+                onClick={() => { setActiveTab('market'); }}
                 className={`flex-1 py-4 px-2 text-center ${activeTab === 'market' ? 'bg-cyan-900 text-white' : 'text-cyan-500'}`}
               >
                 <div className="text-xl mb-1">🛒</div>
                 <div className="text-xs">MARKET</div>
               </button>
               <button
-                onClick={() => { setActiveTab('opponent'); playButton(); }}
+                onClick={() => { setActiveTab('opponent'); }}
                 className={`flex-1 py-4 px-2 text-center ${activeTab === 'opponent' ? 'bg-cyan-900 text-white' : 'text-cyan-500'}`}
               >
                 <div className="text-xl mb-1">👤</div>
@@ -324,6 +395,17 @@ const GameBoard: React.FC = () => {
         onClose={() => setIsDeckViewerOpen(false)}
         playerDeck={activePlayer.deck}
         playerDiscard={activePlayer.discard}
+      />
+      
+      {/* Card Confirmation Modal */}
+      <CardConfirmationModal 
+        isOpen={isCardConfirmOpen}
+        card={getSelectedCard()}
+        onClose={() => setIsCardConfirmOpen(false)}
+        onConfirm={handleCardPlayConfirm}
+        possibleTargets={getPossibleTargets()}
+        playerName={activePlayer.name}
+        opponentName={otherPlayer.name}
       />
     </div>
   );

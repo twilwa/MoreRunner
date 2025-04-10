@@ -7,6 +7,7 @@ interface AudioState {
   cardPlaySound: HTMLAudioElement | null;
   cardBuySound: HTMLAudioElement | null;
   errorSound: HTMLAudioElement | null;
+  buttonSound: HTMLAudioElement | null;
   isMuted: boolean;
   
   // Initialize audio
@@ -17,6 +18,7 @@ interface AudioState {
   playCardPlay: () => void;
   playCardBuy: () => void;
   playError: () => void;
+  playButton: () => void;
 }
 
 export const useAudio = create<AudioState>((set, get) => ({
@@ -24,6 +26,7 @@ export const useAudio = create<AudioState>((set, get) => ({
   cardPlaySound: null,
   cardBuySound: null,
   errorSound: null,
+  buttonSound: null,
   isMuted: true, // Start muted by default
   
   // Initialize all game audio
@@ -47,12 +50,17 @@ export const useAudio = create<AudioState>((set, get) => ({
     errorSound.src = "/sounds/error.mp3"; // Replace with actual file
     errorSound.volume = 0.5;
     
+    const buttonSound = new Audio();
+    buttonSound.src = "/sounds/button-click.mp3"; // Replace with actual file
+    buttonSound.volume = 0.4;
+    
     // Update the store with the audio elements
     set({
       backgroundMusic,
       cardPlaySound,
       cardBuySound,
-      errorSound
+      errorSound,
+      buttonSound
     });
     
     // Start background music (will be muted by default)
@@ -110,6 +118,17 @@ export const useAudio = create<AudioState>((set, get) => ({
       errorSound.currentTime = 0;
       errorSound.play().catch(error => {
         console.log("Error sound play prevented:", error);
+      });
+    }
+  },
+  
+  // Play button click sound
+  playButton: () => {
+    const { buttonSound, isMuted } = get();
+    if (buttonSound && !isMuted) {
+      buttonSound.currentTime = 0;
+      buttonSound.play().catch(error => {
+        console.log("Button sound play prevented:", error);
       });
     }
   }
