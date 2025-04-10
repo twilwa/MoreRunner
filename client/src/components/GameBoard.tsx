@@ -44,7 +44,7 @@ const GameBoard: React.FC = () => {
   const [selectedCardTargets, setSelectedCardTargets] = useState<CardTarget[]>([]);
   
   // State for mobile layout
-  const [activeTab, setActiveTab] = useState<'opponent' | 'market' | 'hand'>('hand');
+  const [activeTab, setActiveTab] = useState<'log' | 'market' | 'hand'>('hand');
   
   // Only show game if state is initialized and in playing phase
   if (!gameState || phase !== 'playing') {
@@ -187,23 +187,24 @@ const GameBoard: React.FC = () => {
   // Render the appropriate tab content for mobile layout
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'opponent':
+      case 'log':
         return (
           <div className="space-y-4">
-            {/* Opponent info */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <Player 
-                player={otherPlayer} 
-                isActive={!isPlayerTurn}
-                turnNumber={gameState.turnNumber}
-                phase={gameState.phase}
-              />
-            </div>
-            
             {/* Game logs */}
             <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 h-64 overflow-y-auto">
               <h2 className="text-lg font-semibold mb-2 text-cyan-400">SYSTEM LOG</h2>
               <GameLog logs={gameState.logs} />
+            </div>
+
+            {/* Player in-play cards */}
+            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+              <h2 className="text-lg font-semibold mb-2 text-cyan-400">ACTIVE PROGRAMS</h2>
+              <Hand 
+                cards={activePlayer.inPlay} 
+                onCardClick={() => {}}
+                canPlayCards={false}
+                title="In Play"
+              />
             </div>
           </div>
         );
@@ -302,18 +303,8 @@ const GameBoard: React.FC = () => {
           
           {/* Desktop layout - 3 columns */}
           <div className="hidden md:grid md:grid-cols-3 gap-6 p-4">
-            {/* Left column - Opponent & Logs */}
+            {/* Left column - Game Logs & Actions */}
             <div className="space-y-4">
-              {/* Opponent info */}
-              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <Player 
-                  player={otherPlayer} 
-                  isActive={!isPlayerTurn}
-                  turnNumber={gameState.turnNumber}
-                  phase={gameState.phase}
-                />
-              </div>
-              
               {/* Game logs */}
               <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 h-64 overflow-y-auto">
                 <h2 className="text-lg font-semibold mb-2 text-cyan-400">SYSTEM LOG</h2>
@@ -424,11 +415,11 @@ const GameBoard: React.FC = () => {
             <div className="text-xs">MARKET</div>
           </button>
           <button
-            onClick={() => { setActiveTab('opponent'); }}
-            className={`flex-1 py-4 px-2 text-center ${activeTab === 'opponent' ? 'bg-cyan-900 text-white' : 'text-cyan-500'}`}
+            onClick={() => { setActiveTab('log'); }}
+            className={`flex-1 py-4 px-2 text-center ${activeTab === 'log' ? 'bg-cyan-900 text-white' : 'text-cyan-500'}`}
           >
-            <div className="text-xl mb-1">👤</div>
-            <div className="text-xs">OPPONENT</div>
+            <div className="text-xl mb-1">📜</div>
+            <div className="text-xs">LOG</div>
           </button>
         </div>
       </div>
