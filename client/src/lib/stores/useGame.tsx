@@ -1,43 +1,63 @@
-import { create } from "zustand";
-import { subscribeWithSelector } from "zustand/middleware";
+import { create } from 'zustand';
+import { subscribeWithSelector } from 'zustand/middleware';
+import { useDeckBuilder } from './useDeckBuilder';
 
-export type GamePhase = "ready" | "playing" | "ended";
+// Game phase types
+type GamePhase = 'ready' | 'playing' | 'paused' | 'game_over' | null;
 
 interface GameState {
   phase: GamePhase;
   
-  // Actions
+  // Game state changes
   start: () => void;
-  restart: () => void;
+  pause: () => void;
+  resume: () => void;
   end: () => void;
+  restart: () => void;
+  
+  // Audio toggles
+  isMuted: boolean;
+  toggleMute: () => void;
 }
 
 export const useGame = create<GameState>()(
-  subscribeWithSelector((set) => ({
-    phase: "ready",
+  subscribeWithSelector((set, get) => ({
+    phase: 'ready',
+    isMuted: false,
     
     start: () => {
-      set((state) => {
-        // Only transition from ready to playing
-        if (state.phase === "ready") {
-          return { phase: "playing" };
-        }
-        return {};
-      });
+      // Reset the deck builder state
+      const resetDeckBuilder = useDeckBuilder.getState().resetGame;
+      resetDeckBuilder();
+      
+      // Initialize with the player name and AI opponent
+      const playerName = 'Player';
+      const initializeGame = useDeckBuilder.getState().initializeGame;
+      initializeGame([playerName, 'SENTINEL AI']);
+      
+      // Set game to playing phase
+      set({ phase: 'playing' });
     },
     
-    restart: () => {
-      set(() => ({ phase: "ready" }));
+    pause: () => {
+      set({ phase: 'paused' });
+    },
+    
+    resume: () => {
+      set({ phase: 'playing' });
     },
     
     end: () => {
-      set((state) => {
-        // Only transition from playing to ended
-        if (state.phase === "playing") {
-          return { phase: "ended" };
-        }
-        return {};
-      });
+      set({ phase: 'game_over' });
+    },
+    
+    restart: () => {
+      // Reset game to ready state for a new game
+      set({ phase: 'ready' });
+    },
+    
+    toggleMute: () => {
+      set(state => ({ isMuted: !state.isMuted }));
     }
   }))
 );
