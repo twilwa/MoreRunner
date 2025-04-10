@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useDeckBuilder } from '../lib/stores/useDeckBuilder';
 import { useGame } from '../lib/stores/useGame';
 import { useAudio } from '../lib/stores/useAudio';
+import { DropResult } from 'react-beautiful-dnd';
 import Hand from './Hand';
 import Market from './Market';
 import Player from './Player';
@@ -10,6 +11,7 @@ import GameLog from './GameLog';
 import DeckViewer from './DeckViewer';
 import LocationCard from './LocationCard';
 import ResourceActions from './ResourceActions';
+import DraggableHand from './DraggableHand';
 import { Card as CardType } from '../lib/game/cards';
 
 // Define the target type used in card confirmation
@@ -118,6 +120,26 @@ const GameBoard: React.FC = () => {
       returnQueuedCard(cardIndex);
     } else {
       addLogMessage('Cannot modify queue during opponent\'s turn or outside action phase.');
+    }
+  };
+  
+  // Handle drag-and-drop reordering of cards in the queue
+  const handleDragEnd = (result: DropResult) => {
+    // Drop outside of the droppable area
+    if (!result.destination) {
+      return;
+    }
+    
+    // No change in position
+    if (result.destination.index === result.source.index) {
+      return;
+    }
+    
+    // Reorder the cards in the queue
+    if (isPlayerTurn && gameState.phase === 'action') {
+      reorderQueuedCards(result.source.index, result.destination.index);
+    } else {
+      addLogMessage('Cannot reorder cards during opponent\'s turn or outside action phase.');
     }
   };
   
@@ -316,11 +338,12 @@ const GameBoard: React.FC = () => {
               {/* Active Programs */}
               <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
                 <h2 className="text-lg font-semibold mb-2 text-cyan-400">ACTIVE PROGRAMS</h2>
-                <Hand 
+                <DraggableHand 
                   cards={activePlayer.inPlay} 
-                  onCardClick={() => {}}
-                  canPlayCards={false}
-                  title="In Play"
+                  onCardClick={handleReturnQueuedCard}
+                  onDragEnd={handleDragEnd}
+                  canPlayCards={gameState.phase === 'action' && isPlayerTurn}
+                  title="Drag to reorder • Click to return to hand"
                 />
               </div>
             </div>
