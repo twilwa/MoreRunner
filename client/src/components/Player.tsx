@@ -9,140 +9,81 @@ interface PlayerProps {
 }
 
 const Player: React.FC<PlayerProps> = ({ player, isActive, turnNumber, phase }) => {
-  // Function to render faction reputation bars
-  const renderReputationBars = () => {
+  // Function to calculate total cards in player's possession
+  const totalCards = () => {
+    return player.deck.length + player.hand.length + player.discard.length + player.inPlay.length;
+  };
+
+  // Display faction reputation as icon and level
+  const renderFactionReputation = (faction: keyof PlayerType['factionReputation'], color: string) => {
+    const level = player.factionReputation[faction];
     return (
-      <div className="grid grid-cols-3 gap-2 text-xs mt-2">
-        {Object.entries(player.factionReputation).map(([faction, value]) => {
-          // Determine color based on faction
-          const colorClass = 
-            faction === 'Corp' ? 'from-blue-700 to-blue-500' :
-            faction === 'Runner' ? 'from-green-700 to-green-500' : 
-            'from-red-700 to-red-500'; // Street
-          
-          return (
-            <div key={faction} className="flex flex-col">
-              <div className="flex justify-between">
-                <span className="text-xs text-cyan-400">{faction}</span>
-                <span className="text-xs text-cyan-300">{value}</span>
-              </div>
-              <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
-                <div 
-                  className={`h-full bg-gradient-to-r ${colorClass}`} 
-                  style={{ width: `${value}%` }}
-                ></div>
-              </div>
-            </div>
-          );
-        })}
+      <div className="flex items-center space-x-1">
+        <div className={`w-2 h-2 rounded-full ${color}`}></div>
+        <span className="text-xs">{level}</span>
       </div>
     );
   };
-  
+
   return (
-    <div className={`p-4 rounded-lg mb-4 ${isActive 
-      ? 'bg-gray-800 border border-cyan-600 shadow-lg shadow-cyan-800/30' 
-      : 'bg-gray-900 border border-gray-700'}`}>
-      <div className="flex justify-between items-center">
-        <h2 className={`text-xl font-bold ${isActive ? 'text-cyan-400' : 'text-gray-400'}`}>
-          {player.name} 
-          {isActive && <span className="text-cyan-500 ml-2">[ACTIVE]</span>}
-        </h2>
-        
+    <div className={`rounded-lg ${isActive ? 'ring-2 ring-cyan-500 bg-gray-800/80' : 'bg-gray-800/40'}`}>
+      {/* Player header */}
+      <div className="flex justify-between items-center p-2 border-b border-gray-700">
         <div className="flex items-center space-x-2">
-          <div className="bg-red-900 border border-red-500 px-3 py-1 rounded-full text-red-400">
-            <span className="font-bold">{player.health}</span> HP
+          <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-cyan-500 animate-pulse' : 'bg-gray-600'}`}></div>
+          <h3 className="font-bold truncate max-w-[120px]" title={player.name}>
+            {player.name}
+          </h3>
+        </div>
+        <div className="text-xs text-gray-400">
+          {isActive ? `${phase} PHASE` : 'WAITING'}
+        </div>
+      </div>
+      
+      {/* Player stats */}
+      <div className="grid grid-cols-2 gap-2 p-2">
+        {/* Resources */}
+        <div className="space-y-2">
+          <div className="flex justify-between">
+            <span className="text-xs text-gray-400">CREDITS:</span>
+            <span className="text-sm font-mono text-cyan-400">₵{player.credits}</span>
           </div>
-          <div className="bg-yellow-900 border border-yellow-500 px-3 py-1 rounded-full text-yellow-400">
-            <span className="font-bold">{player.credits}</span> ¤
+          <div className="flex justify-between">
+            <span className="text-xs text-gray-400">ACTIONS:</span>
+            <span className="text-sm font-mono">{player.actions}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-xs text-gray-400">BUYS:</span>
+            <span className="text-sm font-mono">{player.buys}</span>
+          </div>
+        </div>
+        
+        {/* Cards & Health */}
+        <div className="space-y-2">
+          <div className="flex justify-between">
+            <span className="text-xs text-gray-400">HEALTH:</span>
+            <span className="text-sm font-mono text-red-400">{player.health}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-xs text-gray-400">DECK:</span>
+            <span className="text-sm font-mono">{player.deck.length}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-xs text-gray-400">DISCARD:</span>
+            <span className="text-sm font-mono">{player.discard.length}</span>
           </div>
         </div>
       </div>
       
-      {renderReputationBars()}
-      
-      {isActive && (
-        <div className="mt-3 grid grid-cols-4 gap-2 text-sm">
-          <div className="bg-green-900 border border-green-600 p-2 rounded text-center text-green-400">
-            <div className="font-semibold">Turn</div>
-            <div>{turnNumber}</div>
-          </div>
-          
-          <div className="bg-purple-900 border border-purple-600 p-2 rounded text-center text-purple-400">
-            <div className="font-semibold">Phase</div>
-            <div className="capitalize">{phase}</div>
-          </div>
-          
-          <div className="bg-blue-900 border border-blue-600 p-2 rounded text-center text-blue-400">
-            <div className="font-semibold">Actions</div>
-            <div>{player.actions}</div>
-          </div>
-          
-          <div className="bg-yellow-900 border border-yellow-600 p-2 rounded text-center text-yellow-400">
-            <div className="font-semibold">Buys</div>
-            <div>{player.buys}</div>
-          </div>
-        </div>
-      )}
-      
-      <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-        <div className="bg-gray-800 border border-gray-600 p-2 rounded text-center text-gray-300">
-          <div>Hand</div>
-          <div className="font-semibold">{player.hand.length} cards</div>
-        </div>
-        
-        <div className="bg-gray-800 border border-gray-600 p-2 rounded text-center text-gray-300">
-          <div>Deck</div>
-          <div className="font-semibold">{player.deck.length} cards</div>
-        </div>
-        
-        <div className="bg-gray-800 border border-gray-600 p-2 rounded text-center text-gray-300">
-          <div>Discard</div>
-          <div className="font-semibold">{player.discard.length} cards</div>
+      {/* Faction reputation */}
+      <div className="p-2 border-t border-gray-700">
+        <div className="text-xs text-gray-400 mb-1">FACTION STANDING:</div>
+        <div className="flex justify-between">
+          {renderFactionReputation('Corp', 'bg-blue-500')}
+          {renderFactionReputation('Runner', 'bg-green-500')}
+          {renderFactionReputation('Street', 'bg-red-500')}
         </div>
       </div>
-      
-      {/* Installed cards */}
-      {player.installedCards && player.installedCards.length > 0 && (
-        <div className="mt-3">
-          <div className="text-sm font-semibold text-blue-400">Installed:</div>
-          <div className="flex flex-wrap gap-1 mt-1">
-            {player.installedCards.map((card, index) => (
-              <div key={index} className="bg-blue-900 text-xs px-2 py-1 rounded border border-blue-500 text-blue-300">
-                {card.name}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {/* Face down cards */}
-      {player.faceDownCards && player.faceDownCards.length > 0 && (
-        <div className="mt-3">
-          <div className="text-sm font-semibold text-red-400">Face Down:</div>
-          <div className="flex flex-wrap gap-1 mt-1">
-            {player.faceDownCards.map((_, index) => (
-              <div key={index} className="bg-red-900 text-xs px-2 py-1 rounded border border-red-500 text-red-300">
-                [HIDDEN]
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {/* In play cards */}
-      {player.inPlay.length > 0 && (
-        <div className="mt-3">
-          <div className="text-sm font-semibold text-cyan-400">In Play:</div>
-          <div className="flex flex-wrap gap-1 mt-1">
-            {player.inPlay.map((card, index) => (
-              <div key={index} className="bg-cyan-900 text-xs px-2 py-1 rounded border border-cyan-500 text-cyan-300">
-                {card.name}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

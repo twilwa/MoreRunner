@@ -6,33 +6,52 @@ interface ActionButtonsProps {
   isPlayerTurn: boolean;
 }
 
-const ActionButtons: React.FC<ActionButtonsProps> = ({ onEndPhase, currentPhase, isPlayerTurn }) => {
+const ActionButtons: React.FC<ActionButtonsProps> = ({ 
+  onEndPhase, 
+  currentPhase, 
+  isPlayerTurn 
+}) => {
+  // Only show action buttons during player's turn
   if (!isPlayerTurn) {
-    return null;
+    return (
+      <div className="text-center py-2">
+        <p className="text-yellow-400 font-mono text-sm">WAITING FOR OPPONENT...</p>
+      </div>
+    );
   }
+
+  // Set button text based on current phase
+  let buttonText = '';
+  let actionDescription = '';
   
-  let buttonText = 'EXECUTE_PHASE_END';
-  let buttonBg = 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500';
-  let buttonBorder = 'border-cyan-400';
-  
-  if (currentPhase === 'action') {
-    buttonText = '>> EXECUTE_ACTION_END';
-  } else if (currentPhase === 'buy') {
-    buttonText = '>> EXECUTE_PURCHASE_END';
-    buttonBg = 'bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500';
-    buttonBorder = 'border-yellow-400';
-  } else if (currentPhase === 'game_over') {
-    buttonText = 'CONNECTION_TERMINATED';
-    buttonBg = 'bg-gradient-to-r from-red-800 to-red-600 cursor-not-allowed';
-    buttonBorder = 'border-red-400';
+  switch (currentPhase) {
+    case 'action':
+      buttonText = 'END ACTION PHASE';
+      actionDescription = 'Play programs from your hand to gain advantages.';
+      break;
+    case 'buy':
+      buttonText = 'END BUY PHASE';
+      actionDescription = 'Purchase new programs from the market to improve your deck.';
+      break;
+    case 'cleanup':
+      buttonText = 'END TURN';
+      actionDescription = 'End your turn and draw a new hand.';
+      break;
+    default:
+      buttonText = 'WAIT...';
+      actionDescription = 'Processing...';
   }
-  
+
   return (
-    <div className="mt-6 flex justify-center">
+    <div className="flex flex-col items-center space-y-4">
+      <p className="text-sm text-cyan-300 text-center">{actionDescription}</p>
+      
       <button
-        onClick={currentPhase !== 'game_over' ? onEndPhase : undefined}
-        disabled={currentPhase === 'game_over'}
-        className={`px-6 py-3 rounded-md text-white font-mono tracking-wide ${buttonBg} transform transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-cyan-700/50 border-2 ${buttonBorder}`}
+        onClick={onEndPhase}
+        className="px-6 py-3 w-full rounded-md text-white font-mono
+          bg-gradient-to-r from-cyan-800 to-blue-900 hover:from-cyan-700 hover:to-blue-800
+          transform transition-all duration-200
+          shadow-md border border-cyan-700"
       >
         {buttonText}
       </button>
