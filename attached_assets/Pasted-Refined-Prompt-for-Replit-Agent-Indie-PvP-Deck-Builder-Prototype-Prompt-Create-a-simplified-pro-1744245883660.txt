@@ -1,0 +1,61 @@
+Refined Prompt for Replit Agent — Indie PvP Deck-Builder Prototype
+Prompt:
+
+
+Create a simplified prototype of an indie PvP deck-building game engine, demonstrating ONE or MORE of these innovative mechanics:
+
+
+
+In-game deck construction inspired by Dominion, where players start with a small, identical deck and acquire cards from a shared market during play boardgamegeek.com.
+
+Alternating or action-point turn structure that keeps PvP turns fast and interactive — e.g., players spend limited actions or alternate single moves to reduce downtime.
+
+Synergy-based card effects (keywords, combos, or factions) that encourage engine-building during the match.
+
+Direct PvP interaction such as attack cards, denial effects, or contesting a shared objective/resource rather than pure solitaire deck growth.
+
+Deck culling ("trashing") mechanics to refine decks mid-game.
+
+
+Core requirements:
+
+
+
+Initialize each player with a starting deck of basic cards.
+
+
+Have a shared or dynamic market of cards players can buy on their turn to add to their deck.
+
+
+Simulate a few sample turns where:
+
+Players draw hands, play or buy cards.
+The market updates.
+Decks evolve.
+
+Include at least one form of player interaction — e.g., an attack card that forces the opponent to discard, or acquiring a card that denies it to the other player.
+
+
+Show how a synergy or combo mechanic works (e.g., cards tagged with a 'Fire' keyword give bonuses if combined).
+
+
+Keep the design modular and simple, focusing on the turn flow, market, deck evolution, and PvP interaction, rather than complex UI.
+
+
+
+Optional:
+
+
+
+Add procedural/randomized market refresh.
+
+Log player choices and deck states after each turn.
+
+
+Goal: A minimal PvP deck-building engine prototype that highlights engaging features like shared markets, engine-building synergies, alternating actions, and direct player disruption, inspired by modern deck-building games.
+
+
+Feel free to use Python or JavaScript.
+
+Keep code readable and modular so it can be extended later.
+
