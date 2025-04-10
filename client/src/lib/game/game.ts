@@ -183,11 +183,11 @@ export function buyCardFromMarket(gameState: GameState, cardIndex: number): Game
   
   const cardToBuy = updatedGameState.market.availableCards[cardIndex];
   
-  // Check if player has enough coins
-  if (activePlayer.coins < cardToBuy.cost) {
+  // Check if player has enough credits
+  if (activePlayer.credits < cardToBuy.cost) {
     return addLog(
       updatedGameState, 
-      `Cannot buy ${cardToBuy.name}: Not enough coins (cost: ${cardToBuy.cost}, available: ${activePlayer.coins}).`
+      `Cannot buy ${cardToBuy.name}: Not enough credits (cost: ${cardToBuy.cost}, available: ${activePlayer.credits}).`
     );
   }
   
@@ -205,7 +205,7 @@ export function buyCardFromMarket(gameState: GameState, cardIndex: number): Game
   // Add log
   updatedGameState = addLog(
     updatedGameState, 
-    `${activePlayer.name} bought ${cardToBuy.name} for ${cardToBuy.cost} coins.`
+    `${activePlayer.name} bought ${cardToBuy.name} for ${cardToBuy.cost} credits.`
   );
   
   return updatedGameState;
@@ -261,6 +261,6 @@ export function getGameStatus(gameState: GameState): string {
   const activePlayer = gameState.players[gameState.activePlayerIndex];
   
   return `Turn ${gameState.turnNumber} | ${activePlayer.name}'s turn | Phase: ${gameState.phase} | 
-  Actions: ${activePlayer.actions} | Buys: ${activePlayer.buys} | Coins: ${activePlayer.coins} | 
+  Actions: ${activePlayer.actions} | Buys: ${activePlayer.buys} | Credits: ${activePlayer.credits} | 
   Health: ${activePlayer.health} | Hand: ${activePlayer.hand.length} cards | Deck: ${activePlayer.deck.length} cards`;
 }

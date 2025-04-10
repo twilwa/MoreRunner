@@ -129,6 +129,7 @@ export function playCard(player: Player, cardIndex: number): { player: Player, p
     for (const effect of card.effects) {
       switch (effect.type) {
         case 'gain_credits':
+        case 'gain_resources': // Legacy support
           updatedPlayer.credits += effect.value;
           break;
         case 'gain_action':
@@ -139,6 +140,23 @@ export function playCard(player: Player, cardIndex: number): { player: Player, p
           updatedPlayer.deck = playerAfterDraw.deck;
           updatedPlayer.hand = playerAfterDraw.hand;
           updatedPlayer.discard = playerAfterDraw.discard;
+          break;
+        case 'push_luck':
+          // Push your luck mechanic - chance of damage for extra cards
+          for (let i = 0; i < effect.value; i++) {
+            const { player: playerAfterLuckyDraw } = drawCards(updatedPlayer, 1);
+            updatedPlayer = playerAfterLuckyDraw;
+            
+            // 20% chance of taking damage per card
+            if (Math.random() < 0.2) {
+              updatedPlayer.health -= 1;
+            }
+          }
+          break;
+        case 'set_trap':
+          // Card will be played face down and only revealed later
+          const targetCard = card;
+          targetCard.isFaceDown = true;
           break;
         // Other effects are handled by the game engine
       }
@@ -186,9 +204,10 @@ export function endTurn(player: Player): Player {
   const updatedPlayer = { ...player };
   updatedPlayer.discard = [...updatedPlayer.discard, ...updatedPlayer.inPlay];
   updatedPlayer.inPlay = [];
-  updatedPlayer.coins = 0;
+  updatedPlayer.credits = 0;
   updatedPlayer.actions = 0;
   updatedPlayer.buys = 0;
+  // Note: Installed cards and face-down cards remain in play between turns
   return updatedPlayer;
 }
 

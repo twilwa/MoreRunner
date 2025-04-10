@@ -64,8 +64,8 @@ const GameBoard: React.FC = () => {
   const canBuyCards = phase === 'buy' && activePlayer.buys > 0;
   
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
-      <h1 className="text-3xl font-bold mb-6 text-center">Deck Builder Prototype</h1>
+    <div className="max-w-6xl mx-auto px-4 py-6 bg-gray-900 text-cyan-300 min-h-screen">
+      <h1 className="text-3xl font-bold mb-6 text-center text-cyan-400">NETRUNNER: Cyberpunk Deck Builder</h1>
       
       {/* Other players */}
       <div className="mb-6">
@@ -85,7 +85,7 @@ const GameBoard: React.FC = () => {
         market={market} 
         onCardClick={handleBuyCard} 
         canBuyCards={canBuyCards} 
-        playerCoins={activePlayer.coins}
+        playerCoins={activePlayer.credits}
       />
       
       {/* Game Log */}

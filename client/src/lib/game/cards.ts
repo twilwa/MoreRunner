@@ -33,7 +33,8 @@ export type CardType =
 // Card Effect Types
 export type CardEffect = {
   type: 'gain_credits' | 'damage_opponent' | 'draw_cards' | 'trash_cards' | 'gain_action' | 'force_discard' | 
-        'copy_card' | 'fuse_cards' | 'set_trap' | 'trace' | 'reveal_trap' | 'push_luck' | 'stealth_bypass';
+        'copy_card' | 'fuse_cards' | 'set_trap' | 'trace' | 'reveal_trap' | 'push_luck' | 'stealth_bypass' |
+        'gain_resources'; // Kept for backward compatibility
   value: number;
   // Bonus effects if certain conditions are met
   synergy?: {
