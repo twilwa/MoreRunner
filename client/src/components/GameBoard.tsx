@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDeckBuilder } from '../lib/stores/useDeckBuilder';
 import { useGame } from '../lib/stores/useGame';
 import { useAudio } from '../lib/stores/useAudio';
@@ -14,6 +14,8 @@ import ResourceActions from './ResourceActions';
 import DraggableHand from './DraggableHand';
 import ExecuteButton from './ExecuteButton';
 import { Card as CardType } from '../lib/game/cards';
+import { LocationThreat } from '../lib/game/location';
+import { EntityStatus } from '../lib/stores/useDeckBuilder';
 
 
 
@@ -21,6 +23,7 @@ const GameBoard: React.FC = () => {
   const { 
     gameState, 
     locationDeck,
+    entityStatuses,
     playCard, 
     buyCard, 
     endPhase, 
@@ -31,7 +34,10 @@ const GameBoard: React.FC = () => {
     queueCard,
     returnQueuedCard,
     reorderQueuedCards,
-    executeQueuedCards
+    executeQueuedCards,
+    updateEntityActionPotential,
+    addEntityPlayedCard,
+    clearEntityPlayedCards
   } = useDeckBuilder();
   const { phase } = useGame();
   const { toggleMute, isMuted } = useAudio();
@@ -41,6 +47,23 @@ const GameBoard: React.FC = () => {
   
   // State for mobile layout
   const [activeTab, setActiveTab] = useState<'log' | 'market' | 'hand'>('hand');
+  
+  // Effect to initialize entity statuses when a new location is loaded
+  useEffect(() => {
+    if (locationDeck?.currentLocation) {
+      const { threats } = locationDeck.currentLocation;
+      
+      // Initialize entity statuses for all threats in current location
+      threats.forEach(threat => {
+        // Determine number of action potentials based on threat danger level
+        const numPotentials = Math.max(1, Math.min(4, Math.ceil(threat.dangerLevel * 0.8)));
+        const initialPotentials = Array(numPotentials).fill(false);
+        
+        // Update entity status for this threat
+        updateEntityActionPotential(threat.id, initialPotentials);
+      });
+    }
+  }, [locationDeck?.currentLocation?.id]); // Only run when the location ID changes
   
   // Only show game if state is initialized and in playing phase
   if (!gameState || phase !== 'playing') {
@@ -252,6 +275,7 @@ const GameBoard: React.FC = () => {
               canDrawNextLocation={isPlayerTurn}
               hasFoundObjective={locationDeck?.hasFoundObjective || false}
               hasReachedExit={locationDeck?.hasReachedExit || false}
+              entityStatuses={entityStatuses}
             />
           </div>
           
