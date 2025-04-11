@@ -56,27 +56,25 @@ const GameBoard: React.FC = () => {
   
   // Handlers for game actions
   const handleQueueCard = (cardIndex: number) => {
-    // Queue a card for the action phase
-    if (isPlayerTurn && gameState.phase === 'action' && activePlayer.actions > 0) {
+    // Queue a card anytime during player's turn
+    if (isPlayerTurn && activePlayer.actions > 0) {
       queueCard(cardIndex);
     } else {
       // Show why the card can't be queued
       if (!isPlayerTurn) {
         addLogMessage('Cannot queue cards during opponent\'s turn.');
-      } else if (gameState.phase !== 'action') {
-        addLogMessage(`Cannot queue cards during ${gameState.phase} phase.`);
       } else if (activePlayer.actions <= 0) {
-        addLogMessage('No actions remaining. End the action phase.');
+        addLogMessage('No actions remaining for this turn.');
       }
     }
   };
   
   // Handle clicking a card in the queue to return it to hand
   const handleReturnQueuedCard = (cardIndex: number) => {
-    if (isPlayerTurn && gameState.phase === 'action') {
+    if (isPlayerTurn) {
       returnQueuedCard(cardIndex);
     } else {
-      addLogMessage('Cannot modify queue during opponent\'s turn or outside action phase.');
+      addLogMessage('Cannot modify queue during opponent\'s turn.');
     }
   };
   
@@ -93,16 +91,16 @@ const GameBoard: React.FC = () => {
     }
     
     // Reorder the cards in the queue
-    if (isPlayerTurn && gameState.phase === 'action') {
+    if (isPlayerTurn) {
       reorderQueuedCards(result.source.index, result.destination.index);
     } else {
-      addLogMessage('Cannot reorder cards during opponent\'s turn or outside action phase.');
+      addLogMessage('Cannot reorder cards during opponent\'s turn.');
     }
   };
   
   // Execute all queued cards in order (without ending the action phase)
   const handleExecuteQueuedCards = () => {
-    if (isPlayerTurn && gameState.phase === 'action') {
+    if (isPlayerTurn) {
       if (activePlayer.inPlay.length > 0) {
         executeQueuedCards();
         addLogMessage('Executed all queued cards. You can continue to play more cards.');
@@ -113,8 +111,8 @@ const GameBoard: React.FC = () => {
   };
   
   const handleBuyCard = (cardIndex: number) => {
-    // Only buy if player can perform buys
-    if (isPlayerTurn && gameState.phase === 'buy' && activePlayer.buys > 0) {
+    // Allow buying cards during player's turn, regardless of phase
+    if (isPlayerTurn && activePlayer.buys > 0) {
       const card = gameState.market.availableCards[cardIndex];
       if (card && activePlayer.credits >= card.cost) {
         buyCard(cardIndex);
@@ -129,10 +127,8 @@ const GameBoard: React.FC = () => {
       // Show why the card can't be bought
       if (!isPlayerTurn) {
         addLogMessage('Cannot buy cards during opponent\'s turn.');
-      } else if (gameState.phase !== 'buy') {
-        addLogMessage(`Cannot buy cards during ${gameState.phase} phase.`);
       } else if (activePlayer.buys <= 0) {
-        addLogMessage('No buys remaining. End the buy phase.');
+        addLogMessage('No buys remaining for this turn.');
       }
     }
   };
@@ -160,9 +156,9 @@ const GameBoard: React.FC = () => {
     setIsDeckViewerOpen(true);
   };
   
-  // Determine if player can perform actions
-  const canPlayCards = isPlayerTurn && gameState.phase === 'action' && activePlayer.actions > 0;
-  const canBuyCards = isPlayerTurn && gameState.phase === 'buy' && activePlayer.buys > 0;
+  // Determine if player can perform actions (removed phase restrictions)
+  const canPlayCards = isPlayerTurn && activePlayer.actions > 0;
+  const canBuyCards = isPlayerTurn && activePlayer.buys > 0;
   
   // Render the appropriate tab content for mobile layout
   const renderTabContent = () => {
