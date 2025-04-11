@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { Card as CardType } from '../lib/game/cards';
 import Card from './Card';
@@ -51,9 +51,6 @@ const DraggableHand: React.FC<DraggableHandProps> = ({
   
   // Calculate a scale factor for cards when there are many in the queue
   const getCardScale = (totalCards: number, index: number) => {
-    // No scaling during drag operations for better UX
-    if (isDragging) return 1;
-    
     // No scaling needed for small number of cards
     if (totalCards <= 7) return 1;
     
@@ -67,9 +64,6 @@ const DraggableHand: React.FC<DraggableHandProps> = ({
   
   // Calculate card overlap for queue mode
   const getCardOffset = (totalCards: number, index: number) => {
-    // No overlapping during drag operations
-    if (isDragging) return 0;
-    
     // No offset needed for small number of cards (easier to drag)
     if (totalCards <= 7) return 0;
     
@@ -80,15 +74,89 @@ const DraggableHand: React.FC<DraggableHandProps> = ({
     return `-${45}px`; // Maximum overlap for 14+ cards
   };
   
-  // Function to determine if a gap should be shown before this card
-  const shouldShowGapBefore = (index: number) => {
-    if (!isDragging || draggedItemIndex === null || dropTargetIndex === null) return false;
-    return index === dropTargetIndex && index !== draggedItemIndex;
-  };
-  
-  // Function to determine if this card should be hidden (the one being dragged)
-  const isHidden = (index: number) => {
-    return isDragging && draggedItemIndex === index;
+  // Function to render the card list with proper dropTarget gap
+  const renderCardList = () => {
+    // Create a copy of cards array that we'll modify
+    const displayCards = [...cards];
+    
+    // Map through cards and render them
+    return displayCards.map((card, index) => {
+      // Special case - this is the card being dragged
+      const isCurrentlyDragged = isDragging && draggedItemIndex === index;
+      
+      // Special case - this is the position where we'll insert the dragged card
+      const isDropTarget = isDragging && dropTargetIndex === index && draggedItemIndex !== index;
+      
+      // For the drop target position, render a gap indicator
+      if (isDropTarget) {
+        return (
+          <div 
+            key={`gap-${index}`}
+            className="w-4 h-full min-h-[140px] flex-shrink-0 bg-cyan-500/20 rounded border-l-2 border-r-2 border-cyan-500 animate-pulse z-10 my-1"
+            aria-hidden="true"
+          />
+        );
+      }
+      
+      // Skip the card being dragged entirely from the DOM
+      if (isCurrentlyDragged) {
+        return null;
+      }
+      
+      // Standard card rendering
+      return (
+        <Draggable 
+          key={`${card.id}-${index}`} 
+          draggableId={`${card.id}-${index}`} 
+          index={index}
+          isDragDisabled={!canPlayCards}
+        >
+          {(provided, snapshot) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.draggableProps}
+              {...provided.dragHandleProps}
+              className={`
+                transition-all duration-150 
+                ${snapshot.isDragging ? 'z-50 brightness-125 shadow-lg shadow-cyan-500/50' : 
+                  isQueue ? 'hover:z-50 hover:brightness-110 hover:shadow-lg hover:shadow-cyan-900/50' : 'hover:scale-105'} 
+                relative
+                ${isQueue ? 'first:ml-0' : ''}
+              `}
+              style={{ 
+                ...provided.draggableProps.style,
+                transform: snapshot.isDragging 
+                  ? `${provided.draggableProps.style?.transform} scale(1.05)` 
+                  : `${provided.draggableProps.style?.transform} scale(${getCardScale(cards.length, index)})`,
+                marginLeft: isQueue && index > 0 && !isDragging ? getCardOffset(cards.length, index) : undefined,
+                zIndex: snapshot.isDragging ? 100 : isQueue ? cards.length - index : undefined,
+                transition: 'transform 0.15s ease-out, margin 0.15s ease, box-shadow 0.15s ease',
+              }}
+            >
+              {/* Execution order indicator for queue */}
+              {isQueue && (
+                <div className={`
+                  absolute -top-2 -left-2 bg-cyan-500 text-white 
+                  rounded-full w-6 h-6 flex items-center justify-center 
+                  text-xs font-bold z-10 border-2 border-gray-800 
+                  ${snapshot.isDragging ? 'animate-pulse' : ''}
+                `}>
+                  {/* Calculate correct execution number - account for drag repositioning */}
+                  {isDragging && draggedItemIndex !== null && index >= draggedItemIndex 
+                    ? index
+                    : index + 1}
+                </div>
+              )}
+              <Card 
+                card={card}
+                onClick={() => onCardClick(index)}
+                disabled={!canPlayCards || isDragging}
+              />
+            </div>
+          )}
+        </Draggable>
+      );
+    });
   };
 
   return (
@@ -102,7 +170,7 @@ const DraggableHand: React.FC<DraggableHandProps> = ({
       >
         <Droppable 
           droppableId="cards" 
-          direction="horizontal" 
+          direction="horizontal"
           renderClone={(provided, snapshot, rubric) => (
             <div
               {...provided.draggableProps}
@@ -121,7 +189,9 @@ const DraggableHand: React.FC<DraggableHandProps> = ({
               {/* Execution order indicator */}
               {isQueue && (
                 <div className="absolute -top-2 -left-2 bg-cyan-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold z-10 border-2 border-gray-800 animate-pulse">
-                  {rubric.source.index + 1}
+                  {dropTargetIndex !== null 
+                    ? dropTargetIndex + 1 // Show where it will go
+                    : rubric.source.index + 1} {/* Default to original position */}
                 </div>
               )}
               
@@ -136,8 +206,8 @@ const DraggableHand: React.FC<DraggableHandProps> = ({
           {(provided, snapshot) => (
             <div 
               className={`flex flex-row ${isQueue ? 'overflow-x-auto py-2 w-full flex-nowrap' : 'flex-wrap'} 
-                        ${isDragging ? 'gap-1' : 'gap-2'} 
-                        ${isQueue ? 'min-h-[110px]' : 'min-h-[120px]'}
+                        ${isDragging ? 'gap-2' : 'gap-2'} 
+                        ${isQueue ? 'min-h-[140px]' : 'min-h-[140px]'}
                         ${snapshot.isDraggingOver ? 'bg-gray-800/20 rounded-lg' : ''}`}
               {...provided.droppableProps}
               ref={(el) => {
@@ -149,64 +219,8 @@ const DraggableHand: React.FC<DraggableHandProps> = ({
                 }
               }}
             >
-              {cards.map((card, index) => (
-                <React.Fragment key={`fragment-${card.id}-${index}`}>
-                  {shouldShowGapBefore(index) && (
-                    <div 
-                      className="w-4 h-full flex-shrink-0 bg-cyan-500/20 rounded border-l-2 border-r-2 border-cyan-500 animate-pulse"
-                      aria-hidden="true"
-                    />
-                  )}
-                  <Draggable 
-                    key={`${card.id}-${index}`} 
-                    draggableId={`${card.id}-${index}`} 
-                    index={index}
-                    isDragDisabled={!canPlayCards}
-                  >
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className={`
-                          transition-all duration-150 
-                          ${snapshot.isDragging ? 'z-50 brightness-125 shadow-lg shadow-cyan-500/50' : 
-                            isQueue ? 'hover:z-50 hover:brightness-110 hover:shadow-lg hover:shadow-cyan-900/50' : 'hover:scale-105'} 
-                          relative 
-                          ${isQueue ? 'first:ml-0' : ''}
-                          ${isHidden(index) ? 'opacity-20 pointer-events-none' : ''}
-                        `}
-                        style={{ 
-                          ...provided.draggableProps.style,
-                          transform: snapshot.isDragging 
-                            ? `${provided.draggableProps.style?.transform} scale(1.05)` 
-                            : `${provided.draggableProps.style?.transform} scale(${getCardScale(cards.length, index)})`,
-                          marginLeft: isQueue && index > 0 ? getCardOffset(cards.length, index) : undefined,
-                          zIndex: snapshot.isDragging ? 100 : isQueue ? cards.length - index : undefined,
-                          transition: 'transform 0.15s ease-out, margin 0.15s ease-out, opacity 0.15s ease',
-                        }}
-                      >
-                        {/* Execution order indicator for queue */}
-                        {isQueue && !isHidden(index) && (
-                          <div className={`
-                            absolute -top-2 -left-2 bg-cyan-500 text-white 
-                            rounded-full w-6 h-6 flex items-center justify-center 
-                            text-xs font-bold z-10 border-2 border-gray-800 
-                            ${snapshot.isDragging ? 'animate-pulse' : ''}
-                          `}>
-                            {index + 1}
-                          </div>
-                        )}
-                        <Card 
-                          card={card}
-                          onClick={() => onCardClick(index)}
-                          disabled={!canPlayCards || isDragging}
-                        />
-                      </div>
-                    )}
-                  </Draggable>
-                </React.Fragment>
-              ))}
+              {renderCardList()}
+              {/* The placeholder is critical for the library to work correctly */}
               {provided.placeholder}
             </div>
           )}
