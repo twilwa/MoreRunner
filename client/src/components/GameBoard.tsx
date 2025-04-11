@@ -100,11 +100,14 @@ const GameBoard: React.FC = () => {
     }
   };
   
-  // Execute all queued cards in order when ending the action phase
+  // Execute all queued cards in order (without ending the action phase)
   const handleExecuteQueuedCards = () => {
     if (isPlayerTurn && gameState.phase === 'action') {
       if (activePlayer.inPlay.length > 0) {
         executeQueuedCards();
+        addLogMessage('Executed all queued cards. You can continue to play more cards.');
+      } else {
+        addLogMessage('No cards in queue to execute.');
       }
     }
   };

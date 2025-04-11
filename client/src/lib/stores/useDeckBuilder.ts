@@ -304,7 +304,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       }
     },
     
-    // Execute all queued cards in order
+    // Execute all queued cards in order (but leave the action phase active)
     executeQueuedCards: () => {
       const { gameState } = get();
       if (!gameState) return;
@@ -325,10 +325,9 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       let updatedGameState = gameState;
       const queuedCards = [...activePlayer.inPlay];
       
-      // Clear the inPlay area before processing
-      activePlayer.inPlay = [];
-      
-      // Process each card
+      // Process each card but do not clear the queue yet
+      // Players can see what cards executed, then we'll clear them manually
+      // This provides visual feedback of what cards were executed
       queuedCards.forEach((card, index) => {
         // Log execution of the card
         updatedGameState = addLog(
@@ -403,7 +402,10 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         activePlayer.discard.push(card);
       });
       
-      // Consume an action point
+      // Clear the queue after all cards are processed
+      activePlayer.inPlay = [];
+      
+      // Consume an action point but leave the action phase active
       activePlayer.actions--;
       
       set({ gameState: updatedGameState });

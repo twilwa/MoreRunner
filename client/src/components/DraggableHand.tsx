@@ -23,26 +23,26 @@ const DraggableHand: React.FC<DraggableHandProps> = ({
   // Calculate a scale factor for cards when there are many in the queue
   const getCardScale = (totalCards: number, index: number) => {
     // No scaling needed for small number of cards
-    if (totalCards <= 4) return 1;
+    if (totalCards <= 7) return 1;
     
     // Progressive scaling based on number of cards
     // The more cards we have, the smaller they get
-    if (totalCards <= 6) return 0.95;
-    if (totalCards <= 8) return 0.9;
-    if (totalCards <= 10) return 0.85;
-    return 0.8; // Minimum size for 11+ cards
+    if (totalCards <= 9) return 0.95;
+    if (totalCards <= 11) return 0.9;
+    if (totalCards <= 13) return 0.85;
+    return 0.8; // Minimum size for 14+ cards
   };
   
   // Calculate card overlap for queue mode
   const getCardOffset = (totalCards: number, index: number) => {
-    // No offset needed for small number of cards
-    if (totalCards <= 4) return 0;
+    // No offset needed for small number of cards (easier to drag)
+    if (totalCards <= 7) return 0;
     
     // Progressive overlapping based on total cards
-    if (totalCards <= 6) return `-${20}px`;
-    if (totalCards <= 8) return `-${30}px`;
-    if (totalCards <= 10) return `-${40}px`;
-    return `-${50}px`; // Maximum overlap for 11+ cards
+    if (totalCards <= 9) return `-${15}px`;
+    if (totalCards <= 11) return `-${25}px`;
+    if (totalCards <= 13) return `-${35}px`;
+    return `-${45}px`; // Maximum overlap for 14+ cards
   };
   
   return (
