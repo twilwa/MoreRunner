@@ -5,9 +5,11 @@ interface CardProps {
   card: CardType;
   onClick?: () => void;
   disabled?: boolean;
+  // Card can display who played it if it's on the board
+  showPlayedBy?: boolean;
 }
 
-const Card: React.FC<CardProps> = ({ card, onClick, disabled = false }) => {
+const Card: React.FC<CardProps> = ({ card, onClick, disabled = false, showPlayedBy = false }) => {
   // Get faction-specific colors
   const getFactionColors = (faction: CardFaction) => {
     switch (faction) {
