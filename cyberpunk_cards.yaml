@@ -39,38 +39,83 @@ components:
         - keyword: "Required keyword"
         - count: "Number of cards with the keyword required"
         - location: "Where to look for cards (play, hand, discard)"
+        
+    - name: TrashCost
+      description: "Requires trashing a card or program as part of the cost"
+      parameters:
+        - targetType: "Type of card to trash (program, hardware, resource)"
+        - specific: "Whether a specific card must be targeted"
+        - specificType: "If specific, what type to target (keyword, etc.)"
+      
+    - name: HealthCost
+      description: "Represents taking damage/risk as a cost for powerful effects"
+      parameters:
+        - amount: "Amount of health/damage to pay"
+        - payAtResolution: "Whether cost is paid on resolution rather than play"
       
   effect:
     - name: GainCredits
       description: "Gives credits to target"
       parameters:
         - amount: "Credits to give"
+        - fromOpponent: "Whether credits come from opponent (Criminal specialty)"
       
     - name: DealDamage
       description: "Deals damage to target"
       parameters:
         - amount: "Damage amount"
+        - damageType: "Type of damage (net, meat, core)"
+        - selfDamage: "Optional self-damage (Anarch specialty)"
       
     - name: PreventDamage
       description: "Protects target from damage"
       parameters:
         - amount: "Damage to prevent"
+        - damageType: "Type of damage to prevent (or 'any')"
       
     - name: DrawCards
       description: "Target draws cards"
       parameters:
         - amount: "Cards to draw"
+        - condition: "Optional condition affecting the draw"
       
     - name: DiscardCards
       description: "Forces target to discard cards"
       parameters:
         - amount: "Cards to discard"
         - random: "Whether discard is random"
+        - targetType: "Target from hand, play, etc."
       
     - name: GainAction
       description: "Gives action points to target"
       parameters:
         - amount: "Actions to give"
+      
+    - name: InstallCard
+      description: "Installs a card directly from hand or another zone"
+      parameters:
+        - fromZone: "Source zone (hand, discard, deck)"
+        - installCost: "Cost reduction if any"
+        - specificType: "Type of card to install"
+        
+    - name: BoostProgram
+      description: "Temporarily increases a program's effectiveness"
+      parameters:
+        - amount: "Amount to boost"
+        - duration: "Duration of the boost"
+        - targetProgram: "Program to boost or 'any'"
+        
+    - name: RecycleCard
+      description: "Recycles a card from discard into usable resources"
+      parameters:
+        - effectType: "Type of benefit gained (credits, cards, tempo)"
+        - cardType: "Type of card to recycle"
+        
+    - name: BypassSecurity
+      description: "Bypasses security mechanisms (ICE, authentication)"
+      parameters:
+        - securityType: "Type of security to bypass"
+        - duration: "Duration of the bypass"
       
   conditional:
     - name: KeywordSynergy
@@ -79,6 +124,26 @@ components:
         - keyword: "Keyword to check for"
         - targetComponent: "Component to enhance"
         - bonusAmount: "Amount to increase effect by"
+        
+    - name: ComboEffect
+      description: "Enhanced effect when played in combination with another card"
+      parameters:
+        - requiredCardType: "Type of card required for combo"
+        - bonusEffect: "Effect to apply when combo is active"
+        
+    - name: RiskReward
+      description: "Adds a risk/reward element to card effects (Anarch specialty)"
+      parameters:
+        - riskType: "Type of risk (health, resources, cards)"
+        - rewardType: "Type of reward if successful"
+        - chance: "Chance of success (0-100)"
+      
+    - name: ProgressiveEffect
+      description: "Effect grows stronger over time or with certain triggers"
+      parameters:
+        - triggerType: "What causes the effect to grow"
+        - growthRate: "How quickly effect strengthens"
+        - cap: "Maximum strength of the effect"
       
   control:
     - name: PauseQueue
@@ -91,16 +156,39 @@ components:
       parameters:
         - targetCardIndex: "Index of card to cancel (optional)"
         - targetCardCondition: "Condition to select card (optional)"
+        
+    - name: ModifyCardInQueue
+      description: "Changes a card's effects while in execution queue"
+      parameters:
+        - targetIndex: "Index of card to modify"
+        - modificationType: "Type of modification to make"
+        - newValue: "New value for modified parameter"
+      
+    - name: RedirectEffect
+      description: "Redirects an effect to a different target"
+      parameters:
+        - originalTarget: "Original target type"
+        - newTarget: "New target type"
+        - effectType: "Type of effect to redirect"
       
   information:
     - name: RevealCard
       description: "Reveals a face-down card"
-      parameters: []
+      parameters:
+        - cardLocation: "Where the card is located"
       
     - name: ScanEntity
       description: "Reveals information about target"
       parameters:
         - revealFullInfo: "Whether to show all info or just basics"
+        - infoType: "Specific info to reveal"
+        
+    - name: TagEntity
+      description: "Tags an entity for tracking or future effects"
+      parameters:
+        - tagType: "Type of tag to apply"
+        - duration: "How long the tag lasts"
+        - visibility: "Whether tag is visible to opponent"
 
 # Card Translations - Mapping card text to components
 card_translations:
@@ -114,6 +202,7 @@ card_translations:
       - "Gain 1 credit"
       - "Gain 2 credits"
       - "Gain 3 credits"
+    faction_affinity: "Criminal"
   
   - text: "Deal {X} damage to opponent"
     components:
@@ -127,6 +216,7 @@ card_translations:
     examples:
       - "Deal 2 damage to opponent"
       - "Deal 3 damage to opponent"
+    faction_affinity: "Anarch"
   
   - text: "Deal {X} damage to a threat"
     components:
@@ -143,6 +233,7 @@ card_translations:
     examples:
       - "Deal 2 damage to a threat"
       - "Deal 3 damage to a threat"
+    faction_affinity: "Anarch"
   
   - text: "Draw {X} card"
     components:
@@ -154,6 +245,7 @@ card_translations:
       - "Draw a card"
       - "Draw 2 cards"
       - "Draw 3 cards"
+    faction_affinity: "Shaper"
   
   - text: "Opponent discards {X} card"
     components:
@@ -168,6 +260,7 @@ card_translations:
     examples:
       - "Opponent discards a card"
       - "Opponent discards 2 cards"
+    faction_affinity: "Criminal"
   
   - text: "Prevent {X} damage"
     components:
@@ -178,6 +271,7 @@ card_translations:
     examples:
       - "Prevent 2 damage"
       - "Prevent 3 damage"
+    faction_affinity: "Shaper"
   
   - text: "Gain {X} action"
     components:
@@ -188,6 +282,7 @@ card_translations:
     examples:
       - "Gain 1 action"
       - "Gain 2 actions"
+    faction_affinity: "Criminal"
   
   - text: "If you have another {Keyword} in play, {effect}"
     components:
@@ -199,6 +294,7 @@ card_translations:
     examples:
       - "If you have another Virus in play, deal 1 more damage"
       - "If you have another ICE in play, prevent 1 more damage"
+    faction_affinity: "Shaper"
   
   - text: "Cancel a card with {Keyword}"
     components:
@@ -208,54 +304,54 @@ card_translations:
     examples:
       - "Cancel a card with ICE keyword"
       - "Cancel a card with Virus keyword"
+    faction_affinity: "Criminal"
+    
+  - text: "Deal {X} damage to target. Take {Y} damage."
+    components:
+      - type: PauseQueue
+        params:
+          message: "Select a target for damage"
+      - type: SingleEntityTarget
+        params:
+          targetType: "threat"
+          allowTargetSelection: true
+      - type: DealDamage
+        params:
+          amount: "{X}"
+      - type: SelfTarget
+      - type: DealDamage
+        params:
+          amount: "{Y}"
+          selfDamage: true
+    examples:
+      - "Deal 3 damage to target. Take 1 damage."
+      - "Deal 5 damage to target. Take 2 damage."
+    faction_affinity: "Anarch"
+    
+  - text: "Install a {Keyword} from your discard pile, reducing the cost by {X}"
+    components:
+      - type: PauseQueue
+        params:
+          message: "Select a {Keyword} to install from your discard pile"
+      - type: InstallCard
+        params:
+          fromZone: "discard"
+          installCost: "{X}"
+          specificType: "{Keyword}"
+    examples:
+      - "Install a Program from your discard pile, reducing the cost by 2"
+      - "Install a Hardware from your discard pile, reducing the cost by 3"
+    faction_affinity: "Shaper"
 
-# Cards and Their Component Implementations
+# Cards and Their Component Implementations by Faction
+
+# ANARCH CARDS (Red) - Bold, risky, destructive with high reward/risk ratio
 cards:
-  - id: credit_chip
-    name: Credit Chip
-    text: "Gain 1 credit."
-    components:
-      - type: SelfTarget
-      - type: ActionCost
-        params:
-          amount: 1
-      - type: GainCredits
-        params:
-          amount: 1
-  
-  - id: crypto_wallet
-    name: Crypto Wallet
-    text: "Gain 2 credits."
-    components:
-      - type: SelfTarget
-      - type: ActionCost
-        params:
-          amount: 1
-      - type: GainCredits
-        params:
-          amount: 2
-  
-  - id: dark_market
-    name: Dark Market
-    text: "Gain 1 credit, draw 1 card, and gain 1 action."
-    components:
-      - type: SelfTarget
-      - type: ActionCost
-        params:
-          amount: 1
-      - type: GainCredits
-        params:
-          amount: 1
-      - type: DrawCards
-        params:
-          amount: 1
-      - type: GainAction
-        params:
-          amount: 1
-  
   - id: malicious_code
     name: Malicious Code
-    text: "Deal 2 damage to opponent. If you have another Virus program in play, deal 3 damage instead."
+    faction: "Anarch"
+    keywords: ["Program", "Virus"]
+    text: "Deal 2 damage to a threat. If you have another Virus program in play, deal 3 damage instead."
     components:
       - type: CreditCost
         params:
@@ -279,8 +375,182 @@ cards:
           targetComponent: "DealDamage"
           bonusAmount: 1
   
+  - id: data_corruptor
+    name: Data Corruptor
+    faction: "Anarch"
+    keywords: ["Program", "Virus"]
+    text: "Deal 3 damage to a threat. Take 1 damage yourself."
+    components:
+      - type: CreditCost
+        params:
+          amount: 2
+      - type: ActionCost
+        params:
+          amount: 1
+      - type: PauseQueue
+        params:
+          message: "Select a target for Data Corruptor"
+      - type: SingleEntityTarget
+        params:
+          targetType: "threat"
+          allowTargetSelection: true
+      - type: DealDamage
+        params:
+          amount: 3
+      - type: SelfTarget
+      - type: DealDamage
+        params:
+          amount: 1
+          selfDamage: true
+  
+  - id: circuit_overload
+    name: Circuit Overload
+    faction: "Anarch"
+    keywords: ["Event"]
+    text: "Trash a program to destroy a piece of ICE."
+    components:
+      - type: CreditCost
+        params:
+          amount: 1
+      - type: PauseQueue
+        params:
+          message: "Select a program to trash"
+      - type: TrashCost
+        params:
+          targetType: "program"
+          specific: false
+      - type: PauseQueue
+        params:
+          message: "Select an ICE to destroy"
+      - type: SingleEntityTarget
+        params:
+          targetType: "ice"
+          allowTargetSelection: true
+      - type: DealDamage
+        params:
+          amount: 99  # Effectively destroys the target
+  
+  - id: viral_nexus
+    name: Viral Nexus
+    faction: "Anarch"
+    keywords: ["Program", "Virus"]
+    text: "Virus counters are shared between all your virus programs. Place 1 virus counter when installed."
+    components:
+      - type: CreditCost
+        params:
+          amount: 3
+      - type: ActionCost
+        params:
+          amount: 1
+      - type: SelfTarget
+      - type: ProgressiveEffect
+        params:
+          triggerType: "turn_start"
+          growthRate: 1
+          cap: 0  # No cap
+  
+  - id: high_risk_maneuver
+    name: High Risk Maneuver
+    faction: "Anarch"
+    keywords: ["Event"]
+    text: "Roll a die. On 4-6, gain 5 credits and draw 2 cards. On 1-3, take 2 damage."
+    components:
+      - type: CreditCost
+        params:
+          amount: 1
+      - type: ActionCost
+        params:
+          amount: 1
+      - type: SelfTarget
+      - type: RiskReward
+        params:
+          riskType: "health"
+          rewardType: "resources_and_cards"
+          chance: 50
+
+# CRIMINAL CARDS (Blue) - Efficient, evasive, resource-focused, controls and configuration
+  - id: backdoor_access
+    name: Backdoor Access
+    faction: "Criminal"
+    keywords: ["Event"]
+    text: "Make a run. The first piece of ICE you encounter is bypassed."
+    components:
+      - type: CreditCost
+        params:
+          amount: 2
+      - type: ActionCost
+        params:
+          amount: 1
+      - type: SelfTarget
+      - type: BypassSecurity
+        params:
+          securityType: "ICE"
+          duration: "first_encounter"
+  
+  - id: credit_siphon
+    name: Credit Siphon
+    faction: "Criminal"
+    keywords: ["Event"]
+    text: "Gain 2 credits from the opponent if they have at least 2 credits."
+    components:
+      - type: ActionCost
+        params:
+          amount: 1
+      - type: SingleEntityTarget
+        params:
+          targetType: "opponent"
+          allowTargetSelection: false
+      - type: GainCredits
+        params:
+          amount: 2
+          fromOpponent: true
+  
+  - id: security_bypass
+    name: Security Bypass
+    faction: "Criminal"
+    keywords: ["Event", "Stealth"]
+    text: "Cancel the next card played by the opponent. Gain 1 action."
+    components:
+      - type: CreditCost
+        params:
+          amount: 3
+      - type: ActionCost
+        params:
+          amount: 1
+      - type: SingleEntityTarget
+        params:
+          targetType: "opponent"
+          allowTargetSelection: false
+      - type: CancelCard
+        params:
+          targetCardIndex: 0  # Next card played
+      - type: SelfTarget
+      - type: GainAction
+        params:
+          amount: 1
+  
+  - id: ghost_runner
+    name: Ghost Runner
+    faction: "Criminal"
+    keywords: ["Program", "Stealth"]
+    text: "You cannot be targeted by opponent effects until the start of your next turn."
+    components:
+      - type: CreditCost
+        params:
+          amount: 4
+      - type: ActionCost
+        params:
+          amount: 1
+      - type: SelfTarget
+      - type: PreventDamage
+        params:
+          amount: 99  # Very high to prevent all damage
+          damageType: "any"
+          
   - id: data_breach
     name: Data Breach
+    faction: "Criminal"
+    keywords: ["Event", "Run"]
     text: "Draw 2 cards. Opponent discards 1 card. If you have another Stealth card in play, opponent discards 2 cards."
     components:
       - type: SelfTarget
@@ -303,10 +573,13 @@ cards:
           keyword: "Stealth"
           targetComponent: "DiscardCards"
           bonusAmount: 1
-  
-  - id: firewall
-    name: Firewall
-    text: "Prevent the next 2 damage you would take. If you have another ICE in play, prevent 3 damage instead."
+
+# SHAPER CARDS (Green) - Complex, technical, build-up, powerful when constructed
+  - id: modular_program
+    name: Modular Program
+    faction: "Shaper"
+    keywords: ["Program"]
+    text: "Gain +2 memory. Install a program from your hand, reducing the cost by 2."
     components:
       - type: CreditCost
         params:
@@ -315,17 +588,153 @@ cards:
         params:
           amount: 1
       - type: SelfTarget
-      - type: PreventDamage
+      - type: PauseQueue
+        params:
+          message: "Select a program to install"
+      - type: InstallCard
+        params:
+          fromZone: "hand"
+          installCost: 2
+          specificType: "Program"
+  
+  - id: tech_lab
+    name: Tech Lab
+    faction: "Shaper"
+    keywords: ["Resource", "Location"]
+    text: "When your turn begins, place 1 power counter on each card hosted on Tech Lab. You may host any number of programs on Tech Lab."
+    components:
+      - type: CreditCost
+        params:
+          amount: 1
+      - type: ActionCost
+        params:
+          amount: 1
+      - type: SelfTarget
+      - type: ProgressiveEffect
+        params:
+          triggerType: "turn_start"
+          growthRate: 1
+          cap: 0
+  
+  - id: adaptive_algorithm
+    name: Adaptive Algorithm
+    faction: "Shaper"
+    keywords: ["Program"]
+    text: "Spend 2 credits, trash: Search your stack for a program, reveal it, and install it, lowering its install cost by 3."
+    components:
+      - type: CreditCost
         params:
           amount: 2
+      - type: ActionCost
+        params:
+          amount: 1
+      - type: SelfTarget
+      - type: TrashCost
+        params:
+          targetType: "self"
+          specific: true
+      - type: InstallCard
+        params:
+          fromZone: "deck"
+          installCost: 3
+          specificType: "Program"
+  
+  - id: recursive_engineering
+    name: Recursive Engineering
+    faction: "Shaper"
+    keywords: ["Program", "Builder"]
+    text: "All your installed programs get +1 strength. If you have 3 or more programs installed, gain 1 action each turn."
+    components:
+      - type: CreditCost
+        params:
+          amount: 4
+      - type: ActionCost
+        params:
+          amount: 2
+      - type: SelfTarget
+      - type: BoostProgram
+        params:
+          amount: 1
+          duration: "permanent"
+          targetProgram: "all"
       - type: KeywordSynergy
         params:
-          keyword: "ICE"
-          targetComponent: "PreventDamage"
+          keyword: "Program"
+          targetComponent: "GainAction"
           bonusAmount: 1
+  
+  - id: prototype_deployment
+    name: Prototype Deployment
+    faction: "Shaper"
+    keywords: ["Event"]
+    text: "Search your stack for a program. Install it, paying 3 credits less."
+    components:
+      - type: CreditCost
+        params:
+          amount: 3
+      - type: ActionCost
+        params:
+          amount: 1
+      - type: SelfTarget
+      - type: InstallCard
+        params:
+          fromZone: "deck"
+          installCost: 3
+          specificType: "Program"
+
+# NEUTRAL CARDS (Available to all factions)
+  - id: credit_chip
+    name: Credit Chip
+    faction: "Neutral"
+    keywords: ["Program", "Basic"]
+    text: "Gain 1 credit."
+    components:
+      - type: SelfTarget
+      - type: ActionCost
+        params:
+          amount: 1
+      - type: GainCredits
+        params:
+          amount: 1
+  
+  - id: crypto_wallet
+    name: Crypto Wallet
+    faction: "Neutral"
+    keywords: ["Resource", "Economy"]
+    text: "Gain 2 credits."
+    components:
+      - type: SelfTarget
+      - type: ActionCost
+        params:
+          amount: 1
+      - type: GainCredits
+        params:
+          amount: 2
+  
+  - id: dark_market
+    name: Dark Market
+    faction: "Neutral"
+    keywords: ["Resource", "Location"]
+    text: "Gain 1 credit, draw 1 card, and gain 1 action."
+    components:
+      - type: SelfTarget
+      - type: ActionCost
+        params:
+          amount: 1
+      - type: GainCredits
+        params:
+          amount: 1
+      - type: DrawCards
+        params:
+          amount: 1
+      - type: GainAction
+        params:
+          amount: 1
   
   - id: system_purge
     name: System Purge
+    faction: "Neutral"
+    keywords: ["Event", "Run"]
     text: "Draw 1 card, trash 1 card from your hand, and gain 1 action."
     components:
       - type: SelfTarget
@@ -343,81 +752,114 @@ cards:
         params:
           amount: 1
   
-  - id: neural_implant
-    name: Neural Implant
-    text: "Draw 3 cards. You may copy a card from the discard pile if you have another Cyberware in play."
+  - id: personal_data
+    name: Personal Data
+    faction: "Neutral"
+    keywords: ["Program", "Memory"]
+    text: "Storage for personal data. Worth 1 victory point."
     components:
+      - type: CreditCost
+        params:
+          amount: 2
+      - type: ActionCost
+        params:
+          amount: 1
       - type: SelfTarget
-      - type: ActionCost
-        params:
-          amount: 1
-      - type: DrawCards
-        params:
-          amount: 3
-      # Custom component for copying from discard - needs implementation
-      - type: KeywordSynergy
-        params:
-          keyword: "Cyberware"
-          targetComponent: "CopyCard" # This would need custom implementation
-          bonusAmount: 1
-  
-  - id: backdoor
-    name: Backdoor
-    text: "Bypass one ICE card. Draw a card."
-    components:
-      - type: ActionCost
-        params:
-          amount: 1
-      # Custom component for bypassing ICE - needs implementation
-      - type: SelfTarget
-      - type: DrawCards
-        params:
-          amount: 1
-  
-  - id: trace_program
-    name: Trace Program
-    text: "Trace a runner program. Opponent discards 1 card."
-    components:
-      - type: ActionCost
-        params:
-          amount: 1
-      # Custom component for tracing - needs implementation
-      - type: SingleEntityTarget
-        params:
-          targetType: "opponent"
-          allowTargetSelection: false
-      - type: DiscardCards
-        params:
-          amount: 1
-          random: true
 
-# Keyword Relationships and Synergies
+# Keyword Relationships and Synergies by Faction
 keywords:
   relationships:
+    # ANARCH KEYWORDS
     - keyword: Virus
+      faction: "Anarch"
       synergizes_with:
         - component: DealDamage
           effect: "Increases damage"
         - component: DrawCards
           effect: "Increases card draw"
+        - component: ProgressiveEffect
+          effect: "Grows stronger over time"
+          
+    - keyword: DDoS
+      faction: "Anarch"
+      synergizes_with:
+        - component: CancelCard
+          effect: "Can cancel multiple cards"
+        - component: RiskReward
+          effect: "Greater reward but higher risk"
+    
+    - keyword: Daemon
+      faction: "Anarch"
+      synergizes_with:
+        - component: DealDamage
+          effect: "May affect multiple targets"
+        - component: TrashCost
+          effect: "Reduced trash costs"
+    
+    # CRIMINAL KEYWORDS
+    - keyword: Stealth
+      faction: "Criminal"
+      synergizes_with:
+        - component: DiscardCards
+          effect: "Increases discard effect"
+        - component: CancelCard
+          effect: "Can bypass certain restrictions"
+        - component: BypassSecurity
+          effect: "More efficient bypassing"
+    
+    - keyword: Run
+      faction: "Criminal"
+      synergizes_with:
+        - component: GainCredits
+          effect: "Gain credits during runs"
+        - component: BypassSecurity
+          effect: "Enhanced bypassing during runs"
+    
+    - keyword: Connection
+      faction: "Criminal"
+      synergizes_with:
+        - component: GainCredits
+          effect: "Enhanced economy"
+        - component: DrawCards
+          effect: "Enhanced card draw through connections"
+    
+    # SHAPER KEYWORDS
+    - keyword: Program
+      faction: "Shaper"
+      synergizes_with:
+        - component: InstallCard
+          effect: "Reduced installation costs"
+        - component: BoostProgram
+          effect: "Enhanced program boosting"
+    
+    - keyword: Builder
+      faction: "Shaper"
+      synergizes_with:
+        - component: ProgressiveEffect
+          effect: "More powerful progressive effects"
+        - component: ComboEffect
+          effect: "Enhanced combo potential"
+    
+    - keyword: Memory
+      faction: "Shaper"
+      synergizes_with:
+        - component: DrawCards
+          effect: "Enhanced card draw"
+        - component: RecycleCard
+          effect: "Better recycling of cards"
     
     - keyword: ICE
+      faction: "Neutral"
       synergizes_with:
         - component: PreventDamage
           effect: "Increases damage prevention"
         - component: CancelCard
           effect: "Can be targeted by ICE Breaker cards"
     
-    - keyword: Stealth
-      synergizes_with:
-        - component: DiscardCards
-          effect: "Increases discard effect"
-        - component: CancelCard
-          effect: "Can bypass certain restrictions"
-    
     - keyword: Cyberware
+      faction: "Neutral"
       synergizes_with:
-        - component: CopyCard
-          effect: "Enables copying from discard"
+        - component: InstallCard
+          effect: "Can install from discard"
         - component: DrawCards
           effect: "Can enhance card drawing"

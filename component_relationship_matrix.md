@@ -2,216 +2,280 @@
 
 This document visualizes the relationships between components, keywords, factions, and game mechanics in our Cyberpunk deck-builder.
 
-## Component-Keyword Relationship Matrix
+## Runner Faction Identity Mechanics Matrix
 
-| Component        | Virus       | ICE          | Stealth       | Memory      | Hardware    | Program     | Cyberware    | Weapon      |
-|------------------|-------------|--------------|---------------|-------------|-------------|-------------|--------------|-------------|
-| GainCredits      | -           | -            | -             | -           | ✓✓          | ✓           | -            | -           |
-| DealDamage       | ✓✓✓         | -            | ✓             | -           | -           | -           | -            | ✓✓          |
-| PreventDamage    | -           | ✓✓✓          | ✓             | -           | ✓           | -           | ✓            | -           |
-| DrawCards        | ✓           | -            | ✓             | ✓✓✓         | -           | ✓           | ✓✓           | -           |
-| DiscardCards     | ✓           | -            | ✓✓✓           | -           | -           | -           | -            | ✓           |
-| GainAction       | -           | -            | ✓             | ✓✓          | -           | ✓           | ✓            | -           |
-| CopyCard         | ✓           | -            | -             | ✓           | -           | -           | ✓✓✓          | -           |
-| CancelCard       | ✓           | ✓            | ✓✓✓           | -           | -           | ✓           | -            | -           |
-| RevealCard       | ✓✓          | -            | ✓✓            | -           | -           | -           | -            | -           |
-| ScanEntity       | -           | ✓✓           | ✓             | ✓✓          | ✓           | -           | -            | -           |
+Each runner faction has distinctive gameplay mechanics that align with their identity. This matrix maps the core components and mechanics that define each faction's unique playstyle.
+
+| Faction | Core Identity | Primary Mechanics | Secondary Mechanics | Risk Profile |
+|---------|---------------|-------------------|---------------------|--------------|
+| **Anarch (Red)** | Destructive, recycle what you broke, powerful effects with high risk | DealDamage, TrashCost, RiskReward | ProgressiveEffect (viruses), RecycleCard | High Risk, High Reward |
+| **Criminal (Blue)** | Efficient, stealthy, flexible, resource-focused | GainCredits, BypassSecurity, CancelCard | StealResources, Evasion, Connections | Medium Risk, Consistent Reward |
+| **Shaper (Green)** | Builders, engineers, grows over time, powerful with setup | InstallCard, BoostProgram, ComboEffect | DrawCards, ProgressiveEffect, ModifyCard | Low Risk, Delayed High Reward |
+
+## Component-Keyword Relationship Matrix by Faction
+
+### Anarch Keywords
+
+| Component       | Virus        | DDoS         | Daemon        | Rootkit      | Fragger      |
+|-----------------|--------------|--------------|---------------|--------------|--------------|
+| DealDamage      | ✓✓✓          | ✓            | ✓✓            | ✓            | ✓✓✓          |
+| TrashCost       | ✓            | ✓✓           | ✓✓✓           | ✓            | ✓            |
+| RiskReward      | ✓✓           | ✓✓✓          | ✓✓            | ✓✓           | ✓✓           |
+| RecycleCard     | ✓✓           | ✓            | ✓✓            | ✓✓✓          | -            |
+| ProgressiveEffect| ✓✓✓         | ✓✓           | ✓             | ✓✓           | -            |
+| DiscardCards    | ✓            | ✓✓           | -             | ✓✓✓          | ✓            |
+
+### Criminal Keywords
+
+| Component       | Stealth      | Run          | Connection    | Bypass       | Siphon       |
+|-----------------|--------------|--------------|---------------|--------------|--------------|
+| GainCredits     | ✓            | ✓✓           | ✓✓✓           | ✓            | ✓✓✓          |
+| BypassSecurity  | ✓✓✓          | ✓✓           | ✓             | ✓✓✓          | -            |
+| CancelCard      | ✓✓           | ✓            | ✓             | ✓✓           | -            |
+| RedirectEffect  | ✓            | ✓✓           | ✓             | ✓✓✓          | ✓            |
+| TagEntity       | -            | ✓            | ✓✓✓           | -            | ✓✓           |
+| GainAction      | ✓            | ✓✓           | ✓✓            | ✓            | ✓            |
+
+### Shaper Keywords
+
+| Component       | Program      | Builder      | Memory        | Mod          | Breaker      |
+|-----------------|--------------|--------------|---------------|--------------|--------------|
+| InstallCard     | ✓✓✓          | ✓✓           | ✓             | ✓✓           | ✓✓           |
+| BoostProgram    | ✓✓           | ✓✓✓          | ✓✓            | ✓✓           | ✓✓✓          |
+| ComboEffect     | ✓            | ✓✓✓          | ✓✓            | ✓✓           | ✓            |
+| DrawCards       | ✓            | ✓            | ✓✓✓           | ✓            | ✓            |
+| ModifyCard      | ✓✓           | ✓✓           | ✓             | ✓✓✓          | ✓✓           |
+| PreventDamage   | -            | ✓            | ✓✓            | ✓✓           | ✓            |
+
+## Faction-Component Risk/Reward Profile
+
+This matrix visualizes how each faction balances risk and reward across different component types.
+
+| Component Type | Anarch (Red) | Criminal (Blue) | Shaper (Green) |
+|----------------|--------------|-----------------|----------------|
+| **Cost Components** |
+| CreditCost     | Medium-High  | High            | Medium         |
+| ActionCost     | Medium       | Low-Medium      | High           |
+| TrashCost      | Low          | High            | Medium-High    |
+| HealthCost     | Low          | Very High       | Very High      |
+| **Effect Components** |
+| DealDamage     | Low (High value) | Medium       | High (Low value) |
+| GainCredits    | High         | Low (High value) | Medium        |
+| DrawCards      | Medium       | Medium          | Low (High value) |
+| GainAction     | High         | Medium (High value) | High       |
+| **Control Components** |
+| CancelCard     | High         | Low             | Medium        |
+| RedirectEffect | Medium       | Low             | High          |
+| ModifyCardInQueue | High      | Medium          | Low           |
 
 Legend:
-- ✓: Minor synergy
-- ✓✓: Medium synergy
-- ✓✓✓: Strong synergy
+- For costs: Low = cheapest, High = most expensive
+- For effects: Low = best value, High = worst value
+- For control: Low = most efficient, High = least efficient
 
-## Faction-Component Affinity
-
-| Component        | Runner      | Corp         | Street        |
-|------------------|-------------|--------------|---------------|
-| GainCredits      | ✓✓          | ✓✓✓          | ✓             |
-| DealDamage       | ✓✓          | ✓            | ✓✓✓           |
-| PreventDamage    | ✓           | ✓✓✓          | ✓             |
-| DrawCards        | ✓✓✓         | ✓✓           | ✓             |
-| DiscardCards     | ✓✓          | ✓            | ✓✓✓           |
-| GainAction       | ✓✓✓         | ✓            | ✓✓            |
-| CopyCard         | ✓✓          | ✓✓           | ✓             |
-| CancelCard       | ✓✓✓         | ✓✓           | ✓             |
-| RevealCard       | ✓✓✓         | ✓            | ✓✓            |
-| ScanEntity       | ✓✓          | ✓✓✓          | ✓             |
-
-## Component Interaction Diagram
+## Component Interaction Diagram: Faction-Specific Play Patterns
 
 ```mermaid
 flowchart TD
-    %% Component Categories
-    Targeting["Targeting Components"]
-    Cost["Cost Components"]
-    Effect["Effect Components"] 
-    Conditional["Conditional Components"]
-    Control["Control Flow Components"]
-    Information["Information Components"]
+    %% Component Categories by Faction
+    AnarchCost["Anarch Costs\n(Health, Risk, Trash)"]
+    CriminalCost["Criminal Costs\n(Credits, Efficiency)"]
+    ShaperCost["Shaper Costs\n(Time, Setup)"]
     
-    %% Main execution flow
-    Cost --> |"Paid successfully"| Targeting
-    Targeting --> |"Targets selected"| Effect
-    Effect --> |"May trigger"| Conditional
-    Conditional --> |"May modify"| Effect
-    Conditional --> |"May invoke"| Control
-    Control --> |"May redirect to"| Targeting
-    Control --> |"May invoke"| Information
-    Information --> |"Provides data for"| Effect
+    AnarchEffect["Anarch Effects\n(Damage, Destruction)"]
+    CriminalEffect["Criminal Effects\n(Economy, Evasion)"]
+    ShaperEffect["Shaper Effects\n(Construction, Combo)"]
     
-    %% Example component execution flows
-    subgraph "Example: Malicious Code"
-        CreditCost5["Credit Cost (5)"] --> ActionCost1["Action Cost (1)"]
-        ActionCost1 --> PauseQueue["Pause Queue"]
-        PauseQueue --> SingleEntityTarget["Single Entity Target (threat)"]
-        SingleEntityTarget --> DealDamage2["Deal Damage (2)"]
-        DealDamage2 --> VirusSynergy["Virus Synergy"]
-        VirusSynergy --> |"If Virus card in play"| IncreaseDamage["+1 Damage"]
+    %% Main execution flow by faction
+    AnarchCost --> |"Risk taken"| AnarchEffect
+    AnarchEffect --> |"Creates chaos"| GameState1["Destabilized Game State"]
+    GameState1 --> |"Benefits from chaos"| AnarchAdvantage["Anarch Advantage"]
+    
+    CriminalCost --> |"Efficiency optimized"| CriminalEffect
+    CriminalEffect --> |"Creates opportunities"| GameState2["Resource Advantage"]
+    GameState2 --> |"Exploits weaknesses"| CriminalAdvantage["Criminal Advantage"]
+    
+    ShaperCost --> |"Setup completed"| ShaperEffect
+    ShaperEffect --> |"Creates infrastructure"| GameState3["Enhanced Capabilities"]
+    GameState3 --> |"Leverages technology"| ShaperAdvantage["Shaper Advantage"]
+    
+    %% Example component execution flows by faction
+    subgraph "Anarch Pattern: High Risk/High Reward"
+        TrashCard["Trash Card Cost"] --> RiskDamage["Risk Self-Damage"]
+        RiskDamage --> DestructiveEffect["Destructive Effect"]
+        DestructiveEffect --> RecycleDestroyed["Recycle Destroyed Resources"]
+        RecycleDestroyed --> |"If successful"| MassiveGain["Massive Gain"]
     end
     
-    subgraph "Example: Firewall"
-        CreditCost3["Credit Cost (3)"] --> ActionCost1_2["Action Cost (1)"]
-        ActionCost1_2 --> SelfTarget["Self Target"]
-        SelfTarget --> PreventDamage2["Prevent Damage (2)"]
-        PreventDamage2 --> IceSynergy["ICE Synergy"]
-        IceSynergy --> |"If ICE card in play"| IncreasePrevention["+1 Prevention"]
+    subgraph "Criminal Pattern: Efficiency and Control"
+        CreditInvestment["Credit Investment"] --> StealthBypass["Stealth/Bypass"]
+        StealthBypass --> ResourceExtraction["Resource Extraction"]
+        ResourceExtraction --> ActionGain["Action Gain"]
+        ActionGain --> RepeatCycle["Repeat Efficient Cycle"]
+    end
+    
+    subgraph "Shaper Pattern: Build and Execute"
+        SetupPhase["Setup Phase (High Cost)"] --> BuildInfrastructure["Build Infrastructure"]
+        BuildInfrastructure --> EnhanceComponents["Enhance Components"]
+        EnhanceComponents --> ComboActivation["Combo Activation"]
+        ComboActivation --> |"Once built"| PowerfulOutcome["Powerful Outcome"]
     end
 ```
 
-## Component Usage Frequency in Cards
+## Faction Archetypes: Component Strategy Maps
 
-```mermaid
-pie
-    title "Component Usage in Existing Cards"
-    "ActionCost" : 17
-    "SelfTarget" : 12
-    "GainCredits" : 8
-    "DrawCards" : 7
-    "KeywordSynergy" : 6
-    "CreditCost" : 6
-    "DealDamage" : 4
-    "DiscardCards" : 4
-    "SingleEntityTarget" : 4
-    "PreventDamage" : 3
-    "GainAction" : 3
-    "PauseQueue" : 2
-    "Other Components" : 6
-```
+### Anarch (Red): Destructive Virus Runner
 
-## Strategy Archetypes and Component Relationships
-
-### Virus Runner Archetype
-
-Focus on virus proliferation and damage dealing with a secondary focus on card draw.
+A high-risk, high-reward strategy focused on virus proliferation, destruction, and chaotic effects.
 
 ```mermaid
 graph TD
-    VirusRunner[Virus Runner Strategy]
+    AnarchStrategy["Anarch Strategy:\nBurn It Down"] --> BurnCost["Burn Resources/Health"]
+    BurnCost --> RecycleGain["Recycle Into Power"]
+    RecycleGain --> DestructiveImpact["Cause Destructive Impact"]
     
-    VirusRunner --> MaliciousCode[Malicious Code]
-    VirusRunner --> RiskyHack[Risky Hack]
-    VirusRunner --> DataBreach[Data Breach]
+    AnarchStrategy --> VirusVector["Deploy Virus Programs"] 
+    VirusVector --> ViralGrowth["Grow Virus Counters"]
+    ViralGrowth --> ViralExplosion["Trigger Viral Explosion"]
     
-    MaliciousCode --> DealDamage[Deal Damage]
-    RiskyHack --> DrawCards[Draw Cards]
-    DataBreach --> DiscardCards[Force Discard]
+    AnarchStrategy --> ChaosEngine["Create Chaos/Unpredictability"]
+    ChaosEngine --> UnpredictableOutcome["Unpredictable Outcomes"]
+    UnpredictableOutcome --> HighRiskGamble["High Risk Gambles"]
     
-    DealDamage --> VirusSynergy[Virus Synergy]
-    DrawCards --> RiskLevel[Risk Mechanics]
-    DiscardCards --> StealthSynergy[Stealth Synergy]
+    %% Key cards and components
+    BurnCost -.-> DataCorruptor["Data Corruptor\n(Self-damage for power)"]
+    RecycleGain -.-> CircuitOverload["Circuit Overload\n(Trash program to destroy ICE)"]
+    VirusVector -.-> ViralNexus["Viral Nexus\n(Share virus counters)"]
+    ViralGrowth -.-> MaliciousCode["Malicious Code\n(Virus damage synergy)"]
+    ChaosEngine -.-> HighRiskManeuver["High Risk Maneuver\n(Gamble for resources)"]
     
-    VirusSynergy --> DamageBuff[Increased Damage]
-    RiskLevel --> RewardRisk[High Reward/Risk]
-    StealthSynergy --> DiscardBuff[Increased Discard]
+    %% Components used
+    DataCorruptor -.-> DealDamage["DealDamage Component"]
+    CircuitOverload -.-> TrashCost["TrashCost Component"]
+    ViralNexus -.-> ProgressiveEffect["ProgressiveEffect Component"]
+    MaliciousCode -.-> KeywordSynergy["KeywordSynergy Component"]
+    HighRiskManeuver -.-> RiskReward["RiskReward Component"]
 ```
 
-### ICE Corp Archetype
+### Criminal (Blue): Efficient Resource Specialist
 
-Focus on defense, prevention, and control with information gathering.
+A consistent, efficient strategy focused on resource accumulation, stealth, and control through clever preparation.
 
 ```mermaid
 graph TD
-    ICECorp[ICE Corp Strategy]
+    CriminalStrategy["Criminal Strategy:\nClever Efficiency"] --> ResourceAccumulation["Accumulate Resources"]
+    ResourceAccumulation --> InvestResources["Invest Resources"]
+    InvestResources --> LeverageAdvantage["Leverage Economic Advantage"]
     
-    ICECorp --> Firewall[Firewall]
-    ICECorp --> AmbushProtocol[Ambush Protocol]
-    ICECorp --> TraceProgram[Trace Program]
+    CriminalStrategy --> StealthApproach["Stealth Approach"] 
+    StealthApproach --> BypassSecurity["Bypass Security"]
+    BypassSecurity --> AvoidConsequences["Avoid Consequences"]
     
-    Firewall --> PreventDamage[Prevent Damage]
-    AmbushProtocol --> SetTrap[Set Trap]
-    TraceProgram --> TraceMechanic[Trace Mechanic]
+    CriminalStrategy --> ControlTheGame["Control the Tempo"]
+    ControlTheGame --> DenyOpponent["Deny Opponent Options"]
+    DenyOpponent --> CreateOpportunities["Create Opportunities"]
     
-    PreventDamage --> ICESynergy[ICE Synergy]
-    SetTrap --> DealDamage[Deal Damage]
-    TraceMechanic --> ForceDiscard[Force Discard]
+    %% Key cards and components
+    ResourceAccumulation -.-> CreditSiphon["Credit Siphon\n(Take opponent's credits)"]
+    StealthApproach -.-> GhostRunner["Ghost Runner\n(Avoid targeting)"]
+    BypassSecurity -.-> BackdoorAccess["Backdoor Access\n(Skip ICE)"]
+    ControlTheGame -.-> SecurityBypass["Security Bypass\n(Cancel opponent card)"]
+    DenyOpponent -.-> DataBreach["Data Breach\n(Force discards)"]
     
-    ICESynergy --> PreventionBuff[Increased Prevention]
-    DealDamage --> SurpriseAttack[Surprise Attack]
-    ForceDiscard --> InformationControl[Information Control]
+    %% Components used
+    CreditSiphon -.-> GainCredits["GainCredits Component"]
+    GhostRunner -.-> PreventDamage["PreventDamage Component"]
+    BackdoorAccess -.-> BypassSecurity["BypassSecurity Component"]
+    SecurityBypass -.-> CancelCard["CancelCard Component"]
+    DataBreach -.-> DiscardCards["DiscardCards Component"]
 ```
 
-### Street Weapon Archetype
+### Shaper (Green): Engineering Builder
 
-Focus on direct damage and resource control.
+A methodical, long-term strategy focused on building powerful infrastructure and combos for overwhelming late-game advantage.
 
 ```mermaid
 graph TD
-    StreetWeapon[Street Weapon Strategy]
+    ShaperStrategy["Shaper Strategy:\nBuild From Scratch"] --> Setup["Initial Setup (Expensive)"]
+    Setup --> ConstructFramework["Construct Framework"]
+    ConstructFramework --> PowerfulInfrastructure["Create Powerful Infrastructure"]
     
-    StreetWeapon --> StreetThug[Street Thug]
-    StreetWeapon --> DarkMarket[Dark Market]
+    ShaperStrategy --> Optimization["Program Optimization"] 
+    Optimization --> Synergies["Create Synergies"]
+    Synergies --> ComboEffects["Trigger Combo Effects"]
     
-    StreetThug --> GainCredits[Gain Credits]
-    StreetThug --> ForceDiscard[Force Discard]
-    DarkMarket --> MultiEffect[Multiple Small Effects]
+    ShaperStrategy --> Recursion["Recursive Engineering"]
+    Recursion --> Efficiency["Optimize Efficiency"]
+    Efficiency --> OutvalueOpponent["Outvalue Opponent Long-term"]
     
-    GainCredits --> ResourceGain[Resource Advantage]
-    ForceDiscard --> HandControl[Hand Control]
-    MultiEffect --> Flexibility[Tactical Flexibility]
+    %% Key cards and components
+    Setup -.-> TechLab["Tech Lab\n(Host programs for development)"]
+    ConstructFramework -.-> ModularProgram["Modular Program\n(Enhanced memory & installation)"]
+    Optimization -.-> AdaptiveAlgorithm["Adaptive Algorithm\n(Find & install programs)"]
+    Synergies -.-> RecursiveEngineering["Recursive Engineering\n(Boost all programs)"]
+    Recursion -.-> PrototypeDeployment["Prototype Deployment\n(Discounted installation)"]
     
-    ResourceGain --> EconomyAdvantage[Economy Advantage]
-    HandControl --> DenyOptions[Deny Options]
-    Flexibility --> AdaptivePlay[Adaptive Play]
+    %% Components used
+    TechLab -.-> ProgressiveEffect["ProgressiveEffect Component"]
+    ModularProgram -.-> InstallCard["InstallCard Component"]
+    AdaptiveAlgorithm -.-> TrashCost["TrashCost Component"]
+    RecursiveEngineering -.-> BoostProgram["BoostProgram Component"]
+    PrototypeDeployment -.-> CreditCost["CreditCost Reduction Component"]
 ```
 
-## Component Progression Flow
+## Component Progression Timeline by Faction
 
-How components typically build on each other in card design:
+This diagram illustrates how each faction's components build upon each other throughout a game:
 
 ```mermaid
 graph LR
-    Basic[Basic Components] --> Intermediate[Intermediate Components] --> Advanced[Advanced Components]
+    %% Early Game
+    EarlyGame["Early Game"] --> AnarchEarly["Anarch Early:\nSimple Virus Setup"]
+    EarlyGame --> CriminalEarly["Criminal Early:\nEconomy Building"]
+    EarlyGame --> ShaperEarly["Shaper Early:\nSetup & Infrastructure"]
     
-    subgraph "Basic Components"
-        GainCredits[Gain Credits]
-        DrawCards[Draw Cards]
-        SelfTarget[Self Target]
-        SingleTarget[Single Target]
+    %% Mid Game
+    AnarchEarly --> AnarchMid["Anarch Mid:\nVirus Proliferation"]
+    CriminalEarly --> CriminalMid["Criminal Mid:\nEfficient Resource Cycling"]
+    ShaperEarly --> ShaperMid["Shaper Mid:\nProgram Enhancement"]
+    
+    %% Late Game
+    AnarchMid --> AnarchLate["Anarch Late:\nChaotic Destruction"]
+    CriminalMid --> CriminalLate["Criminal Late:\nComplete Control"]
+    ShaperMid --> ShaperLate["Shaper Late:\nUnbeatable Engine"]
+    
+    %% Component progression
+    subgraph "Anarch Component Progression"
+        A1["Small Virus Programs"] --> A2["Viral Growth Effects"] --> A3["Self-Damage Trades"] --> A4["Mass Destruction Effects"]
     end
     
-    subgraph "Intermediate Components"
-        KeywordSynergy[Keyword Synergy]
-        DealDamage[Deal Damage]
-        PreventDamage[Prevent Damage]
-        GainAction[Gain Action]
+    subgraph "Criminal Component Progression"
+        C1["Basic Economy Cards"] --> C2["Bypass & Evasion"] --> C3["Resource Siphoning"] --> C4["Complete Lockdown"]
     end
     
-    subgraph "Advanced Components"
-        CopyCard[Copy Card]
-        CancelCard[Cancel Card]
-        ConditionalTargeting[Conditional Targeting]
-        MultiEffect[Multi-Effect Chains]
+    subgraph "Shaper Component Progression"
+        S1["Framework Installation"] --> S2["Program Tutoring"] --> S3["Enhancement Effects"] --> S4["Combo Activation"]
     end
-    
-    GainCredits --> KeywordSynergy
-    DrawCards --> KeywordSynergy
-    SelfTarget --> DealDamage
-    SelfTarget --> PreventDamage
-    SingleTarget --> DealDamage
-    
-    KeywordSynergy --> CopyCard
-    KeywordSynergy --> CancelCard
-    DealDamage --> ConditionalTargeting
-    PreventDamage --> ConditionalTargeting
-    GainAction --> MultiEffect
 ```
+
+## Faction Design Principles: Component Guidelines
+
+The design of components for each faction follows these guiding principles to ensure mechanical and thematic alignment:
+
+### Anarch (Red):
+- **Cost Structure**: Lower credit costs, higher risk/health/resource costs
+- **Effect Pattern**: Front-loaded powerful effects with drawbacks or volatility
+- **Synergy Pattern**: Virus proliferation, recycling destruction, chaos multiplication
+- **Tempo Profile**: Fast initial impact, with potential for exponential growth if unchecked
+
+### Criminal (Blue):
+- **Cost Structure**: Moderate to high credit costs, lower action costs
+- **Effect Pattern**: Consistent, predictable, and efficient effects
+- **Synergy Pattern**: Resource feedback loops, efficient combinations, control reinforcement
+- **Tempo Profile**: Steady acceleration model, with consistent incremental gains
+
+### Shaper (Green):
+- **Cost Structure**: High initial costs (time/actions/credits), diminishing costs over time
+- **Effect Pattern**: Setup phase followed by powerful payoffs
+- **Synergy Pattern**: Combo-oriented, with components enhancing each other multiplicatively
+- **Tempo Profile**: Slow start with exponential growth in late game
