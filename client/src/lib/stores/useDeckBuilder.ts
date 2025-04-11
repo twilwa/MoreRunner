@@ -4,6 +4,7 @@ import { subscribeWithSelector } from 'zustand/middleware';
 import { GameState, GamePhase, initializeGame, playCardFromHand, buyCardFromMarket, endPhase, addLog } from '../game/game';
 import { LocationDeck, initializeLocationDeck, drawNextLocation, Location } from '../game/location';
 import { Card as CardType } from '../game/cards';
+import { refillMarket } from '../game/market';
 
 interface DeckBuilderState {
   gameState: GameState | null;
@@ -449,6 +450,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
                 cost: 0,
                 faction: "Corp", // Default faction for now
                 cardType: "Action",
+                keywords: ["ICE"], // Default keywords for entity cards
                 isFaceDown: true,
                 playedBy: threat.name, // Mark which entity played this card
                 effects: [
