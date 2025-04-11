@@ -157,32 +157,17 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       
       // Check if the deck is empty
       if (activePlayer.deck.length === 0) {
-        // If there are cards in the discard pile, shuffle them into the deck
-        if (activePlayer.discard.length > 0) {
-          activePlayer.deck = [...activePlayer.discard];
-          activePlayer.discard = [];
-          
-          // Shuffle the deck
-          for (let i = activePlayer.deck.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [activePlayer.deck[i], activePlayer.deck[j]] = [activePlayer.deck[j], activePlayer.deck[i]];
-          }
-          
-          // Log message
-          const updatedGameState = addLog(
-            gameState, 
-            `Your deck was empty. Discard pile shuffled into deck.`
-          );
-          set({ gameState: updatedGameState });
-        } else {
-          // Both deck and discard are empty
-          const updatedGameState = addLog(
-            gameState, 
-            `Cannot draw a card. Both deck and discard pile are empty.`
-          );
-          set({ gameState: updatedGameState });
-          return;
-        }
+        // In a deck-builder, the discard pile is separate from the deck
+        // Cards stay in the discard pile until a specific card or effect
+        // instructs you to shuffle your discard into your deck
+        
+        // Log message about empty deck
+        const updatedGameState = addLog(
+          gameState, 
+          `Your deck is empty. Use the "Shuffle Discard" action to recycle your discard pile.`
+        );
+        set({ gameState: updatedGameState });
+        return;
       }
       
       // Draw a card
@@ -195,8 +180,6 @@ export const useDeckBuilder = create<DeckBuilderState>()(
           gameState, 
           `You drew ${drawnCard.name}.`
         );
-        
-        // We'll only check for empty deck after execution, allowing players to run out of cards during their turn
         
         set({ gameState: updatedGameState });
       }
@@ -216,6 +199,41 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       const updatedGameState = addLog(
         gameState, 
         `You gained 1 credit.`
+      );
+      set({ gameState: updatedGameState });
+    },
+    
+    shuffleDiscard: () => {
+      const { gameState } = get();
+      if (!gameState) return;
+      
+      // Get the active player
+      const activePlayer = gameState.players[gameState.activePlayerIndex];
+      
+      // Only proceed if the discard pile has cards
+      if (activePlayer.discard.length === 0) {
+        const updatedGameState = addLog(
+          gameState, 
+          `Your discard pile is empty.`
+        );
+        set({ gameState: updatedGameState });
+        return;
+      }
+      
+      // Add discard pile to the deck
+      activePlayer.deck = [...activePlayer.deck, ...activePlayer.discard];
+      activePlayer.discard = [];
+      
+      // Shuffle the deck
+      for (let i = activePlayer.deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [activePlayer.deck[i], activePlayer.deck[j]] = [activePlayer.deck[j], activePlayer.deck[i]];
+      }
+      
+      // Log message
+      const updatedGameState = addLog(
+        gameState, 
+        `You shuffled your discard pile into your deck.`
       );
       set({ gameState: updatedGameState });
     },
@@ -377,40 +395,34 @@ export const useDeckBuilder = create<DeckBuilderState>()(
               break;
               
             case 'draw_cards':
-              // Draw cards
+              // Draw cards - count how many we actually draw
+              let cardsDrawn = 0;
               for (let i = 0; i < effect.value; i++) {
-                // Similar logic to drawCard but without individual logs
+                // Check if there are cards left to draw
                 if (activePlayer.deck.length === 0) {
-                  if (activePlayer.discard.length > 0) {
-                    activePlayer.deck = [...activePlayer.discard];
-                    activePlayer.discard = [];
-                    
-                    // Shuffle the deck
-                    for (let i = activePlayer.deck.length - 1; i > 0; i--) {
-                      const j = Math.floor(Math.random() * (i + 1));
-                      [activePlayer.deck[i], activePlayer.deck[j]] = [activePlayer.deck[j], activePlayer.deck[i]];
-                    }
-                    
-                    updatedGameState = addLog(
-                      updatedGameState, 
-                      `Shuffled discard pile back into the deck.`
-                    );
-                  } else {
-                    // Can't draw more
-                    break;
-                  }
+                  // No more cards to draw from deck
+                  updatedGameState = addLog(
+                    updatedGameState, 
+                    `Your deck is empty. Can't draw more cards.`
+                  );
+                  break;
                 }
                 
+                // Draw a card if possible
                 const drawnCard = activePlayer.deck.pop();
                 if (drawnCard) {
                   activePlayer.hand.push(drawnCard);
+                  cardsDrawn++;
                 }
               }
               
-              updatedGameState = addLog(
-                updatedGameState, 
-                `Drew ${effect.value} cards.`
-              );
+              // Log how many cards were actually drawn
+              if (cardsDrawn > 0) {
+                updatedGameState = addLog(
+                  updatedGameState, 
+                  `Drew ${cardsDrawn} card${cardsDrawn > 1 ? 's' : ''}.`
+                );
+              }
               break;
               
             // Add other effect types as needed
@@ -644,23 +656,21 @@ export const useDeckBuilder = create<DeckBuilderState>()(
           // End AI turn and switch back to player
           updatedGameState.activePlayerIndex = 0; // Switch back to player
           
-          // Check if the player's deck is empty and has cards in discard pile
+          // Check if the player's deck is empty
           const player = updatedGameState.players[0];
-          if (player.deck.length === 0 && player.discard.length > 0) {
-            // Shuffle the discard pile back into the deck
-            player.deck = [...player.discard];
-            player.discard = [];
-            
-            // Shuffle the deck
-            for (let i = player.deck.length - 1; i > 0; i--) {
-              const j = Math.floor(Math.random() * (i + 1));
-              [player.deck[i], player.deck[j]] = [player.deck[j], player.deck[i]];
+          if (player.deck.length === 0) {
+            // Notify player if they have cards in their discard pile that can be shuffled
+            if (player.discard.length > 0) {
+              updatedGameState = addLog(
+                updatedGameState, 
+                `Your deck is empty but you have ${player.discard.length} cards in your discard pile. Use "Shuffle Discard" to recycle these cards.`
+              );
+            } else {
+              updatedGameState = addLog(
+                updatedGameState, 
+                `Your deck and discard pile are both empty.`
+              );
             }
-            
-            updatedGameState = addLog(
-              updatedGameState, 
-              `Your discard pile was shuffled back into your deck.`
-            );
           }
           
           // Refresh player's actions and buys

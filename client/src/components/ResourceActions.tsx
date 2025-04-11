@@ -3,15 +3,19 @@ import React from 'react';
 interface ResourceActionsProps {
   onDrawCard: () => void;
   onGainCredit: () => void;
+  onShuffleDiscard: () => void;
   isPlayerTurn: boolean;
   compact?: boolean;
+  hasCardsInDiscard?: boolean;  // To disable the button when discard is empty
 }
 
 const ResourceActions: React.FC<ResourceActionsProps> = ({
   onDrawCard,
   onGainCredit,
+  onShuffleDiscard,
   isPlayerTurn,
-  compact = false
+  compact = false,
+  hasCardsInDiscard = false
 }) => {
   if (!isPlayerTurn) {
     return null;
@@ -34,6 +38,16 @@ const ResourceActions: React.FC<ResourceActionsProps> = ({
           className="w-8 h-8 bg-green-700 hover:bg-green-600 text-white rounded-md flex items-center justify-center"
         >
           <span>💰</span>
+        </button>
+
+        <button
+          onClick={onShuffleDiscard}
+          title="Shuffle discard pile into deck"
+          disabled={!hasCardsInDiscard}
+          className={`w-8 h-8 ${hasCardsInDiscard ? 'bg-purple-700 hover:bg-purple-600' : 'bg-gray-700 cursor-not-allowed'} 
+            text-white rounded-md flex items-center justify-center`}
+        >
+          <span>🔄</span>
         </button>
       </div>
     );
@@ -58,6 +72,20 @@ const ResourceActions: React.FC<ResourceActionsProps> = ({
             text-white rounded-md font-mono text-sm flex items-center justify-center"
         >
           <span className="mr-2">💰</span> CREDIT
+        </button>
+      </div>
+
+      {/* Add a full width shuffle discard button in its own row */}
+      <div className="mt-2">
+        <button
+          onClick={onShuffleDiscard}
+          disabled={!hasCardsInDiscard}
+          className={`w-full px-3 py-2 ${hasCardsInDiscard ? 
+            'bg-gradient-to-r from-purple-800 to-indigo-800 hover:from-purple-700 hover:to-indigo-700' : 
+            'bg-gray-700 cursor-not-allowed'} 
+            text-white rounded-md font-mono text-sm flex items-center justify-center`}
+        >
+          <span className="mr-2">🔄</span> SHUFFLE DISCARD
         </button>
       </div>
     </div>
