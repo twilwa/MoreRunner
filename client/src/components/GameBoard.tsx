@@ -233,8 +233,10 @@ const GameBoard: React.FC = () => {
                 <ResourceActions
                   onDrawCard={drawCard}
                   onGainCredit={gainCredit}
+                  onShuffleDiscard={shuffleDiscard}
                   isPlayerTurn={isPlayerTurn}
                   compact={true}
+                  hasCardsInDiscard={activePlayer.discard.length > 0}
                 />
               </div>
               <Hand 
@@ -325,8 +327,10 @@ const GameBoard: React.FC = () => {
                   <ResourceActions
                     onDrawCard={drawCard}
                     onGainCredit={gainCredit}
+                    onShuffleDiscard={shuffleDiscard}
                     isPlayerTurn={isPlayerTurn}
                     compact={true}
+                    hasCardsInDiscard={activePlayer.discard.length > 0}
                   />
                 </div>
                 <Hand 
