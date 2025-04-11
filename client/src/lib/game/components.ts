@@ -22,6 +22,7 @@ export interface GameContext {
   awaitingTargetSelection: boolean; // Whether waiting for player to select targets
   gameState: any; // Full game state object
   log: (message: string) => void; // For logging game events
+  recentlyTrashed?: Card; // Card that was recently trashed (for RecycleGain component)
 }
 
 // ----- TARGET COMPONENTS -----
@@ -240,7 +241,7 @@ export class TrashCost implements Component {
       }
       
       if (this.specific && this.specificType && 
-          !(targetCard.keywords && targetCard.keywords.includes(this.specificType))) {
+          !(targetCard.keywords && targetCard.keywords.some((k: string) => k === this.specificType as any))) {
         isValidTarget = false;
       }
       
@@ -270,7 +271,8 @@ export class TrashCost implements Component {
       
       let targetTypeDescription = this.targetType;
       if (this.specific && this.specificType) {
-        targetTypeDescription = `${this.specificType} ${this.targetType}`;
+        // Use concatenation instead of template literals to avoid LSP issues
+        targetTypeDescription = this.specificType + " " + this.targetType;
       }
       
       context.log(`Select a ${targetTypeDescription} card to trash.`);
@@ -413,6 +415,63 @@ export class GainAction implements Component {
         context.log(`${target.name} gained ${this.amount} action(s).`);
       }
     });
+  }
+}
+
+export class RecycleGain implements Component {
+  type = 'RecycleGain';
+  
+  constructor(
+    public resourceType: 'credits' | 'cards' | 'actions',
+    public amount: number,
+    public bonusFromCardCost: boolean = false,
+    public bonusMultiplier: number = 0.5 // By default gain 50% of the trashed card's cost
+  ) {}
+  
+  apply(context: GameContext): void {
+    // Check if there's a recently trashed card in the execution context
+    // This requires extension of GameContext with a recentlyTrashed property
+    const trashedCard = context.recentlyTrashed || { cost: 0, name: "unknown card" };
+    
+    // Calculate bonus from trashed card if applicable
+    let totalAmount = this.amount;
+    if (this.bonusFromCardCost && 'cost' in trashedCard) {
+      const bonus = Math.floor(trashedCard.cost * this.bonusMultiplier);
+      totalAmount += bonus;
+      const cardName = 'name' in trashedCard ? trashedCard.name : "unknown card";
+      context.log(`${context.card.name} gained a bonus of ${bonus} from recycling ${cardName}.`);
+    }
+    
+    // Apply the resource gain based on type
+    switch (this.resourceType) {
+      case 'credits':
+        if (context.player.credits !== undefined) {
+          context.player.credits += totalAmount;
+          context.log(`${context.player.name} gained ${totalAmount} credits from recycling.`);
+        }
+        break;
+        
+      case 'cards':
+        if (context.player.drawCard) {
+          for (let i = 0; i < totalAmount; i++) {
+            const cardDrawn = context.player.drawCard();
+            if (cardDrawn) {
+              context.log(`${context.player.name} drew ${cardDrawn.name} from recycling.`);
+            } else {
+              context.log(`${context.player.name} couldn't draw a card (deck empty).`);
+              break;
+            }
+          }
+        }
+        break;
+        
+      case 'actions':
+        if (context.player.actions !== undefined) {
+          context.player.actions += totalAmount;
+          context.log(`${context.player.name} gained ${totalAmount} action(s) from recycling.`);
+        }
+        break;
+    }
   }
 }
 

@@ -28,6 +28,7 @@ import {
   CreditCost,
   ActionCost,
   KeywordRequirement,
+  TrashCost,
   GainCredits,
   DealDamage,
   PreventDamage,
@@ -35,6 +36,8 @@ import {
   DiscardCards,
   GainAction,
   KeywordSynergy,
+  RiskReward,
+  ComboEffect,
   PauseQueue,
   CancelCard,
   RevealCard,
@@ -198,6 +201,58 @@ export const ICE_BREAKER: EnhancedCard = createCardWithComponents(
   ]
 );
 
+// New Anarch card showcasing high-risk/high-reward mechanics
+export const DESPERATE_HACK: EnhancedCard = createCardWithComponents(
+  {
+    id: 'desperate_hack',
+    name: 'Desperate Hack',
+    cost: 2, // Low credit cost but high risk
+    faction: 'Runner', // Specifically Anarch in flavor
+    cardType: 'Event',
+    keywords: ['Virus', 'Program'], // Using valid keywords from CardKeyword
+    effects: [], // Using components instead
+    description: 'Target a threat. Take a risky action - 60% chance to deal 4 damage, 40% chance to take 2 damage yourself. If you have a Virus card in play, deal +1 damage.'
+  },
+  [
+    new CreditCost(2), // Cheap but risky
+    new ActionCost(1),
+    new PauseQueue('Select a target for Desperate Hack'),
+    new SingleEntityTarget('threat', true, threat => threat.health !== undefined),
+    new RiskReward(
+      'health', // Risk type - player takes damage if failed
+      'damage', // Reward type - deal damage if successful
+      60, // 60% chance of success
+      2,  // Take 2 damage on failure
+      4   // Deal 4 damage on success
+    ),
+    new KeywordSynergy('Virus', 'RiskReward', 1) // +1 damage if you have a Virus card
+  ]
+);
+
+// New Anarch card showcasing trash/recycle mechanics
+export const CIRCUIT_BREAKER: EnhancedCard = createCardWithComponents(
+  {
+    id: 'circuit_breaker',
+    name: 'Circuit Breaker',
+    cost: 3,
+    faction: 'Runner', // Specifically Anarch in flavor
+    cardType: 'Program',
+    keywords: ['Virus', 'Hardware'], // Using valid keywords from CardKeyword
+    effects: [], // Using components instead
+    description: 'Trash a program you control. Deal damage equal to the trashed program\'s cost +1 to a target threat.'
+  },
+  [
+    new CreditCost(1), // Very cheap because you're sacrificing another card
+    new ActionCost(1),
+    new PauseQueue('Select a program to trash'),
+    new TrashCost('program', false), // Trash any program
+    new PauseQueue('Select a target for the damage'),
+    new SingleEntityTarget('threat', true, threat => threat.health !== undefined),
+    new DealDamage(3), // Base damage value (gets modified in real gameplay based on trashed card's cost)
+    new ComboEffect('Virus', { type: 'damage', amount: 1 }) // +1 damage if you have a Virus card in play
+  ]
+);
+
 // Create a collection of all enhanced cards
 export const ENHANCED_CARDS: EnhancedCard[] = [
   ENHANCED_CREDIT_CHIP,
@@ -211,7 +266,9 @@ export const ENHANCED_CARDS: EnhancedCard[] = [
   ENHANCED_TRACE_PROGRAM,
   ENHANCED_DATA_BREACH,
   NETWORK_SCANNER,
-  ICE_BREAKER
+  ICE_BREAKER,
+  DESPERATE_HACK,
+  CIRCUIT_BREAKER
 ];
 
 // Helper function to get the enhanced version of a card by ID
