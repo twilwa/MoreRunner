@@ -417,25 +417,88 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       // Run the AI turn after executing all cards
       updatedGameState = addLog(
         updatedGameState, 
-        `Your turn is over. Processing AI turn...`
+        `Your turn is over. Processing location entities...`
       );
       
-      // Simulate AI turn (placeholder)
+      // Simulate AI turn with entities at the location playing cards
       setTimeout(() => {
         // Switch to the AI player to handle the AI turn
         const aiPlayerIndex = 1; // Assuming the AI is the second player
         updatedGameState.activePlayerIndex = aiPlayerIndex;
-        updatedGameState = addLog(
-          updatedGameState, 
-          `AI turn: SENTINEL AI is analyzing...`
-        );
         
-        // Simulate the AI taking actions and ending their turn
-        setTimeout(() => {
+        // Get the current location and its threats/entities
+        const { locationDeck } = get();
+        if (locationDeck && locationDeck.currentLocation) {
+          const currentLocation = locationDeck.currentLocation;
+          const locationThreats = currentLocation.threats || [];
+          
+          // Log the start of location entity actions
           updatedGameState = addLog(
             updatedGameState, 
-            `AI turn: SENTINEL AI processed some operations.`
+            `The entities at ${currentLocation.name} are responding to your actions...`
           );
+          
+          // Have each entity at the location play a facedown card
+          if (locationThreats.length > 0) {
+            locationThreats.forEach((threat, index) => {
+              // Create a placeholder facedown card for this entity
+              const entityCard: CardType = {
+                id: `entity-card-${Date.now()}-${index}`,
+                name: `${threat.name}'s Card`,
+                description: "A face-down card played by a location entity.",
+                cost: 0,
+                faction: "Corp", // Default faction for now
+                cardType: "Action",
+                isFaceDown: true,
+                playedBy: threat.name, // Mark which entity played this card
+                effects: [
+                  // We'll define proper effects later when the card is revealed
+                  { type: "damage_player", value: threat.attack }
+                ]
+              };
+              
+              // Add the card to the AI player's inPlay area
+              updatedGameState.players[aiPlayerIndex].inPlay.push(entityCard);
+              
+              // Log the entity playing a card
+              updatedGameState = addLog(
+                updatedGameState, 
+                `${threat.name} played a face-down card.`
+              );
+            });
+          } else {
+            updatedGameState = addLog(
+              updatedGameState, 
+              `No entities at this location to respond.`
+            );
+          }
+        }
+        
+        // Simulate the AI processing after entities play cards
+        setTimeout(() => {
+          // Refill the market with new cards
+          if (updatedGameState.market) {
+            // Check if any market spots are empty
+            const emptySlots = updatedGameState.market.availableCards.length < updatedGameState.market.maxSize;
+            
+            if (emptySlots) {
+              // Refill the market from the market deck
+              for (let i = updatedGameState.market.availableCards.length; i < updatedGameState.market.maxSize; i++) {
+                if (updatedGameState.market.deck.length > 0) {
+                  // Draw a card from the market deck
+                  const card = updatedGameState.market.deck.pop();
+                  if (card) {
+                    updatedGameState.market.availableCards.push(card);
+                  }
+                }
+              }
+              
+              updatedGameState = addLog(
+                updatedGameState, 
+                `The DataMarket refreshed with new products.`
+              );
+            }
+          }
           
           // End AI turn and switch back to player
           updatedGameState.activePlayerIndex = 0; // Switch back to player
@@ -465,7 +528,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
           
           updatedGameState = addLog(
             updatedGameState, 
-            `Your turn begins. You have ${player.actions} action and ${player.buys} buy.`
+            `Your turn begins. You have ${player.actions} action and unlimited buys.`
           );
           
           set({ gameState: updatedGameState });

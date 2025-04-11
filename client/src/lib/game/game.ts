@@ -171,10 +171,8 @@ export function buyCardFromMarket(gameState: GameState, cardIndex: number): Game
   let updatedGameState = { ...gameState };
   const activePlayer = updatedGameState.players[updatedGameState.activePlayerIndex];
   
-  // Check if player has buys left
-  if (activePlayer.buys <= 0) {
-    return addLog(updatedGameState, "Cannot buy card: No buys left.");
-  }
+  // Allow any number of buys during player turn
+  // Players can buy as many cards as they can afford
   
   // Check if the card exists in market
   if (cardIndex < 0 || cardIndex >= updatedGameState.market.availableCards.length) {
@@ -199,8 +197,8 @@ export function buyCardFromMarket(gameState: GameState, cardIndex: number): Game
   const { market: updatedMarket } = removeCard(updatedGameState.market, cardIndex);
   updatedGameState.market = updatedMarket;
   
-  // Refill the market
-  updatedGameState.market = refillMarket(updatedGameState.market);
+  // We'll no longer refill the market immediately after buying cards
+  // Instead, it will be refilled during the AI turn
   
   // Add log
   updatedGameState = addLog(

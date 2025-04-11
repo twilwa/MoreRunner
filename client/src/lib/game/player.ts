@@ -171,14 +171,16 @@ export function playCard(player: Player, cardIndex: number): { player: Player, p
   return { player: updatedPlayer, playedCard: null };
 }
 
-// Buy a card from the market
+// Buy a card from the market (unlimited buys allowed)
 export function buyCard(player: Player, card: Card): Player {
   const updatedPlayer = { ...player };
   
-  if (updatedPlayer.credits >= card.cost && updatedPlayer.buys > 0) {
+  if (updatedPlayer.credits >= card.cost) {
     updatedPlayer.credits -= card.cost;
-    updatedPlayer.buys -= 1;
-    updatedPlayer.discard.push({ ...card }); // Add to discard pile
+    // No longer decrement buys - unlimited buys allowed
+    
+    // Add card to discard pile (not directly to deck)
+    updatedPlayer.discard.push({ ...card });
     
     // Adjust faction reputation based on card purchased
     if (card.faction !== 'Neutral') {
