@@ -84,11 +84,21 @@ const Card: React.FC<CardProps> = ({ card, onClick, disabled = false }) => {
           transform transition-all shadow-lg overflow-hidden`}
         onClick={!disabled && onClick ? onClick : undefined}
       >
+        {/* Show which entity played this card if available */}
+        {card.playedBy && (
+          <div className="absolute top-3 left-0 right-0 text-center">
+            <div className="bg-red-900/70 py-1 px-2 mx-auto inline-block rounded-full">
+              <span className="text-xs text-red-300 font-bold">FROM: {card.playedBy}</span>
+            </div>
+          </div>
+        )}
+        
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-20 h-20 rounded-full bg-gradient-to-r from-cyan-900 to-blue-900 flex items-center justify-center">
             <div className="text-cyan-500 font-bold">ENCRYPTED</div>
           </div>
         </div>
+        
         <div className="absolute bottom-3 left-0 right-0 text-center text-xs text-cyan-700 font-mono">
           SECURE PROGRAM
         </div>

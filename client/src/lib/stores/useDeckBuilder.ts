@@ -482,16 +482,8 @@ export const useDeckBuilder = create<DeckBuilderState>()(
             const emptySlots = updatedGameState.market.availableCards.length < updatedGameState.market.maxSize;
             
             if (emptySlots) {
-              // Refill the market from the market deck
-              for (let i = updatedGameState.market.availableCards.length; i < updatedGameState.market.maxSize; i++) {
-                if (updatedGameState.market.deck.length > 0) {
-                  // Draw a card from the market deck
-                  const card = updatedGameState.market.deck.pop();
-                  if (card) {
-                    updatedGameState.market.availableCards.push(card);
-                  }
-                }
-              }
+              // Refill the market with new random cards
+              updatedGameState.market = refillMarket(updatedGameState.market);
               
               updatedGameState = addLog(
                 updatedGameState, 

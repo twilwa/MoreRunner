@@ -28,11 +28,12 @@ export type CardType =
   | 'Trap'      // Can be played face down as a trap
   | 'Install'   // Installed card with ongoing effects
   | 'Hardware'  // Permanent upgrades/equipment
-  | 'Event';    // One-time effect cards
+  | 'Event'     // One-time effect cards
+  | 'Action';   // Action cards played by NPCs/entities
 
 // Card Effect Types
 export type CardEffect = {
-  type: 'gain_credits' | 'damage_opponent' | 'draw_cards' | 'trash_cards' | 'gain_action' | 'force_discard' | 
+  type: 'gain_credits' | 'damage_opponent' | 'damage_player' | 'draw_cards' | 'trash_cards' | 'gain_action' | 'force_discard' | 
         'copy_card' | 'fuse_cards' | 'set_trap' | 'trace' | 'reveal_trap' | 'push_luck' | 'stealth_bypass' |
         'gain_resources'; // Kept for backward compatibility
   value: number;
