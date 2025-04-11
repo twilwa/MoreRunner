@@ -179,7 +179,7 @@ const GameBoard: React.FC = () => {
                 {gameState.phase === 'action' && isPlayerTurn && (
                   <ExecuteButton 
                     onExecute={handleExecuteQueuedCards}
-                    disabled={!isPlayerTurn || gameState.phase !== 'action'}
+                    disabled={!isPlayerTurn}
                     count={activePlayer.inPlay.length}
                   />
                 )}
@@ -190,7 +190,7 @@ const GameBoard: React.FC = () => {
                     cards={activePlayer.inPlay} 
                     onCardClick={handleReturnQueuedCard}
                     onDragEnd={handleDragEnd}
-                    canPlayCards={gameState.phase === 'action' && isPlayerTurn}
+                    canPlayCards={isPlayerTurn}
                     title="Drag to reorder • Click to return to hand"
                     isQueue={true}
                   />
@@ -253,7 +253,7 @@ const GameBoard: React.FC = () => {
                 {gameState.phase === 'action' && isPlayerTurn && (
                   <ExecuteButton 
                     onExecute={handleExecuteQueuedCards}
-                    disabled={!isPlayerTurn || gameState.phase !== 'action'}
+                    disabled={!isPlayerTurn}
                     count={activePlayer.inPlay.length}
                   />
                 )}
@@ -264,7 +264,7 @@ const GameBoard: React.FC = () => {
                     cards={activePlayer.inPlay} 
                     onCardClick={handleReturnQueuedCard}
                     onDragEnd={handleDragEnd}
-                    canPlayCards={gameState.phase === 'action' && isPlayerTurn}
+                    canPlayCards={isPlayerTurn}
                     title="Drag to reorder • Click to return to hand"
                     isQueue={true}
                   />
@@ -380,7 +380,7 @@ const GameBoard: React.FC = () => {
                 {gameState.phase === 'action' && isPlayerTurn && (
                   <ExecuteButton 
                     onExecute={handleExecuteQueuedCards}
-                    disabled={!isPlayerTurn || gameState.phase !== 'action'}
+                    disabled={!isPlayerTurn}
                     count={activePlayer.inPlay.length}
                   />
                 )}
@@ -391,7 +391,7 @@ const GameBoard: React.FC = () => {
                     cards={activePlayer.inPlay} 
                     onCardClick={handleReturnQueuedCard}
                     onDragEnd={handleDragEnd}
-                    canPlayCards={gameState.phase === 'action' && isPlayerTurn}
+                    canPlayCards={isPlayerTurn}
                     title="Drag to reorder • Click to return to hand"
                     isQueue={true}
                   />
