@@ -134,8 +134,8 @@ const GameBoard: React.FC = () => {
   };
   
   const handleEndPhase = () => {
-    // Execute any queued cards first if ending action phase with cards in queue
-    if (gameState.phase === 'action' && isPlayerTurn && activePlayer.inPlay.length > 0) {
+    // Execute any queued cards first if player has cards in queue
+    if (isPlayerTurn && activePlayer.inPlay.length > 0) {
       executeQueuedCards();
       addLogMessage('Executing all queued programs.');
     }
@@ -176,7 +176,7 @@ const GameBoard: React.FC = () => {
             <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
               <div className="flex justify-between items-center mb-2">
                 <h2 className="text-lg font-semibold text-cyan-400">ACTIVE PROGRAMS</h2>
-                {gameState.phase === 'action' && isPlayerTurn && (
+                {isPlayerTurn && (
                   <ExecuteButton 
                     onExecute={handleExecuteQueuedCards}
                     disabled={!isPlayerTurn}
@@ -250,7 +250,7 @@ const GameBoard: React.FC = () => {
             <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
               <div className="flex justify-between items-center mb-2">
                 <h2 className="text-lg font-semibold text-cyan-400">ACTIVE PROGRAMS</h2>
-                {gameState.phase === 'action' && isPlayerTurn && (
+                {isPlayerTurn && (
                   <ExecuteButton 
                     onExecute={handleExecuteQueuedCards}
                     disabled={!isPlayerTurn}
