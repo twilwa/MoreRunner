@@ -181,23 +181,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
           `You drew ${drawnCard.name}.`
         );
         
-        // Check if the deck is now empty and there are cards in discard
-        if (activePlayer.deck.length === 0 && activePlayer.discard.length > 0) {
-          // Shuffle discard pile back into deck
-          activePlayer.deck = [...activePlayer.discard];
-          activePlayer.discard = [];
-          
-          // Shuffle the deck
-          for (let i = activePlayer.deck.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [activePlayer.deck[i], activePlayer.deck[j]] = [activePlayer.deck[j], activePlayer.deck[i]];
-          }
-          
-          updatedGameState = addLog(
-            updatedGameState, 
-            `Your deck is now empty. Shuffled discard pile back into deck.`
-          );
-        }
+        // We'll only check for empty deck after execution, allowing players to run out of cards during their turn
         
         set({ gameState: updatedGameState });
       }

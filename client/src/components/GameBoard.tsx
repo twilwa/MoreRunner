@@ -171,32 +171,6 @@ const GameBoard: React.FC = () => {
               <h2 className="text-lg font-semibold mb-2 text-cyan-400">SYSTEM LOG</h2>
               <GameLog logs={gameState.logs} />
             </div>
-
-            {/* Player queued cards (Active Programs) */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <div className="flex justify-between items-center mb-2">
-                <h2 className="text-lg font-semibold text-cyan-400">ACTIVE PROGRAMS</h2>
-                {isPlayerTurn && (
-                  <ExecuteButton 
-                    onExecute={handleExecuteQueuedCards}
-                    disabled={!isPlayerTurn}
-                    count={activePlayer.inPlay.length}
-                  />
-                )}
-              </div>
-              <div className="min-h-[140px] relative w-full overflow-hidden">
-                <div className="w-full pr-2">
-                  <DraggableHand 
-                    cards={activePlayer.inPlay} 
-                    onCardClick={handleReturnQueuedCard}
-                    onDragEnd={handleDragEnd}
-                    canPlayCards={isPlayerTurn}
-                    title="Drag to reorder • Click to return to hand"
-                    isQueue={true}
-                  />
-                </div>
-              </div>
-            </div>
           </div>
         );
       case 'market':
@@ -245,32 +219,6 @@ const GameBoard: React.FC = () => {
                 canPlayCards={canPlayCards}
               />
             </div>
-            
-            {/* Player queued cards (Active Programs) */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <div className="flex justify-between items-center mb-2">
-                <h2 className="text-lg font-semibold text-cyan-400">ACTIVE PROGRAMS</h2>
-                {isPlayerTurn && (
-                  <ExecuteButton 
-                    onExecute={handleExecuteQueuedCards}
-                    disabled={!isPlayerTurn}
-                    count={activePlayer.inPlay.length}
-                  />
-                )}
-              </div>
-              <div className="min-h-[140px] relative w-full overflow-hidden">
-                <div className="w-full pr-2">
-                  <DraggableHand 
-                    cards={activePlayer.inPlay} 
-                    onCardClick={handleReturnQueuedCard}
-                    onDragEnd={handleDragEnd}
-                    canPlayCards={isPlayerTurn}
-                    title="Drag to reorder • Click to return to hand"
-                    isQueue={true}
-                  />
-                </div>
-              </div>
-            </div>
           </div>
         );
     }
@@ -307,7 +255,35 @@ const GameBoard: React.FC = () => {
             />
           </div>
           
-          {/* Desktop layout - New structure with wider Active Programs */}
+          {/* Active Programs - Full width right below Location for targeting (visible on all devices) */}
+          <div className="p-4">
+            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="text-lg font-semibold text-cyan-400">ACTIVE PROGRAMS</h2>
+                {isPlayerTurn && (
+                  <ExecuteButton 
+                    onExecute={handleExecuteQueuedCards}
+                    disabled={!isPlayerTurn}
+                    count={activePlayer.inPlay.length}
+                  />
+                )}
+              </div>
+              <div className="min-h-[170px] relative w-full overflow-hidden">
+                <div className="w-full pr-2">
+                  <DraggableHand 
+                    cards={activePlayer.inPlay} 
+                    onCardClick={handleReturnQueuedCard}
+                    onDragEnd={handleDragEnd}
+                    canPlayCards={isPlayerTurn}
+                    title="Drag to reorder • Click to return to hand"
+                    isQueue={true}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Desktop layout - Columns for other components */}
           <div className="hidden md:grid md:grid-cols-12 gap-6 p-4">
             {/* Left column - System Log and Hand (6 cols) */}
             <div className="col-span-6 space-y-4">
@@ -371,32 +347,6 @@ const GameBoard: React.FC = () => {
                   />
                 </div>
               )}
-            </div>
-            
-            {/* Active Programs - Full width for better visualization */}
-            <div className="col-span-12 bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <div className="flex justify-between items-center mb-3">
-                <h2 className="text-lg font-semibold text-cyan-400">ACTIVE PROGRAMS</h2>
-                {isPlayerTurn && (
-                  <ExecuteButton 
-                    onExecute={handleExecuteQueuedCards}
-                    disabled={!isPlayerTurn}
-                    count={activePlayer.inPlay.length}
-                  />
-                )}
-              </div>
-              <div className="min-h-[170px] relative w-full overflow-hidden">
-                <div className="w-full pr-2">
-                  <DraggableHand 
-                    cards={activePlayer.inPlay} 
-                    onCardClick={handleReturnQueuedCard}
-                    onDragEnd={handleDragEnd}
-                    canPlayCards={isPlayerTurn}
-                    title="Drag to reorder • Click to return to hand"
-                    isQueue={true}
-                  />
-                </div>
-              </div>
             </div>
           </div>
           
