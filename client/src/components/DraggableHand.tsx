@@ -34,11 +34,34 @@ const DraggableHand: React.FC<DraggableHandProps> = ({
     setDraggedItemIndex(start.source.index);
   };
   
+  // Keep a temporary state to force re-renders if needed
+  const [cleanupCounter, setCleanupCounter] = useState(0);
+  
   const handleDragEndWithState = (result: DropResult) => {
+    // First, clear all our visual state
     setIsDragging(false);
     setDraggedItemIndex(null);
     setDropTargetIndex(null);
-    onDragEnd(result); // Call the original handler
+    
+    // Call the original handler to update the card order
+    onDragEnd(result);
+    
+    // Always clean up after drag operations to prevent visual artifacts
+    setTimeout(() => {
+      // Find all cards and gaps within the droppable area
+      const container = containerRef.current;
+      if (container) {
+        // Look for any lingering gap indicators
+        const gapElements = container.querySelectorAll('[aria-hidden="true"]');
+        const cardElements = container.querySelectorAll('[data-draggable-id]');
+        
+        // Check if we need cleanup
+        if (gapElements.length > 0 || cardElements.length !== cards.length) {
+          // Force a re-render to clean up artifacts
+          setCleanupCounter(prev => prev + 1);
+        }
+      }
+    }, 100); // Slightly longer delay to ensure react-beautiful-dnd has finished its work
   };
   
   const handleDragUpdate = (update: any) => {
@@ -116,6 +139,7 @@ const DraggableHand: React.FC<DraggableHandProps> = ({
               ref={provided.innerRef}
               {...provided.draggableProps}
               {...provided.dragHandleProps}
+              data-draggable-id={`${card.id}-${index}`}
               className={`
                 transition-all duration-150 
                 ${snapshot.isDragging ? 'z-50 brightness-125 shadow-lg shadow-cyan-500/50' : 
@@ -176,6 +200,7 @@ const DraggableHand: React.FC<DraggableHandProps> = ({
               {...provided.draggableProps}
               {...provided.dragHandleProps}
               ref={provided.innerRef}
+              data-draggable-clone="true"
               style={{
                 ...provided.draggableProps.style,
                 transform: `${provided.draggableProps.style?.transform} scale(1.05)`,
