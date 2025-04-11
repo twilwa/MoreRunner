@@ -360,8 +360,8 @@ const GameBoard: React.FC = () => {
                 />
               </div>
               
-              {/* Phase change buttons */}
-              {gameState.phase !== 'action' && (
+              {/* Phase change buttons - only show when not player's turn */}
+              {!isPlayerTurn && (
                 <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
                   <ActionButtons 
                     onEndPhase={handleEndPhase}
@@ -377,7 +377,7 @@ const GameBoard: React.FC = () => {
             <div className="col-span-12 bg-gray-800 rounded-lg p-4 border border-gray-700">
               <div className="flex justify-between items-center mb-3">
                 <h2 className="text-lg font-semibold text-cyan-400">ACTIVE PROGRAMS</h2>
-                {gameState.phase === 'action' && isPlayerTurn && (
+                {isPlayerTurn && (
                   <ExecuteButton 
                     onExecute={handleExecuteQueuedCards}
                     disabled={!isPlayerTurn}
@@ -407,14 +407,14 @@ const GameBoard: React.FC = () => {
             
             {/* Action buttons always visible on mobile */}
             <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 mt-4 mb-20">
-              {gameState.phase === 'action' && isPlayerTurn ? (
+              {isPlayerTurn ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-center mb-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse mr-2"></div>
-                    <h3 className="text-green-400 font-bold tracking-wider text-sm">ACTION PHASE: Queue cards, then execute</h3>
+                    <div className="w-3 h-3 bg-cyan-500 rounded-full animate-pulse mr-2"></div>
+                    <h3 className="text-cyan-400 font-bold tracking-wider text-sm">QUEUE CARDS: Add cards and execute them</h3>
                   </div>
                   
-                  <p className="text-sm text-green-300 text-center font-mono mb-4">TAP CARDS IN HAND to play them and gain advantages</p>
+                  <p className="text-sm text-cyan-300 text-center font-mono mb-4">TAP CARDS IN HAND to queue, or BUY CARDS from the market</p>
                   
                   <ExecuteButton 
                     onExecute={handleExecuteQueuedCards}
