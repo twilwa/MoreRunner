@@ -56,6 +56,7 @@ export interface Card {
   isFaceDown?: boolean;  // For trap/ambush cards
   canFuse?: boolean;     // Indicates if this card can be fused with another
   riskLevel?: number;    // For push-your-luck mechanics (0-3)
+  playedBy?: string;     // Which entity played this card (for AI-played cards)
 }
 
 // --------------------------------------------------

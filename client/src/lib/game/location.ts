@@ -9,6 +9,7 @@ export type LocationThreat = {
   description: string;
   dangerLevel: number; // 1-5
   defenseValue: number;
+  attack: number; // Damage this threat can deal to player
 };
 
 export interface Location {
@@ -42,7 +43,8 @@ const LOCATIONS: Location[] = [
         name: 'Security Scanner',
         description: 'A biometric scanner checks all who enter.',
         dangerLevel: 1,
-        defenseValue: 2
+        defenseValue: 2,
+        attack: 1
       }
     ],
     rewards: {
@@ -63,13 +65,15 @@ const LOCATIONS: Location[] = [
         name: 'Automated Defense System',
         description: 'Motion sensors trigger counter-intrusion measures.',
         dangerLevel: 3,
-        defenseValue: 4
+        defenseValue: 4,
+        attack: 2
       },
       {
         name: 'Security AI',
         description: 'An artificial intelligence monitors the server farm.',
         dangerLevel: 2,
-        defenseValue: 3
+        defenseValue: 3,
+        attack: 2
       }
     ],
     rewards: {
@@ -90,7 +94,8 @@ const LOCATIONS: Location[] = [
         name: 'Guard Patrol',
         description: 'Security guards occasionally check this exit.',
         dangerLevel: 2,
-        defenseValue: 2
+        defenseValue: 2,
+        attack: 1
       }
     ],
     rewards: {
@@ -111,13 +116,14 @@ const LOCATIONS: Location[] = [
         name: 'Elite Security Team',
         description: 'Heavily armed guards protect the valuables.',
         dangerLevel: 4,
-        defenseValue: 5
+        defenseValue: 5,
+        attack: 3
       },
       {
         name: 'Advanced Alarm System',
         description: 'State-of-the-art alarms will trigger reinforcements.',
         dangerLevel: 3,
-        defenseValue: 4
+        defenseValue: 4, attack: 2
       }
     ],
     rewards: {
@@ -138,7 +144,7 @@ const LOCATIONS: Location[] = [
         name: 'Security Cameras',
         description: 'Rotating cameras monitor all movement.',
         dangerLevel: 2,
-        defenseValue: 3
+        defenseValue: 3, attack: 2
       }
     ],
     rewards: {
@@ -159,13 +165,13 @@ const LOCATIONS: Location[] = [
         name: 'Security Chief',
         description: 'A veteran security professional with cybernetic enhancements.',
         dangerLevel: 5,
-        defenseValue: 6
+        defenseValue: 6, attack: 2
       },
       {
         name: 'Alarm Console',
         description: 'This console can lock down the entire building.',
         dangerLevel: 3,
-        defenseValue: 4
+        defenseValue: 4, attack: 2
       }
     ],
     rewards: {
