@@ -324,7 +324,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
     
     // Execute all queued cards in order and then run AI turn
     executeQueuedCards: () => {
-      const { gameState } = get();
+      const { gameState, entityStatuses } = get();
       if (!gameState) return;
       
       const activePlayer = gameState.players[gameState.activePlayerIndex];
@@ -338,6 +338,9 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         set({ gameState: updatedGameState });
         return;
       }
+      
+      // Track entity statuses
+      let updatedEntityStatuses = [...entityStatuses];
       
       // Apply effects for each card in the queue
       let updatedGameState = gameState;
@@ -435,6 +438,56 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         `Your turn is over. Processing location entities...`
       );
       
+      // Update action potentials for entities
+      const { locationDeck } = get();
+      if (locationDeck?.currentLocation) {
+        const threats = locationDeck.currentLocation.threats;
+        
+        // For each threat, advance its action potential
+        threats.forEach(threat => {
+          // Find current status for this threat
+          const entityStatusIndex = updatedEntityStatuses.findIndex(
+            status => status.threatId === threat.id
+          );
+          
+          if (entityStatusIndex >= 0) {
+            const currentStatus = updatedEntityStatuses[entityStatusIndex];
+            const updatedPotentials = [...currentStatus.actionPotentials];
+            
+            // Find first inactive dot and activate it
+            const inactiveIndex = updatedPotentials.findIndex(pot => !pot);
+            if (inactiveIndex >= 0) {
+              updatedPotentials[inactiveIndex] = true;
+              
+              // Update the entity status with new action potentials
+              updatedEntityStatuses[entityStatusIndex] = {
+                ...currentStatus,
+                actionPotentials: updatedPotentials
+              };
+              
+              // Log action potential increase
+              updatedGameState = addLog(
+                updatedGameState,
+                `${threat.name} is charging up its action potential.`
+              );
+            }
+            
+            // Check if all action potentials are active
+            const allActive = updatedPotentials.every(pot => pot);
+            if (allActive) {
+              // Log that this entity will act on next turn
+              updatedGameState = addLog(
+                updatedGameState,
+                `${threat.name} has reached full action potential and will act soon!`
+              );
+            }
+          }
+        });
+      }
+      
+      // Update the entity statuses
+      set({ entityStatuses: updatedEntityStatuses });
+      
       // Simulate AI turn with entities at the location playing cards
       setTimeout(() => {
         // Switch to the AI player to handle the AI turn
@@ -453,35 +506,115 @@ export const useDeckBuilder = create<DeckBuilderState>()(
             `The entities at ${currentLocation.name} are responding to your actions...`
           );
           
-          // Have each entity at the location play a facedown card
+          // Have entities with full action potentials play cards
           if (locationThreats.length > 0) {
-            locationThreats.forEach((threat, index) => {
-              // Create a placeholder facedown card for this entity
+            // Get latest entity statuses
+            const latestEntityStatuses = [...updatedEntityStatuses];
+            
+            // Track entities that have full action potential
+            const activatedEntities: LocationThreat[] = [];
+            
+            // Check which entities should fully activate
+            locationThreats.forEach(threat => {
+              const entityStatus = latestEntityStatuses.find(
+                status => status.threatId === threat.id
+              );
+              
+              if (entityStatus) {
+                // Check if all action potentials are active
+                const allActive = entityStatus.actionPotentials.every(pot => pot);
+                
+                if (allActive) {
+                  // This entity should activate
+                  activatedEntities.push(threat);
+                  
+                  // Reset its action potentials for next cycle
+                  const resetPotentials = entityStatus.actionPotentials.map(() => false);
+                  updatedEntityStatuses = updatedEntityStatuses.map(status => 
+                    status.threatId === threat.id 
+                      ? { ...status, actionPotentials: resetPotentials } 
+                      : status
+                  );
+                }
+              }
+            });
+            
+            // Update entity statuses with reset action potentials
+            set({ entityStatuses: updatedEntityStatuses });
+            
+            // Process entities with full action potential first
+            activatedEntities.forEach((threat, index) => {
+              // Create a card for this activated entity
               const entityCard: CardType = {
                 id: `entity-card-${Date.now()}-${index}`,
-                name: `${threat.name}'s Card`,
-                description: "A face-down card played by a location entity.",
+                name: `${threat.name}'s Attack`,
+                description: "A card played by a location entity that has reached full action potential.",
                 cost: 0,
-                faction: "Corp", // Default faction for now
+                faction: "Corp",
                 cardType: "Action",
-                keywords: ["ICE"], // Default keywords for entity cards
-                isFaceDown: true,
-                playedBy: threat.name, // Mark which entity played this card
+                keywords: ["ICE", "Attack"],
+                isFaceDown: false, // Face up for activated entities
+                playedBy: threat.name,
                 effects: [
-                  // We'll define proper effects later when the card is revealed
                   { type: "damage_player", value: threat.attack }
                 ]
               };
               
-              // Add the card to the AI player's inPlay area
-              updatedGameState.players[aiPlayerIndex].inPlay.push(entityCard);
+              // Add the card to the AI player's inPlay area at the FRONT (to be resolved first)
+              updatedGameState.players[aiPlayerIndex].inPlay.unshift(entityCard);
+              
+              // Add the card to entity's played cards
+              const entityStatusIndex = updatedEntityStatuses.findIndex(
+                status => status.threatId === threat.id
+              );
+              
+              if (entityStatusIndex >= 0) {
+                updatedEntityStatuses[entityStatusIndex] = {
+                  ...updatedEntityStatuses[entityStatusIndex],
+                  playedCards: [...updatedEntityStatuses[entityStatusIndex].playedCards, entityCard]
+                };
+              }
               
               // Log the entity playing a card
               updatedGameState = addLog(
                 updatedGameState, 
-                `${threat.name} played a face-down card.`
+                `${threat.name} has reached full potential and executes an attack!`
               );
             });
+            
+            // Have any remaining entities potentially play facedown cards
+            locationThreats
+              .filter(threat => !activatedEntities.some(ae => ae.id === threat.id))
+              .forEach((threat, index) => {
+                // Only 30% chance to play a card if not fully activated
+                if (Math.random() < 0.3) {
+                  // Create a placeholder facedown card for this entity
+                  const entityCard: CardType = {
+                    id: `entity-card-${Date.now()}-passive-${index}`,
+                    name: `${threat.name}'s Card`,
+                    description: "A face-down card played by a location entity.",
+                    cost: 0,
+                    faction: "Corp",
+                    cardType: "Action",
+                    keywords: ["ICE"],
+                    isFaceDown: true,
+                    playedBy: threat.name,
+                    effects: [
+                      // Weaker effect for non-activated entities
+                      { type: "damage_player", value: Math.max(1, Math.floor(threat.attack / 2)) }
+                    ]
+                  };
+                  
+                  // Add to AI inPlay AFTER activated cards
+                  updatedGameState.players[aiPlayerIndex].inPlay.push(entityCard);
+                  
+                  // Log the entity playing a card
+                  updatedGameState = addLog(
+                    updatedGameState, 
+                    `${threat.name} played a face-down card.`
+                  );
+                }
+              });
           } else {
             updatedGameState = addLog(
               updatedGameState, 
