@@ -58,6 +58,7 @@ export interface Card {
   canFuse?: boolean;     // Indicates if this card can be fused with another
   riskLevel?: number;    // For push-your-luck mechanics (0-3)
   playedBy?: string;     // Which entity played this card (for AI-played cards)
+  components?: any[];    // For component-based system, allowing enhanced cards
 }
 
 // --------------------------------------------------
