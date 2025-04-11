@@ -31,6 +31,7 @@ const GameBoard: React.FC = () => {
     drawLocation,
     drawCard,
     gainCredit,
+    shuffleDiscard,
     queueCard,
     returnQueuedCard,
     reorderQueuedCards,

@@ -28,6 +28,7 @@ interface DeckBuilderState {
   drawLocation: () => void;
   drawCard: () => void;
   gainCredit: () => void;
+  shuffleDiscard: () => void;
   
   // Card action queue system
   queueCard: (cardIndex: number) => void;
