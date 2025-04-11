@@ -116,6 +116,15 @@ const Card: React.FC<CardProps> = ({ card, onClick, disabled = false, showPlayed
       transform transition-all duration-200 shadow-lg overflow-hidden`}
       onClick={!disabled && onClick ? onClick : undefined}
     >
+      {/* Show which entity played this card if available and showPlayedBy is true */}
+      {showPlayedBy && card.playedBy && (
+        <div className="absolute -top-2 left-0 right-0 text-center z-10">
+          <div className="bg-red-900/80 py-0.5 px-2 mx-auto inline-block rounded-full border border-red-700">
+            <span className="text-[9px] text-red-100 font-bold">{card.playedBy}</span>
+          </div>
+        </div>
+      )}
+      
       {/* Card header */}
       <div className={`p-2 flex justify-between items-center border-b ${colors.border}`}>
         <div className="font-bold text-sm truncate max-w-[100px]" title={card.name}>

@@ -2,13 +2,21 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 
 import { GameState, GamePhase, initializeGame, playCardFromHand, buyCardFromMarket, endPhase, addLog } from '../game/game';
-import { LocationDeck, initializeLocationDeck, drawNextLocation, Location } from '../game/location';
+import { LocationDeck, initializeLocationDeck, drawNextLocation, Location, LocationThreat } from '../game/location';
 import { Card as CardType } from '../game/cards';
 import { refillMarket } from '../game/market';
+
+// Define the entity status type for tracking action potentials and played cards
+export interface EntityStatus {
+  threatId: string;
+  actionPotentials: boolean[]; // Array of action potential dots (true = active)
+  playedCards: CardType[]; // Cards played by this entity
+}
 
 interface DeckBuilderState {
   gameState: GameState | null;
   locationDeck: LocationDeck | null;
+  entityStatuses: EntityStatus[]; // Track entity action potentials and played cards
   
   // Game initialization
   initializeGame: (playerNames: string[]) => void;
@@ -27,6 +35,11 @@ interface DeckBuilderState {
   reorderQueuedCards: (fromIndex: number, toIndex: number) => void;
   executeQueuedCards: () => void;
   
+  // Entity status management
+  updateEntityActionPotential: (threatId: string, newPotentials: boolean[]) => void;
+  addEntityPlayedCard: (threatId: string, card: CardType) => void;
+  clearEntityPlayedCards: (threatId: string) => void;
+  
   // Utility
   addLogMessage: (message: string) => void;
   resetGame: () => void;
@@ -36,6 +49,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
   subscribeWithSelector((set, get) => ({
     gameState: null,
     locationDeck: null,
+    entityStatuses: [],
     
     initializeGame: (playerNames) => {
       const gameState = initializeGame(playerNames);
@@ -532,10 +546,76 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       set({ gameState: updatedGameState });
     },
     
+    // Entity status management
+    updateEntityActionPotential: (threatId, newPotentials) => {
+      const { entityStatuses } = get();
+      const existingIndex = entityStatuses.findIndex(status => status.threatId === threatId);
+      
+      let updatedStatuses = [...entityStatuses];
+      
+      if (existingIndex >= 0) {
+        // Update existing entity status
+        updatedStatuses[existingIndex] = {
+          ...updatedStatuses[existingIndex],
+          actionPotentials: newPotentials
+        };
+      } else {
+        // Create new entity status
+        updatedStatuses.push({
+          threatId,
+          actionPotentials: newPotentials,
+          playedCards: []
+        });
+      }
+      
+      set({ entityStatuses: updatedStatuses });
+    },
+    
+    addEntityPlayedCard: (threatId, card) => {
+      const { entityStatuses } = get();
+      const existingIndex = entityStatuses.findIndex(status => status.threatId === threatId);
+      
+      let updatedStatuses = [...entityStatuses];
+      
+      if (existingIndex >= 0) {
+        // Add card to existing entity
+        updatedStatuses[existingIndex] = {
+          ...updatedStatuses[existingIndex],
+          playedCards: [...updatedStatuses[existingIndex].playedCards, card]
+        };
+      } else {
+        // Create new entity status with this card
+        updatedStatuses.push({
+          threatId,
+          actionPotentials: [],  // Default empty action potentials
+          playedCards: [card]
+        });
+      }
+      
+      set({ entityStatuses: updatedStatuses });
+    },
+    
+    clearEntityPlayedCards: (threatId) => {
+      const { entityStatuses } = get();
+      const existingIndex = entityStatuses.findIndex(status => status.threatId === threatId);
+      
+      if (existingIndex >= 0) {
+        // Clear played cards for this entity
+        let updatedStatuses = [...entityStatuses];
+        updatedStatuses[existingIndex] = {
+          ...updatedStatuses[existingIndex],
+          playedCards: []
+        };
+        
+        set({ entityStatuses: updatedStatuses });
+      }
+    },
+    
     resetGame: () => {
       set({ 
         gameState: null,
-        locationDeck: null
+        locationDeck: null,
+        entityStatuses: []
       });
     }
   }))
