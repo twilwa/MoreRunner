@@ -13,9 +13,11 @@ import LocationCard from './LocationCard';
 import ResourceActions from './ResourceActions';
 import DraggableHand from './DraggableHand';
 import ExecuteButton from './ExecuteButton';
+import CardTargetingModal from './CardTargetingModal';
 import { Card as CardType } from '../lib/game/cards';
 import { LocationThreat } from '../lib/game/location';
 import { EntityStatus } from '../lib/stores/useDeckBuilder';
+import { cardExecutionService } from '../lib/game/cardExecutionService';
 
 
 

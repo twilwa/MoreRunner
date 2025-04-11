@@ -358,6 +358,13 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         return;
       }
       
+      // Import cardExecutionService and related utilities
+      const { 
+        cardExecutionService, 
+        TargetSelectionCallback 
+      } = require('../game/cardExecutionService');
+      const { getEnhancedCard } = require('../game/enhancedCards');
+      
       // Track entity statuses
       let updatedEntityStatuses = [...entityStatuses];
       
@@ -365,85 +372,153 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       let updatedGameState = gameState;
       const queuedCards = [...activePlayer.inPlay];
       
-      // Process each card
-      queuedCards.forEach((card, index) => {
-        // Log execution of the card
-        updatedGameState = addLog(
-          updatedGameState, 
-          `Executing card ${index + 1}/${queuedCards.length}: ${card.name}`
-        );
+      // First, check if we have any enhanced cards that need to use the component system
+      const hasEnhancedCards = queuedCards.some(card => 
+        card.components || getEnhancedCard(card.id)
+      );
+      
+      // If we have enhanced cards, use the component-based execution service
+      if (hasEnhancedCards) {
+        // Reset the execution service
+        cardExecutionService.resetExecutionState();
         
-        // Process card effects
-        // For each effect in the card
-        card.effects.forEach(effect => {
-          switch(effect.type) {
-            case 'gain_credits':
-              activePlayer.credits += effect.value;
-              updatedGameState = addLog(
-                updatedGameState, 
-                `Gained ${effect.value} credits.`
-              );
-              break;
-              
-            case 'damage_opponent':
-              // Apply damage to opponent
-              const opponentIndex = gameState.activePlayerIndex === 0 ? 1 : 0;
-              updatedGameState.players[opponentIndex].health -= effect.value;
-              updatedGameState = addLog(
-                updatedGameState, 
-                `Dealt ${effect.value} damage to opponent.`
-              );
-              break;
-              
-            case 'draw_cards':
-              // Draw cards - count how many we actually draw
-              let cardsDrawn = 0;
-              for (let i = 0; i < effect.value; i++) {
-                // Check if there are cards left to draw
-                if (activePlayer.deck.length === 0) {
-                  // No more cards to draw from deck
-                  updatedGameState = addLog(
-                    updatedGameState, 
-                    `Your deck is empty. Can't draw more cards.`
-                  );
-                  break;
-                }
-                
-                // Draw a card if possible
-                const drawnCard = activePlayer.deck.pop();
-                if (drawnCard) {
-                  activePlayer.hand.push(drawnCard);
-                  cardsDrawn++;
-                }
-              }
-              
-              // Log how many cards were actually drawn
-              if (cardsDrawn > 0) {
-                updatedGameState = addLog(
-                  updatedGameState, 
-                  `Drew ${cardsDrawn} card${cardsDrawn > 1 ? 's' : ''}.`
-                );
-              }
-              break;
-              
-            // Add other effect types as needed
-            default:
-              updatedGameState = addLog(
-                updatedGameState, 
-                `Applied ${effect.type} effect.`
-              );
+        // Queue each card for execution
+        queuedCards.forEach(card => {
+          // If card already has components, use it directly
+          // Otherwise, try to get the enhanced version
+          const enhancedCard = card.components ? card : getEnhancedCard(card.id);
+          if (enhancedCard) {
+            cardExecutionService.queueCard(enhancedCard);
+          } else {
+            // If no enhanced version exists, still queue the original card
+            cardExecutionService.queueCard(card);
           }
         });
         
-        // Add card to discard after processing
-        activePlayer.discard.push(card);
-      });
-      
-      // Clear the queue after all cards are processed
-      activePlayer.inPlay = [];
-      
-      // Consume an action point
-      activePlayer.actions--;
+        // Create a log function
+        const addLogMessage = (message: string) => {
+          updatedGameState = addLog(updatedGameState, message);
+        };
+        
+        // Execute all cards or until execution is paused for target selection
+        cardExecutionService.executeAllCards(updatedGameState, addLogMessage);
+        
+        // Check if execution was paused for target selection
+        if (cardExecutionService.isExecutionPaused()) {
+          // Store the current state
+          set({ gameState: updatedGameState });
+          
+          // If this is awaiting target selection, we should show a modal or UI for selection
+          if (cardExecutionService.isAwaitingTargetSelection()) {
+            // In the real implementation, we would show a UI for target selection
+            // For now, let's just log that we need targeting
+            const context = cardExecutionService.getExecutionContext();
+            if (context) {
+              updatedGameState = addLog(
+                updatedGameState, 
+                `Waiting for target selection for ${context.card.name}...`
+              );
+              set({ gameState: updatedGameState });
+            }
+            
+            // Return early, execution will continue when targets are provided
+            return;
+          }
+        }
+        
+        // If all cards were executed successfully, move them to discard
+        queuedCards.forEach(card => {
+          activePlayer.discard.push(card);
+        });
+        
+        // Clear the queue
+        activePlayer.inPlay = [];
+        
+        // Consume an action point
+        activePlayer.actions--;
+      } else {
+        // Use the original effect-based execution for backward compatibility
+        
+        // Process each card
+        queuedCards.forEach((card, index) => {
+          // Log execution of the card
+          updatedGameState = addLog(
+            updatedGameState, 
+            `Executing card ${index + 1}/${queuedCards.length}: ${card.name}`
+          );
+          
+          // Process card effects
+          // For each effect in the card
+          card.effects.forEach(effect => {
+            switch(effect.type) {
+              case 'gain_credits':
+                activePlayer.credits += effect.value;
+                updatedGameState = addLog(
+                  updatedGameState, 
+                  `Gained ${effect.value} credits.`
+                );
+                break;
+                
+              case 'damage_opponent':
+                // Apply damage to opponent
+                const opponentIndex = gameState.activePlayerIndex === 0 ? 1 : 0;
+                updatedGameState.players[opponentIndex].health -= effect.value;
+                updatedGameState = addLog(
+                  updatedGameState, 
+                  `Dealt ${effect.value} damage to opponent.`
+                );
+                break;
+                
+              case 'draw_cards':
+                // Draw cards - count how many we actually draw
+                let cardsDrawn = 0;
+                for (let i = 0; i < effect.value; i++) {
+                  // Check if there are cards left to draw
+                  if (activePlayer.deck.length === 0) {
+                    // No more cards to draw from deck
+                    updatedGameState = addLog(
+                      updatedGameState, 
+                      `Your deck is empty. Can't draw more cards.`
+                    );
+                    break;
+                  }
+                  
+                  // Draw a card if possible
+                  const drawnCard = activePlayer.deck.pop();
+                  if (drawnCard) {
+                    activePlayer.hand.push(drawnCard);
+                    cardsDrawn++;
+                  }
+                }
+                
+                // Log how many cards were actually drawn
+                if (cardsDrawn > 0) {
+                  updatedGameState = addLog(
+                    updatedGameState, 
+                    `Drew ${cardsDrawn} card${cardsDrawn > 1 ? 's' : ''}.`
+                  );
+                }
+                break;
+                
+              // Add other effect types as needed
+              default:
+                updatedGameState = addLog(
+                  updatedGameState, 
+                  `Applied ${effect.type} effect.`
+                );
+            }
+          });
+          
+          // Add card to discard after processing
+          activePlayer.discard.push(card);
+        });
+        
+        // Clear the queue after all cards are processed
+        activePlayer.inPlay = [];
+        
+        // Consume an action point
+        activePlayer.actions--;
+      }
       
       // Run the AI turn after executing all cards
       updatedGameState = addLog(
