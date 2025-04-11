@@ -176,10 +176,29 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         activePlayer.hand.push(drawnCard);
         
         // Log message
-        const updatedGameState = addLog(
+        let updatedGameState = addLog(
           gameState, 
           `You drew ${drawnCard.name}.`
         );
+        
+        // Check if the deck is now empty and there are cards in discard
+        if (activePlayer.deck.length === 0 && activePlayer.discard.length > 0) {
+          // Shuffle discard pile back into deck
+          activePlayer.deck = [...activePlayer.discard];
+          activePlayer.discard = [];
+          
+          // Shuffle the deck
+          for (let i = activePlayer.deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [activePlayer.deck[i], activePlayer.deck[j]] = [activePlayer.deck[j], activePlayer.deck[i]];
+          }
+          
+          updatedGameState = addLog(
+            updatedGameState, 
+            `Your deck is now empty. Shuffled discard pile back into deck.`
+          );
+        }
+        
         set({ gameState: updatedGameState });
       }
     },
@@ -210,18 +229,18 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       set({ gameState: updatedGameState });
     },
     
-    // Queue a card from hand to the inPlay area (for action phase)
+    // Queue a card from hand to the inPlay area
     queueCard: (cardIndex) => {
       const { gameState } = get();
       if (!gameState) return;
       
       const activePlayer = gameState.players[gameState.activePlayerIndex];
       
-      // Check if player can play cards
-      if (gameState.phase !== 'action' || activePlayer.actions <= 0) {
+      // Check if player has actions left
+      if (activePlayer.actions <= 0) {
         const updatedGameState = addLog(
           gameState, 
-          `Cannot queue cards during ${gameState.phase} phase or without actions.`
+          `Cannot queue cards without actions left.`
         );
         set({ gameState: updatedGameState });
         return;
@@ -304,7 +323,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       }
     },
     
-    // Execute all queued cards in order (but leave the action phase active)
+    // Execute all queued cards in order and then run AI turn
     executeQueuedCards: () => {
       const { gameState } = get();
       if (!gameState) return;
@@ -325,9 +344,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       let updatedGameState = gameState;
       const queuedCards = [...activePlayer.inPlay];
       
-      // Process each card but do not clear the queue yet
-      // Players can see what cards executed, then we'll clear them manually
-      // This provides visual feedback of what cards were executed
+      // Process each card
       queuedCards.forEach((card, index) => {
         // Log execution of the card
         updatedGameState = addLog(
@@ -371,6 +388,11 @@ export const useDeckBuilder = create<DeckBuilderState>()(
                       const j = Math.floor(Math.random() * (i + 1));
                       [activePlayer.deck[i], activePlayer.deck[j]] = [activePlayer.deck[j], activePlayer.deck[i]];
                     }
+                    
+                    updatedGameState = addLog(
+                      updatedGameState, 
+                      `Shuffled discard pile back into the deck.`
+                    );
                   } else {
                     // Can't draw more
                     break;
@@ -405,8 +427,66 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       // Clear the queue after all cards are processed
       activePlayer.inPlay = [];
       
-      // Consume an action point but leave the action phase active
+      // Consume an action point
       activePlayer.actions--;
+      
+      // Run the AI turn after executing all cards
+      updatedGameState = addLog(
+        updatedGameState, 
+        `Your turn is over. Processing AI turn...`
+      );
+      
+      // Simulate AI turn (placeholder)
+      setTimeout(() => {
+        // Switch to the AI player to handle the AI turn
+        const aiPlayerIndex = 1; // Assuming the AI is the second player
+        updatedGameState.activePlayerIndex = aiPlayerIndex;
+        updatedGameState = addLog(
+          updatedGameState, 
+          `AI turn: SENTINEL AI is analyzing...`
+        );
+        
+        // Simulate the AI taking actions and ending their turn
+        setTimeout(() => {
+          updatedGameState = addLog(
+            updatedGameState, 
+            `AI turn: SENTINEL AI processed some operations.`
+          );
+          
+          // End AI turn and switch back to player
+          updatedGameState.activePlayerIndex = 0; // Switch back to player
+          
+          // Check if the player's deck is empty and has cards in discard pile
+          const player = updatedGameState.players[0];
+          if (player.deck.length === 0 && player.discard.length > 0) {
+            // Shuffle the discard pile back into the deck
+            player.deck = [...player.discard];
+            player.discard = [];
+            
+            // Shuffle the deck
+            for (let i = player.deck.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [player.deck[i], player.deck[j]] = [player.deck[j], player.deck[i]];
+            }
+            
+            updatedGameState = addLog(
+              updatedGameState, 
+              `Your discard pile was shuffled back into your deck.`
+            );
+          }
+          
+          // Refresh player's actions and buys
+          player.actions = 1;
+          player.buys = 1;
+          
+          updatedGameState = addLog(
+            updatedGameState, 
+            `Your turn begins. You have ${player.actions} action and ${player.buys} buy.`
+          );
+          
+          set({ gameState: updatedGameState });
+        }, 1500); // Delay to simulate AI thinking
+      }, 1000); // Initial delay before AI turn starts
       
       set({ gameState: updatedGameState });
     },

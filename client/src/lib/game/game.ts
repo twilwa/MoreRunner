@@ -171,9 +171,9 @@ export function buyCardFromMarket(gameState: GameState, cardIndex: number): Game
   let updatedGameState = { ...gameState };
   const activePlayer = updatedGameState.players[updatedGameState.activePlayerIndex];
   
-  // Check if in buy phase and player has buys left
-  if (updatedGameState.phase !== 'buy' || activePlayer.buys <= 0) {
-    return addLog(updatedGameState, "Cannot buy card: Not in buy phase or no buys left.");
+  // Check if player has buys left
+  if (activePlayer.buys <= 0) {
+    return addLog(updatedGameState, "Cannot buy card: No buys left.");
   }
   
   // Check if the card exists in market
