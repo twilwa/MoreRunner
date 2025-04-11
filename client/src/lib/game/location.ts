@@ -5,6 +5,7 @@ export type LocationType = 'entrance' | 'corridor' | 'server_room' | 'security' 
 export type LocationDifficulty = 'easy' | 'medium' | 'hard';
 
 export type LocationThreat = {
+  id: string; // Unique identifier for this threat
   name: string;
   description: string;
   dangerLevel: number; // 1-5
@@ -40,6 +41,7 @@ const LOCATIONS: Location[] = [
     isExit: false,
     threats: [
       {
+        id: 'threat-security-scanner',
         name: 'Security Scanner',
         description: 'A biometric scanner checks all who enter.',
         dangerLevel: 1,
@@ -62,6 +64,7 @@ const LOCATIONS: Location[] = [
     isExit: false,
     threats: [
       {
+        id: 'threat-automated-defense-system',
         name: 'Automated Defense System',
         description: 'Motion sensors trigger counter-intrusion measures.',
         dangerLevel: 3,
@@ -69,6 +72,7 @@ const LOCATIONS: Location[] = [
         attack: 2
       },
       {
+        id: 'threat-security-ai',
         name: 'Security AI',
         description: 'An artificial intelligence monitors the server farm.',
         dangerLevel: 2,
@@ -91,6 +95,7 @@ const LOCATIONS: Location[] = [
     isExit: true,
     threats: [
       {
+        id: 'threat-guard-patrol',
         name: 'Guard Patrol',
         description: 'Security guards occasionally check this exit.',
         dangerLevel: 2,
@@ -113,6 +118,7 @@ const LOCATIONS: Location[] = [
     isExit: false,
     threats: [
       {
+        id: 'threat-elite-security-team',
         name: 'Elite Security Team',
         description: 'Heavily armed guards protect the valuables.',
         dangerLevel: 4,
@@ -120,6 +126,7 @@ const LOCATIONS: Location[] = [
         attack: 3
       },
       {
+        id: 'threat-advanced-alarm-system',
         name: 'Advanced Alarm System',
         description: 'State-of-the-art alarms will trigger reinforcements.',
         dangerLevel: 3,
@@ -141,6 +148,7 @@ const LOCATIONS: Location[] = [
     isExit: false,
     threats: [
       {
+        id: 'threat-security-cameras',
         name: 'Security Cameras',
         description: 'Rotating cameras monitor all movement.',
         dangerLevel: 2,
@@ -162,12 +170,14 @@ const LOCATIONS: Location[] = [
     isExit: false,
     threats: [
       {
+        id: 'threat-security-chief',
         name: 'Security Chief',
         description: 'A veteran security professional with cybernetic enhancements.',
         dangerLevel: 5,
         defenseValue: 6, attack: 2
       },
       {
+        id: 'threat-alarm-console',
         name: 'Alarm Console',
         description: 'This console can lock down the entire building.',
         dangerLevel: 3,

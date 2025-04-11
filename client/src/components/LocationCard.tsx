@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
 import { Location, LocationThreat } from '../lib/game/location';
+import { Card as CardType } from '../lib/game/cards';
+import Card from './Card';
+
+interface EntityStatus {
+  threatId: string;
+  actionPotentials: boolean[]; // Array of action potential dots (true = active)
+  playedCards: CardType[]; // Cards played by this entity
+}
 
 interface LocationCardProps {
   location: Location | null;
@@ -7,6 +15,7 @@ interface LocationCardProps {
   canDrawNextLocation: boolean;
   hasFoundObjective: boolean;
   hasReachedExit: boolean;
+  entityStatuses?: EntityStatus[]; // Optional tracking of entity action potentials and cards
 }
 
 const LocationCard: React.FC<LocationCardProps> = ({
@@ -14,7 +23,8 @@ const LocationCard: React.FC<LocationCardProps> = ({
   onDrawNextLocation,
   canDrawNextLocation,
   hasFoundObjective,
-  hasReachedExit
+  hasReachedExit,
+  entityStatuses = []
 }) => {
   const [selectedThreat, setSelectedThreat] = useState<number | null>(null);
   
@@ -75,9 +85,29 @@ const LocationCard: React.FC<LocationCardProps> = ({
     }
   };
 
+  // Generate action potential dots based on entity type/speed
+  const getActionPotentials = (threat: LocationThreat) => {
+    // Determine number of dots based on threat danger level (lower = faster = fewer dots)
+    // Range from 1-4 dots
+    const numDots = Math.max(1, Math.min(4, Math.ceil(threat.dangerLevel * 0.8)));
+    
+    // For now we'll simulate all dots as inactive (no cards played yet)
+    return Array(numDots).fill(false);
+  };
+  
   // Render a threat item
   const renderThreat = (threat: LocationThreat, index: number) => {
     const isSelected = selectedThreat === index;
+    
+    // Check if we have entity status data for this threat
+    const entityStatus = entityStatuses.find(status => status.threatId === threat.id);
+    
+    // Use stored action potentials or generate default ones
+    const actionPotentials = entityStatus?.actionPotentials || getActionPotentials(threat);
+    
+    // Check if entity has played cards
+    const playedCards = entityStatus?.playedCards || [];
+    const hasPlayedCards = playedCards.length > 0;
     
     return (
       <div 
@@ -90,7 +120,7 @@ const LocationCard: React.FC<LocationCardProps> = ({
           <div className="font-bold text-sm">{threat.name}</div>
           <div className="flex space-x-2">
             <span className="px-2 py-0.5 bg-orange-900 text-orange-100 rounded text-xs">
-              ATK: {threat.dangerLevel}
+              ATK: {threat.attack}
             </span>
             <span className="px-2 py-0.5 bg-blue-900 text-blue-100 rounded text-xs">
               DEF: {threat.defenseValue}
@@ -99,24 +129,55 @@ const LocationCard: React.FC<LocationCardProps> = ({
         </div>
         <p className="text-xs text-gray-400 mt-1">{threat.description}</p>
         
+        {/* Action potential indicators */}
+        <div className="flex items-center space-x-1 mt-2">
+          <span className="text-xs text-gray-400">Action Potential:</span>
+          <div className="flex space-x-1">
+            {actionPotentials.map((isActive, dotIndex) => (
+              <div 
+                key={dotIndex}
+                className={`w-3 h-3 rounded-full ${isActive 
+                  ? 'bg-red-500' 
+                  : 'bg-gray-600'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+        
+        {/* Entity's played cards */}
+        <div className="mt-2 min-h-8 border-t border-gray-700/50 pt-1">
+          {hasPlayedCards ? (
+            <div className="flex flex-wrap gap-1">
+              {playedCards.map((card, cardIndex) => (
+                <div key={cardIndex} className="scale-[0.6] origin-top-left">
+                  <Card card={card} disabled={true} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-xs text-gray-400">No active cards</div>
+          )}
+        </div>
+        
         {isSelected && (
           <div className="mt-2 p-2 bg-gray-700/50 rounded text-xs">
             <div className="flex space-x-6 justify-around mb-2">
               <div className="flex flex-col items-center">
                 <span className="text-cyan-400">Attack</span>
-                <span className="text-lg font-mono text-orange-400">{threat.dangerLevel}</span>
+                <span className="text-lg font-mono text-orange-400">{threat.attack}</span>
               </div>
               <div className="flex flex-col items-center">
                 <span className="text-cyan-400">Defense</span>
                 <span className="text-lg font-mono text-blue-400">{threat.defenseValue}</span>
               </div>
               <div className="flex flex-col items-center">
-                <span className="text-cyan-400">Risk</span>
-                <span className="text-lg font-mono text-red-400">{Math.ceil(threat.dangerLevel * 0.75)}</span>
+                <span className="text-cyan-400">Danger</span>
+                <span className="text-lg font-mono text-red-400">{threat.dangerLevel}</span>
               </div>
             </div>
             <div className="text-xs border-t border-gray-600 pt-1 mt-1">
-              <span className="text-gray-300 italic">Tip: Higher attack values can be countered with defense-focused cards.</span>
+              <span className="text-gray-300 italic">Tip: Each dot represents an action potential that fills over time.</span>
             </div>
           </div>
         )}
