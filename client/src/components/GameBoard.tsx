@@ -51,6 +51,9 @@ const GameBoard: React.FC = () => {
   // State for mobile layout
   const [activeTab, setActiveTab] = useState<'log' | 'market' | 'hand'>('hand');
   
+  // State for card targeting modal
+  const [isTargetingModalOpen, setIsTargetingModalOpen] = useState(false);
+  
   // Effect to initialize entity statuses when a new location is loaded
   useEffect(() => {
     if (locationDeck?.currentLocation) {
@@ -67,6 +70,16 @@ const GameBoard: React.FC = () => {
       });
     }
   }, [locationDeck?.currentLocation?.id]); // Only run when the location ID changes
+  
+  // Effect to check if we need to show targeting modal
+  useEffect(() => {
+    // Check if card execution service is awaiting target selection
+    if (cardExecutionService.isAwaitingTargetSelection()) {
+      setIsTargetingModalOpen(true);
+    } else {
+      setIsTargetingModalOpen(false);
+    }
+  }, [gameState?.turnNumber, gameState?.logs.length]); // Check after game state updates
   
   // Only show game if state is initialized and in playing phase
   if (!gameState || phase !== 'playing') {
@@ -180,6 +193,37 @@ const GameBoard: React.FC = () => {
   
   const handleViewDeck = () => {
     setIsDeckViewerOpen(true);
+  };
+  
+  // Handle target selection from the targeting modal
+  const handleTargetSelection = (targets: any[]) => {
+    if (cardExecutionService.isAwaitingTargetSelection()) {
+      // Provide the selected targets to the execution service
+      cardExecutionService.provideTargets(targets);
+      
+      // Create a log function to pass to executeAllCards
+      const logMessage = (message: string) => {
+        addLogMessage(message);
+      };
+      
+      // Resume execution with the provided targets
+      cardExecutionService.executeAllCards(gameState, logMessage);
+      
+      // If execution is still paused, we'll wait for another target selection
+      // Otherwise, we should move executed cards to discard
+      if (!cardExecutionService.isExecutionPaused()) {
+        // Move all cards from inPlay to discard
+        activePlayer.inPlay.forEach(card => {
+          activePlayer.discard.push(card);
+        });
+        
+        // Clear the queue
+        activePlayer.inPlay = [];
+        
+        // Update state (since we're modifying the gameState directly)
+        addLogMessage('Execution complete.');
+      }
+    }
   };
   
   // Determine if player can perform actions (removed phase restrictions)
@@ -449,6 +493,18 @@ const GameBoard: React.FC = () => {
         onClose={() => setIsDeckViewerOpen(false)}
         playerDeck={activePlayer.deck}
         playerDiscard={activePlayer.discard}
+      />
+      
+      {/* Card Targeting Modal */}
+      <CardTargetingModal
+        isOpen={isTargetingModalOpen}
+        onClose={() => {
+          setIsTargetingModalOpen(false);
+          // Cancel execution if user closes the modal
+          cardExecutionService.cancelExecution();
+          addLogMessage('Card execution canceled.');
+        }}
+        onTargetSelect={handleTargetSelection}
       />
 
     </div>
