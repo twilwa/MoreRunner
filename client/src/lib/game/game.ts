@@ -203,7 +203,7 @@ export function buyCardFromMarket(gameState: GameState, cardIndex: number): Game
   // Add log
   updatedGameState = addLog(
     updatedGameState, 
-    `${activePlayer.name} bought ${cardToBuy.name} for ${cardToBuy.cost} credits.`
+    `${activePlayer.name} bought ${cardToBuy.name} for ${cardToBuy.cost} credits. Card added to discard pile.`
   );
   
   return updatedGameState;

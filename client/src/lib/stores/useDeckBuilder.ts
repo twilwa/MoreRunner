@@ -552,7 +552,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
                 cost: 0,
                 faction: "Corp",
                 cardType: "Action",
-                keywords: ["ICE", "Attack"],
+                keywords: ["ICE", "Weapon"],
                 isFaceDown: false, // Face up for activated entities
                 playedBy: threat.name,
                 effects: [
