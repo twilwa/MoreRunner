@@ -199,6 +199,85 @@ export class KeywordRequirement implements Component {
   }
 }
 
+export class TrashCost implements Component {
+  type = 'TrashCost';
+  
+  constructor(
+    public targetType: 'program' | 'hardware' | 'resource' | 'self' | 'any',
+    public specific: boolean = false,
+    public specificType?: string // Keyword or other filter
+  ) {}
+  
+  apply(context: GameContext): void {
+    // If self-trash (the card trashes itself)
+    if (this.targetType === 'self') {
+      // First check if card is in play
+      const cardIndex = context.cardsInPlay.findIndex(c => c.id === context.card.id);
+      if (cardIndex >= 0) {
+        // Remove card from play
+        const trashCard = context.cardsInPlay.splice(cardIndex, 1)[0];
+        // Add to discard pile if player has one
+        if (context.player.discard) {
+          context.player.discard.push(trashCard);
+        }
+        context.log(`${context.card.name} was trashed as part of its cost.`);
+      } else {
+        context.log(`${context.card.name} cannot trash itself (not in play).`);
+        context.executionPaused = true; // Fail execution
+      }
+      return;
+    }
+    
+    // For all other trash costs, we need to select a card
+    // If we already have targets selected, use those
+    if (context.targets && context.targets.length > 0 && context.targets[0].cardType) {
+      const targetCard = context.targets[0];
+      
+      // Validate target matches required type
+      let isValidTarget = true;
+      if (this.targetType !== 'any' && targetCard.cardType !== this.targetType) {
+        isValidTarget = false;
+      }
+      
+      if (this.specific && this.specificType && 
+          !(targetCard.keywords && targetCard.keywords.includes(this.specificType))) {
+        isValidTarget = false;
+      }
+      
+      if (isValidTarget) {
+        // Find card in play
+        const cardIndex = context.cardsInPlay.findIndex(c => c.id === targetCard.id);
+        if (cardIndex >= 0) {
+          // Remove card from play
+          const trashCard = context.cardsInPlay.splice(cardIndex, 1)[0];
+          // Add to discard pile if player has one
+          if (context.player.discard) {
+            context.player.discard.push(trashCard);
+          }
+          context.log(`${targetCard.name} was trashed as part of ${context.card.name}'s cost.`);
+        } else {
+          context.log(`${targetCard.name} is not in play and cannot be trashed.`);
+          context.executionPaused = true; // Fail execution
+        }
+      } else {
+        context.log(`${targetCard.name} is not a valid trash target (wrong type).`);
+        context.executionPaused = true; // Fail execution
+      }
+    } else {
+      // No targets selected yet, pause execution for player input
+      context.executionPaused = true;
+      context.awaitingTargetSelection = true;
+      
+      let targetTypeDescription = this.targetType;
+      if (this.specific && this.specificType) {
+        targetTypeDescription = `${this.specificType} ${this.targetType}`;
+      }
+      
+      context.log(`Select a ${targetTypeDescription} card to trash.`);
+    }
+  }
+}
+
 // ----- EFFECT COMPONENTS -----
 
 export class GainCredits implements Component {
@@ -368,6 +447,213 @@ export class KeywordSynergy implements Component {
         setTimeout(() => {
           component.amount = originalAmount;
         }, 0);
+      }
+    }
+  }
+}
+
+export class RiskReward implements Component {
+  type = 'RiskReward';
+  
+  constructor(
+    public riskType: 'health' | 'resources' | 'cards',
+    public rewardType: 'credits' | 'damage' | 'cards' | 'actions' | 'resources_and_cards',
+    public chance: number, // 0 to 100
+    public riskAmount: number = 1,
+    public rewardAmount: number = 3
+  ) {}
+  
+  apply(context: GameContext): void {
+    // Roll for success
+    const roll = Math.floor(Math.random() * 100) + 1;
+    const isSuccess = roll <= this.chance;
+    
+    // Log the roll
+    context.log(`${context.card.name}: Risk roll: ${roll} (Need ${this.chance} or lower)`);
+    
+    if (isSuccess) {
+      // Success: Apply reward
+      context.log(`${context.card.name}: Success! Applying reward.`);
+      this.applyReward(context);
+    } else {
+      // Failure: Apply risk
+      context.log(`${context.card.name}: Failed! Applying penalty.`);
+      this.applyRisk(context);
+    }
+  }
+  
+  private applyReward(context: GameContext): void {
+    // Apply reward based on reward type
+    switch (this.rewardType) {
+      case 'credits':
+        if (context.player.credits !== undefined) {
+          context.player.credits += this.rewardAmount;
+          context.log(`${context.player.name} gained ${this.rewardAmount} credits.`);
+        }
+        break;
+        
+      case 'damage':
+        // Apply damage to each target
+        context.targets.forEach(target => {
+          if (target.health !== undefined) {
+            target.health -= this.rewardAmount;
+            context.log(`${context.card.name} dealt ${this.rewardAmount} damage to ${target.name}.`);
+            
+            // Check if target is defeated
+            if (target.health <= 0) {
+              context.log(`${target.name} was defeated!`);
+            }
+          }
+        });
+        break;
+        
+      case 'cards':
+        // Draw cards
+        if (context.player.drawCard) {
+          for (let i = 0; i < this.rewardAmount; i++) {
+            const cardDrawn = context.player.drawCard();
+            if (cardDrawn) {
+              context.log(`${context.player.name} drew ${cardDrawn.name}.`);
+            } else {
+              context.log(`${context.player.name} couldn't draw a card (deck empty).`);
+              break;
+            }
+          }
+        }
+        break;
+        
+      case 'actions':
+        if (context.player.actions !== undefined) {
+          context.player.actions += this.rewardAmount;
+          context.log(`${context.player.name} gained ${this.rewardAmount} action(s).`);
+        }
+        break;
+        
+      case 'resources_and_cards':
+        // Combination reward - both credits and cards
+        if (context.player.credits !== undefined) {
+          context.player.credits += this.rewardAmount;
+          context.log(`${context.player.name} gained ${this.rewardAmount} credits.`);
+        }
+        
+        if (context.player.drawCard) {
+          // Draw half as many cards as the reward amount (minimum 1)
+          const cardsToDraw = Math.max(1, Math.floor(this.rewardAmount / 2));
+          for (let i = 0; i < cardsToDraw; i++) {
+            const cardDrawn = context.player.drawCard();
+            if (cardDrawn) {
+              context.log(`${context.player.name} drew ${cardDrawn.name}.`);
+            } else {
+              context.log(`${context.player.name} couldn't draw a card (deck empty).`);
+              break;
+            }
+          }
+        }
+        break;
+    }
+  }
+  
+  private applyRisk(context: GameContext): void {
+    // Apply risk based on risk type
+    switch (this.riskType) {
+      case 'health':
+        if (context.player.health !== undefined) {
+          context.player.health -= this.riskAmount;
+          context.log(`${context.player.name} took ${this.riskAmount} damage from the failed risk.`);
+          
+          // Check if player is defeated
+          if (context.player.health <= 0) {
+            context.log(`${context.player.name} was defeated!`);
+            // Handle player defeat logic
+          }
+        }
+        break;
+        
+      case 'resources':
+        if (context.player.credits !== undefined) {
+          // Lose credits, but don't go below 0
+          const amountToLose = Math.min(context.player.credits, this.riskAmount);
+          context.player.credits -= amountToLose;
+          context.log(`${context.player.name} lost ${amountToLose} credits from the failed risk.`);
+        }
+        break;
+        
+      case 'cards':
+        if (context.player.hand && context.player.discard) {
+          // Random discard
+          for (let i = 0; i < Math.min(this.riskAmount, context.player.hand.length); i++) {
+            const randomIndex = Math.floor(Math.random() * context.player.hand.length);
+            const discardedCard = context.player.hand.splice(randomIndex, 1)[0];
+            context.player.discard.push(discardedCard);
+            context.log(`${context.player.name} randomly discarded ${discardedCard.name} from the failed risk.`);
+          }
+        }
+        break;
+    }
+  }
+}
+
+export class ComboEffect implements Component {
+  type = 'ComboEffect';
+  
+  constructor(
+    public requiredCardType: string, // The type of card needed for combo
+    public bonusEffect: {
+      type: 'credits' | 'damage' | 'cards' | 'actions',
+      amount: number
+    }
+  ) {}
+  
+  apply(context: GameContext): void {
+    // Check if required card is in play for combo
+    const hasComboCard = context.cardsInPlay.some(card => 
+      card.id !== context.card.id && (
+        card.keywords.some(k => k === this.requiredCardType as any) || 
+        card.cardType === this.requiredCardType
+      )
+    );
+    
+    if (hasComboCard) {
+      context.log(`${context.card.name} activated combo with ${this.requiredCardType}!`);
+      
+      // Apply bonus effect
+      switch (this.bonusEffect.type) {
+        case 'credits':
+          if (context.player.credits !== undefined) {
+            context.player.credits += this.bonusEffect.amount;
+            context.log(`${context.player.name} gained ${this.bonusEffect.amount} credits from combo effect.`);
+          }
+          break;
+          
+        case 'damage':
+          context.targets.forEach(target => {
+            if (target.health !== undefined) {
+              target.health -= this.bonusEffect.amount;
+              context.log(`${context.card.name} dealt ${this.bonusEffect.amount} additional damage to ${target.name} from combo effect.`);
+            }
+          });
+          break;
+          
+        case 'cards':
+          if (context.player.drawCard) {
+            for (let i = 0; i < this.bonusEffect.amount; i++) {
+              const cardDrawn = context.player.drawCard();
+              if (cardDrawn) {
+                context.log(`${context.player.name} drew ${cardDrawn.name} from combo effect.`);
+              } else {
+                context.log(`${context.player.name} couldn't draw a card (deck empty).`);
+                break;
+              }
+            }
+          }
+          break;
+          
+        case 'actions':
+          if (context.player.actions !== undefined) {
+            context.player.actions += this.bonusEffect.amount;
+            context.log(`${context.player.name} gained ${this.bonusEffect.amount} action(s) from combo effect.`);
+          }
+          break;
       }
     }
   }
