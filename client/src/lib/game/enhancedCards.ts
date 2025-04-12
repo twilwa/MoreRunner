@@ -59,7 +59,7 @@ export const ENHANCED_CREDIT_CHIP: EnhancedCard = createCardWithComponents(
   CREDIT_CHIP,
   [
     new SelfTarget(),
-    new ActionCost(1),
+    new ActionCost(0), // Credit Chip requires 0 actions to play (special case)
     new GainCredits(1)
   ]
 );
@@ -70,9 +70,9 @@ export const ENHANCED_MALICIOUS_CODE: EnhancedCard = createCardWithComponents(
   [
     new CreditCost(5),
     new ActionCost(1),
-    // First pause execution and signal that we need target selection
-    new PauseQueue('Select a target for Malicious Code. Tap on a threat to target it.'),
-    // Then the SingleEntityTarget will handle the target selection
+    // Targeting component directly to handle target selection
+    // This is implemented as an inQueue cost component that will be checked
+    // before the card can be played from the queue
     new SingleEntityTarget('threat', true, threat => threat.health !== undefined),
     // After targets are selected, these components will execute
     new DealDamage(2),
@@ -186,7 +186,8 @@ export const NETWORK_SCANNER: EnhancedCard = createCardWithComponents(
   [
     new CreditCost(4),
     new ActionCost(1),
-    new PauseQueue('Select a target to scan'),
+    // Directly use SingleEntityTarget without PauseQueue
+    // The targeting component is now treated as a cost component in the inQueue zone
     new SingleEntityTarget('threat', true),
     new ScanEntity(true),
     new KeywordRequirement('Stealth', 1, 'play'),
@@ -220,7 +221,7 @@ export const ENHANCED_DESPERATE_HACK: EnhancedCard = createCardWithComponents(
   [
     new CreditCost(2), // Cheap but risky
     new ActionCost(1),
-    new PauseQueue('Select a target for Desperate Hack'),
+    // Direct targeting component instead of PauseQueue
     new SingleEntityTarget('threat', true, threat => threat.health !== undefined),
     new RiskReward(
       'health', // Risk type - player takes damage if failed
@@ -239,9 +240,9 @@ export const ENHANCED_CIRCUIT_BREAKER: EnhancedCard = createCardWithComponents(
   [
     new CreditCost(1), // Very cheap because you're sacrificing another card
     new ActionCost(1),
-    new PauseQueue('Select a program to trash'),
+    // TrashCost is handled directly as a cost component
     new TrashCost('program', false), // Trash any program
-    new PauseQueue('Select a target for the damage'),
+    // Direct targeting component
     new SingleEntityTarget('threat', true, threat => threat.health !== undefined),
     new DealDamage(3), // Base damage value (gets modified in real gameplay based on trashed card's cost)
     new ComboEffect('Virus', { type: 'damage', amount: 1 }) // +1 damage if you have a Virus card in play
