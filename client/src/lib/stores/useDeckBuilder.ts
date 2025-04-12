@@ -5,6 +5,8 @@ import { GameState, GamePhase, initializeGame, playCardFromHand, buyCardFromMark
 import { LocationDeck, initializeLocationDeck, drawNextLocation, Location, LocationThreat } from '../game/location';
 import { Card as CardType } from '../game/cards';
 import { refillMarket } from '../game/market';
+import { cardExecutionService, TargetSelectionCallback } from '../game/cardExecutionService';
+import { getEnhancedCard } from '../game/enhancedCards';
 
 // Define the entity status type for tracking action potentials and played cards
 export interface EntityStatus {
@@ -358,12 +360,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         return;
       }
       
-      // Import cardExecutionService and related utilities
-      const { 
-        cardExecutionService, 
-        TargetSelectionCallback 
-      } = require('../game/cardExecutionService');
-      const { getEnhancedCard } = require('../game/enhancedCards');
+      // Use imported cardExecutionService and related utilities from top of file
       
       // Track entity statuses
       let updatedEntityStatuses = [...entityStatuses];
