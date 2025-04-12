@@ -229,13 +229,29 @@ const CardTargetingModal: React.FC<CardTargetingModalProps> = ({
                 <div 
                   key={target.id}
                   onClick={(e) => toggleTarget(target, e)}
-                  onTouchEnd={(e) => toggleTarget(target, e)}
+                  onTouchStart={(e) => {
+                    // Prevent default behavior on mobile
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onTouchEnd={(e) => {
+                    toggleTarget(target, e);
+                    // Add a delay to ensure the toggle happens
+                    setTimeout(() => {
+                      console.log("Touch action completed for target", target.name);
+                    }, 50);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      toggleTarget(target, e);
+                    }
+                  }}
                   role="button"
                   tabIndex={0}
                   className={`w-full p-3 rounded cursor-pointer transition-colors flex items-center
                     ${selectedTargets.some(t => t.id === target.id) 
-                      ? 'bg-cyan-900 border border-cyan-500' 
-                      : 'bg-gray-700 border border-gray-600 hover:bg-gray-600'}`}
+                      ? 'bg-cyan-900 border border-cyan-500 active:bg-cyan-700' 
+                      : 'bg-gray-700 border border-gray-600 hover:bg-gray-600 active:bg-gray-500'}`}
                 >
                   <div className="mr-3 text-xl">{getTargetIcon(target.type)}</div>
                   <div className="flex-grow">
