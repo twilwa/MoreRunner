@@ -80,9 +80,20 @@ export const useDeckBuilder = create<DeckBuilderState>()(
     entityStatuses: [],
 
     // Helper function to enhance a single card with components
-    enhanceCard: (card: CardType): CardType => {
+    enhanceCard: (card: CardType): EnhancedCard => {
+      // First try to get a pre-defined enhanced version
       const enhancedVersion = getEnhancedCard(card.id);
-      return enhancedVersion ? { ...enhancedVersion } : { ...card };
+      
+      if (enhancedVersion) {
+        // Return the enhanced version if it exists
+        return { ...enhancedVersion };
+      } else {
+        // Otherwise, convert the basic card to an EnhancedCard with empty components array
+        return { 
+          ...card, 
+          components: [] // Ensure it has an empty components array to satisfy EnhancedCard interface
+        };
+      }
     },
 
     initializeGame: (playerNames) => {
@@ -386,11 +397,19 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         // Remove the card from hand
         activePlayer.hand.splice(cardIndex, 1);
 
-        // Make sure the card has components by enhancing it
+        // Convert the card to an EnhancedCard to satisfy TypeScript
         const enhancedCard = enhanceCard(card);
-
-        // Add enhanced card to inPlay (queued cards)
-        activePlayer.inPlay.push(enhancedCard);
+        
+        // Move the card from hand to play zone using our zone transition system
+        // The enhanceCard method ensures it returns a proper EnhancedCard
+        const cardWithZone = cardExecutionService.moveCardToZone(
+          enhancedCard,
+          'inHand',  // from zone
+          'inPlay'   // to zone
+        );
+        
+        // Add transitioned card to inPlay (queued cards)
+        activePlayer.inPlay.push(cardWithZone);
 
         // Log message
         const updatedGameState = addLog(
@@ -417,9 +436,16 @@ export const useDeckBuilder = create<DeckBuilderState>()(
 
         // Make sure the card has components by enhancing it
         const enhancedCard = enhanceCard(card);
+        
+        // Move the card from play zone to hand zone using our zone transition system
+        const cardWithZone = cardExecutionService.moveCardToZone(
+          enhancedCard,
+          'inPlay',  // from zone
+          'inHand'   // to zone
+        );
 
-        // Add enhanced card back to hand
-        activePlayer.hand.push(enhancedCard);
+        // Add the transitioned card back to hand
+        activePlayer.hand.push(cardWithZone);
 
         // Log message
         const updatedGameState = addLog(
