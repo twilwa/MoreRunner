@@ -71,16 +71,26 @@ export class CardExecutionService {
       this.executionState.currentIndex >= this.executionState.queue.length ||
       this.executionState.isPaused
     ) {
+      console.log("Cannot execute next card:", 
+                  "queue empty:", this.executionState.queue.length === 0,
+                  "index out of bounds:", this.executionState.currentIndex >= this.executionState.queue.length,
+                  "execution paused:", this.executionState.isPaused);
       return false;
     }
     
     // Get the current card
     const currentCard = this.executionState.queue[this.executionState.currentIndex];
+    console.log("Executing card:", currentCard.name, "at index:", this.executionState.currentIndex);
     
     // Get the enhanced version of the card if available
     const enhancedCard = currentCard.components 
       ? currentCard 
       : getEnhancedCard(currentCard.id) || currentCard;
+    
+    // Log if we found an enhanced version
+    if (enhancedCard !== currentCard) {
+      console.log("Using enhanced version of card:", enhancedCard.name);
+    }
     
     // Create context for execution
     const context: GameContext = {
@@ -134,12 +144,26 @@ export class CardExecutionService {
   executeAllCards(gameState: any, addLogMessage: (message: string) => void): boolean {
     let allComplete = false;
     
+    // If execution is already paused, we do nothing
+    if (this.executionState.isPaused) {
+      console.log("Execution is paused, not proceeding with card execution");
+      return allComplete;
+    }
+    
+    console.log("Starting execution of cards, queue length:", this.executionState.queue.length, 
+                "current index:", this.executionState.currentIndex);
+    
     // While there are cards to execute and execution isn't paused
     while (
       this.executionState.currentIndex < this.executionState.queue.length && 
       !this.executionState.isPaused
     ) {
       allComplete = this.executeNextCard(gameState, addLogMessage);
+      
+      // Log status after executing a card
+      console.log("After executing card, isPaused:", this.executionState.isPaused,
+                  "awaitingTargetSelection:", this.executionState.awaitingTargetSelection,
+                  "currentIndex:", this.executionState.currentIndex);
     }
     
     return allComplete;
@@ -175,7 +199,28 @@ export class CardExecutionService {
   
   // Cancel the current execution
   cancelExecution(): void {
-    this.resetExecutionState();
+    // We want to keep the queue but reset execution state
+    const currentQueue = [...this.executionState.queue];
+    const currentIndex = this.executionState.currentIndex;
+    
+    // Reset flags but don't clear the queue completely
+    this.executionState.isPaused = false;
+    this.executionState.awaitingTargetSelection = false;
+    this.executionState.selectedTargets = [];
+    
+    // If we have a context, update it
+    if (this.executionState.context) {
+      this.executionState.context.executionPaused = false;
+      this.executionState.context.awaitingTargetSelection = false;
+      this.executionState.context = null;
+    }
+    
+    // Preserve the queue and index
+    this.executionState.queue = currentQueue;
+    this.executionState.currentIndex = currentIndex;
+    
+    // Add logging
+    console.log("Execution canceled, queue preserved:", currentQueue);
   }
   
   // Reset the execution state
@@ -214,21 +259,6 @@ export class CardExecutionService {
   // Get the current execution index
   getCurrentIndex(): number {
     return this.executionState.currentIndex;
-  }
-  
-  // Cancel execution, resetting the state when a user cancels a target selection
-  cancelExecution(): void {
-    this.executionState.isPaused = false;
-    this.executionState.awaitingTargetSelection = false;
-    this.executionState.selectedTargets = [];
-    
-    // If we have a context, update it
-    if (this.executionState.context) {
-      this.executionState.context.executionPaused = false;
-      this.executionState.context.awaitingTargetSelection = false;
-    }
-    
-    // Do not reset the queue or current index, as we may want to continue execution later
   }
 }
 
