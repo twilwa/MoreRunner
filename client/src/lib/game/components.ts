@@ -58,7 +58,17 @@ export class InMarketZone extends ZoneComponent {
   
   apply(context: GameContext): void {
     super.apply(context);
-    // Implementation for market zone behavior
+    
+    // Market zone behavior:
+    // - Cards in the market can be purchased with credits
+    // - They cannot be played directly
+    // - They remain in market until purchased or cycled
+
+    // When a card is in the market, add a log message
+    context.log(`${context.card.name} is available for purchase in the market for ${context.card.cost} credits.`);
+    
+    // Cards in market can't move to play zone directly
+    // Market cards can only be purchased, not played
   }
 }
 
@@ -70,7 +80,24 @@ export class InDiscardZone extends ZoneComponent {
   
   apply(context: GameContext): void {
     super.apply(context);
-    // Implementation for discard zone behavior
+    
+    // Discard zone behavior:
+    // - Cards in discard can't be played directly
+    // - They can be retrieved by specific effects
+    // - The discard pile is public information
+
+    // Log when card moves to discard - only if not already there
+    if (context.recentlyTrashed === context.card) {
+      context.log(`${context.card.name} was trashed to the discard pile.`);
+    }
+    
+    // When in recycling phase, some cards might trigger effects from discard
+    const isAnarchCard = context.card.faction === 'red'; // Using 'red' for Anarch faction
+    const hasRecycleKeyword = context.card.keywords?.includes('recycle'); // Using lowercase for consistency
+    
+    if (isAnarchCard && hasRecycleKeyword) {
+      context.log(`${context.card.name} is in the discard pile. Anarch cards with Recycle keyword may have special abilities when trashed.`);
+    }
   }
 }
 
@@ -82,7 +109,29 @@ export class InDeckZone extends ZoneComponent {
   
   apply(context: GameContext): void {
     super.apply(context);
-    // Implementation for deck zone behavior
+    
+    // Deck zone behavior:
+    // - Cards in deck are hidden information
+    // - They can be drawn or manipulated by effects
+    // - Some effects can look at or arrange the top cards
+    
+    // If deckPosition is defined, we might want to track position in the deck
+    if (this.deckPosition !== undefined) {
+      // For "look at top X cards" type effects
+      if (this.deckPosition === 0) {
+        context.log(`${context.card.name} is on top of the deck.`);
+      } else if (this.deckPosition === 1) {
+        context.log(`${context.card.name} is the second card from the top of the deck.`);
+      } else {
+        context.log(`${context.card.name} is ${this.deckPosition+1} cards from the top of the deck.`);
+      }
+    } else {
+      // If we're just generic "in deck"
+      console.log(`${context.card.name} is somewhere in the deck.`);
+    }
+    
+    // Cards in deck cannot be played directly
+    // They need to be drawn first
   }
 }
 
@@ -94,7 +143,34 @@ export class InHandZone extends ZoneComponent {
   
   apply(context: GameContext): void {
     super.apply(context);
-    // Implementation for hand zone behavior
+    
+    // Hand zone behavior:
+    // - Cards in hand are only visible to their owner
+    // - They can be played when requirements are met
+    // - They can be targeted by hand disruption effects
+    
+    // Check if this card can be played from hand
+    // This could be determined by cost, actions, or other requirements
+    const canPlay = context.player.actions > 0 && 
+                    context.player.credits >= context.card.cost;
+                    
+    if (canPlay) {
+      console.log(`${context.card.name} can be played from hand (actions and credits available).`);
+    } else {
+      if (context.player.actions <= 0) {
+        console.log(`${context.card.name} cannot be played from hand (no actions left).`);
+      }
+      if (context.player.credits < context.card.cost) {
+        console.log(`${context.card.name} cannot be played from hand (insufficient credits).`);
+      }
+    }
+    
+    // Apply any effects specific to cards while they're in hand
+    // (for example, some cards might have abilities that work from hand)
+    const hasHandAbility = context.card.keywords?.includes('reaction'); // using lowercase for consistency
+    if (hasHandAbility) {
+      console.log(`${context.card.name} has abilities that can be used from hand.`);
+    }
   }
 }
 
@@ -106,8 +182,30 @@ export class InQueueZone extends ZoneComponent {
   
   apply(context: GameContext): void {
     super.apply(context);
+    
+    // Queue zone behavior:
+    // - Cards in queue are waiting to be executed
+    // - They have been committed (removed from hand) but not yet resolved
+    // - Their costs will be deducted when execution begins
+    
+    // Set queue position in the context
     context.queuePosition = this.queuePosition;
-    // Implementation for queue zone behavior
+    
+    // Log card's position in the queue (for debugging)
+    console.log(`${context.card.name} is in execution queue at position ${this.queuePosition}.`);
+    
+    // Validate that the player has sufficient resources to play the card
+    const hasSufficientCredits = context.player.credits >= context.card.cost;
+    
+    if (!hasSufficientCredits) {
+      console.log(`Warning: ${context.card.name} is queued but player may not have enough credits when it executes.`);
+    }
+    
+    // Cards in queue zone might have special abilities that trigger while waiting
+    const hasPrepEffect = context.card.keywords?.includes('prep');
+    if (hasPrepEffect) {
+      console.log(`${context.card.name} has a prep effect that triggers while in the queue.`);
+    }
   }
 }
 
@@ -119,7 +217,34 @@ export class InPlayZone extends ZoneComponent {
   
   apply(context: GameContext): void {
     super.apply(context);
-    // Implementation for play zone behavior
+    
+    // Play zone behavior:
+    // - Cards in play are active and their effects are ongoing
+    // - They can be targeted by other cards
+    // - They may have activation abilities
+    // - They remain in play until trashed, returned to hand, or the game ends
+    
+    // Log when a card enters play zone (usually only happens once when a card resolves)
+    console.log(`${context.card.name} is in play and active.`);
+    
+    // Handle persistent effects
+    
+    // Check for activation abilities that can be used while in play
+    const hasActivation = context.card.cardType === 'program' || context.card.cardType === 'hardware';
+    
+    if (hasActivation) {
+      console.log(`${context.card.name} has abilities that can be activated while in play.`);
+    }
+    
+    // Handle installed card mechanics (for hardware, programs, etc.)
+    const duration = context.card.duration || 'permanent';
+    if (duration !== 'permanent') {
+      console.log(`${context.card.name} will remain in play for ${duration}.`);
+    }
+    
+    // Cards in play contribute to faction synergies
+    const faction = context.card.faction || 'neutral';
+    console.log(`${context.card.name} contributes to ${faction} faction synergies.`);
   }
 }
 
