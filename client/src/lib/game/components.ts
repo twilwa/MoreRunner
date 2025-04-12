@@ -992,24 +992,11 @@ export function executeCardComponents(card: EnhancedCard, context: GameContext):
       console.log(`Moving ${card.name} from play area to discard pile`);
       const cardToDiscard = activePlayer.inPlay[cardInPlayIndex];
       
-      // Update card zone tracking - remove inQueue/inPlay and add inDiscard
-      // Clone the components to avoid modifying the original card
-      // This ensures we have a clean array to work with
-      card.components = [...cardComponents];
+      // Import cardExecutionService to use the moveCardToZone helper method
+      // This will be handled by the cardExecutionService.executeNextCard method
+      // since it has direct access to the moveCardToZone helper
       
-      // Remove old zone components
-      card.components = card.components.filter(comp => 
-        comp.type !== 'InMarketZone' && 
-        comp.type !== 'InDeckZone' && 
-        comp.type !== 'InHandZone' && 
-        comp.type !== 'InQueueZone' &&
-        comp.type !== 'InPlayZone'
-      );
-      
-      // Add inDiscard component
-      card.components.push(new InDiscardZone());
-      
-      console.log(`Updated ${card.name} with InDiscardZone component after execution`);
+      console.log(`Card zone transition will be handled by cardExecutionService`);
       
       activePlayer.discard.push(cardToDiscard);
       

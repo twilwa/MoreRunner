@@ -163,7 +163,8 @@ export class CardExecutionService {
     } else {
       // If card doesn't use component system, use traditional effects
       addLogMessage(`Executing ${currentCard.name} using traditional effects.`);
-      // Apply traditional effects here...
+      // Add empty components array to ensure it's a proper EnhancedCard
+      enhancedCard.components = [];
     }
     
     // Move to next card
@@ -346,7 +347,14 @@ export class CardExecutionService {
       comp.type !== 'inHandZone' && 
       comp.type !== 'inQueueZone' &&
       comp.type !== 'inPlayZone' &&
-      comp.type !== 'inDiscardZone'
+      comp.type !== 'inDiscardZone' &&
+      // Also check for class-based component types
+      comp.type !== 'InMarketZone' && 
+      comp.type !== 'InDeckZone' && 
+      comp.type !== 'InHandZone' && 
+      comp.type !== 'InQueueZone' &&
+      comp.type !== 'InPlayZone' &&
+      comp.type !== 'InDiscardZone'
     );
     
     // Add the appropriate zone component based on the target zone
