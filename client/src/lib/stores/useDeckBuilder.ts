@@ -504,29 +504,16 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         return;
       }
 
-      // Calculate total cost of queued cards
+      // In our updated entity-component system, we no longer need queue-level credit checks
+      // Credit costs are only validated during market purchases
+      // Action costs are validated when a card is executed from the queue
+      
+      // Get all queued cards for execution
       const queuedCards = [...activePlayer.inPlay];
-      const totalQueueCost = queuedCards.reduce(
-        (total, card) => total + card.cost,
-        0,
-      );
-
-      // Check if player has enough credits to pay for all queued cards
-      if (totalQueueCost > activePlayer.credits) {
-        const insufficientCreditsGameState = addLog(
-          gameState,
-          `Cannot execute cards - total cost is ${totalQueueCost} credits but you only have ${activePlayer.credits}.`,
-        );
-        set({ gameState: insufficientCreditsGameState });
-        return;
-      }
-
-      // Deduct the cost of the cards from player's credits
-      activePlayer.credits -= totalQueueCost;
       // Define both variable names to avoid runtime errors
       let executionGameState = addLog(
         gameState,
-        `Paid ${totalQueueCost} credits to execute ${queuedCards.length} card${queuedCards.length > 1 ? "s" : ""}.`,
+        `Executing ${queuedCards.length} card${queuedCards.length > 1 ? "s" : ""} from the queue...`,
       );
       let updatedGameState = executionGameState; // Make sure both variables are initialized
 

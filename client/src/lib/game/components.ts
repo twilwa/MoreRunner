@@ -64,6 +64,22 @@ export class InMarketZone extends ZoneComponent {
     // - They cannot be played directly
     // - They remain in market until purchased or cycled
 
+    // Credit validation - check if player has enough credits to buy the card
+    // ONLY credit costs are validated in market zone
+    const hasCreditCost = context.card.components?.some(comp => comp.type === 'CreditCost');
+    
+    // If no custom credit cost component, use the default card.cost property
+    if (!hasCreditCost && context.card.cost > 0) {
+      const hasSufficientCredits = context.player.credits >= context.card.cost;
+      
+      if (!hasSufficientCredits) {
+        console.log(`Warning: ${context.card.name} requires ${context.card.cost} credits but player only has ${context.player.credits}.`);
+        context.executionPaused = true;
+        context.log(`Not enough credits to buy ${context.card.name}.`);
+        return;
+      }
+    }
+    
     // When a card is in the market, add a log message
     context.log(`${context.card.name} is available for purchase in the market for ${context.card.cost} credits.`);
     
@@ -148,23 +164,17 @@ export class InHandZone extends ZoneComponent {
     
     // Hand zone behavior:
     // - Cards in hand are only visible to their owner
-    // - They can be played when requirements are met
+    // - They can be played when action requirements are met
     // - They can be targeted by hand disruption effects
     
-    // Check if this card can be played from hand
-    // This could be determined by cost, actions, or other requirements
-    const canPlay = context.player.actions > 0 && 
-                    context.player.credits >= context.card.cost;
+    // Check if this card can be played from hand based on actions only
+    // Credit costs are ONLY checked in market, not here
+    const canPlay = context.player.actions > 0;
                     
     if (canPlay) {
-      console.log(`${context.card.name} can be played from hand (actions and credits available).`);
+      console.log(`${context.card.name} can be played from hand (actions available).`);
     } else {
-      if (context.player.actions <= 0) {
-        console.log(`${context.card.name} cannot be played from hand (no actions left).`);
-      }
-      if (context.player.credits < context.card.cost) {
-        console.log(`${context.card.name} cannot be played from hand (insufficient credits).`);
-      }
+      console.log(`${context.card.name} cannot be played from hand (no actions left).`);
     }
     
     // Apply any effects specific to cards while they're in hand
@@ -189,7 +199,7 @@ export class InQueueZone extends ZoneComponent {
     // Queue zone behavior:
     // - Cards in queue are waiting to be executed
     // - They have been committed (removed from hand) but not yet resolved
-    // - Cost components are checked here to ensure the card can execute
+    // - ONLY ACTION costs are checked here; credit costs are checked in market zone
     
     // Set queue position in the context
     context.queuePosition = this.queuePosition;
@@ -197,24 +207,8 @@ export class InQueueZone extends ZoneComponent {
     // Log card's position in the queue (for debugging)
     console.log(`${context.card.name} is in execution queue at position ${this.queuePosition}.`);
     
-    // Check if this card has specific cost components
-    const hasCreditCost = context.card.components?.some(comp => comp.type === 'CreditCost');
+    // Check if this card has a specific action cost component
     const hasActionCost = context.card.components?.some(comp => comp.type === 'ActionCost');
-    
-    // If the card doesn't have explicit cost components, let's check if we need to use
-    // the card.cost property as a fallback for legacy cards
-    if (!hasCreditCost && context.card.cost > 0) {
-      // Credit costs are handled by cost components in the new system
-      // Check if player has sufficient credits based on card.cost property (legacy)
-      const hasSufficientCredits = context.player.credits >= context.card.cost;
-      
-      if (!hasSufficientCredits) {
-        console.log(`Warning: ${context.card.name} requires ${context.card.cost} credits but player only has ${context.player.credits}.`);
-        context.executionPaused = true;
-        context.log(`Not enough credits to play ${context.card.name}.`);
-        return;
-      }
-    }
     
     // By default, all cards require at least 1 action to play unless they have an explicit action cost of 0
     // Credit Chip is a special case as it requires 0 actions
