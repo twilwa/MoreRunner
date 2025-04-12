@@ -174,14 +174,16 @@ const GameBoard: React.FC = () => {
     // Allow buying cards during player's turn, regardless of phase
     if (isPlayerTurn && activePlayer.buys > 0) {
       const card = gameState.market.availableCards[cardIndex];
-      if (card && activePlayer.credits >= card.cost) {
+      if (card) {
+        // Credit costs are now validated by the component system
+        // This avoids redundant credit checks that bypass our entity-component system
         buyCard(cardIndex);
         
         // Add log message
         const cardName = card.name || 'Unknown card';
         addLogMessage(`You bought ${cardName} for ${card.cost} credits.`);
       } else {
-        addLogMessage('Insufficient credits to purchase this card.');
+        addLogMessage('Card not available in the market.');
       }
     } else {
       // Show why the card can't be bought
