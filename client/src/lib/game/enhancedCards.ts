@@ -62,8 +62,11 @@ export const ENHANCED_MALICIOUS_CODE: EnhancedCard = createCardWithComponents(
   [
     new CreditCost(5),
     new ActionCost(1),
-    new PauseQueue('Select a target for Malicious Code'),
+    // First pause execution and signal that we need target selection
+    new PauseQueue('Select a target for Malicious Code. Tap on a threat to target it.'),
+    // Then the SingleEntityTarget will handle the target selection
     new SingleEntityTarget('threat', true, threat => threat.health !== undefined),
+    // After targets are selected, these components will execute
     new DealDamage(2),
     new KeywordSynergy('Virus', 'DealDamage', 1)
   ]

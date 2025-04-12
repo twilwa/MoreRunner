@@ -118,23 +118,40 @@ const CardTargetingModal: React.FC<CardTargetingModalProps> = ({
   
   const potentialTargets = getPotentialTargets();
   
-  const toggleTarget = (target: TargetEntity) => {
+  const toggleTarget = (target: TargetEntity, event?: React.MouseEvent | React.TouchEvent) => {
+    // Stop event propagation to prevent issues on mobile
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    console.log(`Target ${target.name} (${target.id}) clicked/tapped`);
+    
     // Find if target is already selected
     const isSelected = selectedTargets.some(t => t.id === target.id);
     
     if (isSelected) {
       // Remove from selection
+      console.log(`Removing ${target.name} from selection`);
       setSelectedTargets(selectedTargets.filter(t => t.id !== target.id));
     } else {
       // Add to selection
+      console.log(`Adding ${target.name} to selection`);
       setSelectedTargets([...selectedTargets, target]);
     }
   };
   
   const handleConfirm = () => {
     if (selectedTargets.length > 0) {
+      console.log("CardTargetingModal: Confirming target selection:", selectedTargets);
+      // Call the onTargetSelect callback to pass targets back to parent component
       onTargetSelect(selectedTargets);
+      console.log("CardTargetingModal: onTargetSelect callback completed");
+      // Close the modal
       onClose();
+      console.log("CardTargetingModal: Modal closed");
+    } else {
+      console.log("CardTargetingModal: Cannot confirm with no targets selected");
     }
   };
   
@@ -211,9 +228,11 @@ const CardTargetingModal: React.FC<CardTargetingModalProps> = ({
               potentialTargets.map(target => (
                 <div 
                   key={target.id}
-                  onClick={() => toggleTarget(target)}
-                  onTouchEnd={() => toggleTarget(target)}
-                  className={`p-3 rounded cursor-pointer transition-colors flex items-center
+                  onClick={(e) => toggleTarget(target, e)}
+                  onTouchEnd={(e) => toggleTarget(target, e)}
+                  role="button"
+                  tabIndex={0}
+                  className={`w-full p-3 rounded cursor-pointer transition-colors flex items-center
                     ${selectedTargets.some(t => t.id === target.id) 
                       ? 'bg-cyan-900 border border-cyan-500' 
                       : 'bg-gray-700 border border-gray-600 hover:bg-gray-600'}`}
