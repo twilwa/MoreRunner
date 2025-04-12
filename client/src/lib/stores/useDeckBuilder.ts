@@ -367,7 +367,8 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         }
 
         // Get the enhanced card version to use with our component system
-        const enhancedCard = enhanceCard(card);
+        // enhanceCard adds components, handling and validates costs via InQueueZone component
+        const cardWithComponents = enhanceCard(card);
         
         // Credit costs are now handled by the InQueueZone component's apply method
         // This ensures all cost validation goes through our entity-component system
@@ -400,7 +401,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         // Move the card from hand to play zone using our zone transition system
         // The enhanceCard method ensures it returns a proper EnhancedCard
         const cardWithZone = cardExecutionService.moveCardToZone(
-          enhancedCard,
+          cardWithComponents,
           'inHand',  // from zone
           'inPlay'   // to zone
         );
@@ -411,7 +412,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         // Log message
         const updatedGameState = addLog(
           gameState,
-          `You queued ${enhancedCard.name} for execution. Card costs ${enhancedCard.cost} credits, total queue cost: ${totalCost} credits.`,
+          `You queued ${cardWithComponents.name} for execution. Card costs ${cardWithComponents.cost} credits, total queue cost: ${totalCost} credits.`,
         );
         set({ gameState: updatedGameState });
       }
