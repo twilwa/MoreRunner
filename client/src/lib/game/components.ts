@@ -189,7 +189,7 @@ export class InQueueZone extends ZoneComponent {
     // Queue zone behavior:
     // - Cards in queue are waiting to be executed
     // - They have been committed (removed from hand) but not yet resolved
-    // - Their costs will be deducted when execution begins
+    // - Cost components are checked here to ensure the card can execute
     
     // Set queue position in the context
     context.queuePosition = this.queuePosition;
@@ -197,11 +197,47 @@ export class InQueueZone extends ZoneComponent {
     // Log card's position in the queue (for debugging)
     console.log(`${context.card.name} is in execution queue at position ${this.queuePosition}.`);
     
-    // Validate that the player has sufficient resources to play the card
-    const hasSufficientCredits = context.player.credits >= context.card.cost;
+    // Check if this card has specific cost components
+    const hasCreditCost = context.card.components?.some(comp => comp.type === 'CreditCost');
+    const hasActionCost = context.card.components?.some(comp => comp.type === 'ActionCost');
     
-    if (!hasSufficientCredits) {
-      console.log(`Warning: ${context.card.name} is queued but player may not have enough credits when it executes.`);
+    // If the card doesn't have explicit cost components, let's check if we need to use
+    // the card.cost property as a fallback for legacy cards
+    if (!hasCreditCost && context.card.cost > 0) {
+      // Credit costs are handled by cost components in the new system
+      // Check if player has sufficient credits based on card.cost property (legacy)
+      const hasSufficientCredits = context.player.credits >= context.card.cost;
+      
+      if (!hasSufficientCredits) {
+        console.log(`Warning: ${context.card.name} requires ${context.card.cost} credits but player only has ${context.player.credits}.`);
+        context.executionPaused = true;
+        context.log(`Not enough credits to play ${context.card.name}.`);
+        return;
+      }
+    }
+    
+    // By default, all cards require at least 1 action to play unless they have an explicit action cost of 0
+    // Credit Chip is a special case as it requires 0 actions
+    if (!hasActionCost && context.card.name !== 'Credit Chip') {
+      // Check if player has at least 1 action
+      const hasSufficientActions = context.player.actions >= 1;
+      
+      if (!hasSufficientActions) {
+        console.log(`Warning: ${context.card.name} requires 1 action but player has ${context.player.actions}.`);
+        context.executionPaused = true;
+        context.log(`Not enough actions to play ${context.card.name}.`);
+        return;
+      }
+    }
+    
+    // Special handling for cards with targeting components
+    const hasTargeting = context.card.components?.some(comp => 
+      comp.type === 'SingleEntityTarget' || 
+      comp.type === 'MultiEntityTarget'
+    );
+    
+    if (hasTargeting) {
+      console.log(`${context.card.name} has targeting components and may pause execution for targeting.`);
     }
     
     // Cards in queue zone might have special abilities that trigger while waiting
