@@ -20,6 +20,9 @@ interface DeckBuilderState {
   locationDeck: LocationDeck | null;
   entityStatuses: EntityStatus[]; // Track entity action potentials and played cards
   
+  // Helper for card enhancement
+  enhanceCard: (card: CardType) => CardType;
+  
   // Game initialization
   initializeGame: (playerNames: string[]) => void;
   
@@ -55,9 +58,43 @@ export const useDeckBuilder = create<DeckBuilderState>()(
     locationDeck: null,
     entityStatuses: [],
     
+    // Helper function to enhance a single card with components
+    enhanceCard: (card: CardType): CardType => {
+      const enhancedVersion = getEnhancedCard(card.id);
+      return enhancedVersion ? { ...enhancedVersion } : { ...card };
+    },
+    
     initializeGame: (playerNames) => {
+      // First, initialize the base game with standard cards
       const gameState = initializeGame(playerNames);
       const locationDeck = initializeLocationDeck();
+      
+      // Create the store methods for enhancing cards
+      const { enhanceCard } = get();
+      
+      if (gameState && gameState.players) {
+        console.log("Enhancing cards in all decks and hands...");
+        
+        // Enhance all players' cards
+        gameState.players.forEach(player => {
+          // Enhance deck cards
+          player.deck = player.deck.map(enhanceCard);
+          
+          // Enhance hand cards
+          player.hand = player.hand.map(enhanceCard);
+          
+          // Enhance discard pile cards
+          player.discard = player.discard.map(enhanceCard);
+        });
+        
+        // Also enhance the market cards
+        if (gameState.market && gameState.market.availableCards) {
+          gameState.market.availableCards = gameState.market.availableCards.map(enhanceCard);
+        }
+      }
+      
+      // Update the game state with enhanced cards
+      console.log("Enhanced cards added to game state");
       set({ gameState, locationDeck });
     },
     
@@ -153,7 +190,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
     },
     
     drawCard: () => {
-      const { gameState } = get();
+      const { gameState, enhanceCard } = get();
       if (!gameState) return;
       
       // Get the active player
@@ -177,12 +214,16 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       // Draw a card
       const drawnCard = activePlayer.deck.pop();
       if (drawnCard) {
-        activePlayer.hand.push(drawnCard);
+        // Enhance the card with components before adding it to hand
+        const enhancedDrawnCard = enhanceCard(drawnCard);
+        
+        // Add the enhanced card to hand
+        activePlayer.hand.push(enhancedDrawnCard);
         
         // Log message
         let updatedGameState = addLog(
           gameState, 
-          `You drew ${drawnCard.name}.`
+          `You drew ${enhancedDrawnCard.name}.`
         );
         
         set({ gameState: updatedGameState });
