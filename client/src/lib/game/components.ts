@@ -37,13 +37,18 @@ export class SingleEntityTarget implements Component {
   ) {}
   
   apply(context: GameContext): void {
+    console.log(`SingleEntityTarget applying for ${context.card.name}, target type: ${this.targetType}, allow selection: ${this.allowTargetSelection}`);
+    
     if (this.allowTargetSelection) {
       // Signal that we need player input for target selection
+      console.log(`Pausing execution for target selection (${this.targetType})`);
       context.executionPaused = true;
       context.awaitingTargetSelection = true;
+      context.log(`Selecting target for ${context.card.name}...`);
       
       // This will be completed when player selects a target
       // The target will be stored in context.targets
+      return; // Exit early to ensure no more components are processed
     } else {
       // Auto-select target based on target type
       switch (this.targetType) {

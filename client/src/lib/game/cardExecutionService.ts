@@ -168,12 +168,22 @@ export class CardExecutionService {
       this.executionState.currentIndex < this.executionState.queue.length && 
       !this.executionState.isPaused
     ) {
+      const currentCard = this.executionState.queue[this.executionState.currentIndex];
+      console.log(`Executing card: ${currentCard.name}, index: ${this.executionState.currentIndex}`);
+      
       allComplete = this.executeNextCard(gameState, addLogMessage);
       
       // Log status after executing a card
       console.log("After executing card, isPaused:", this.executionState.isPaused,
                   "awaitingTargetSelection:", this.executionState.awaitingTargetSelection,
                   "currentIndex:", this.executionState.currentIndex);
+                  
+      // If execution is paused for targeting, stop and return early
+      if (this.executionState.isPaused && this.executionState.awaitingTargetSelection) {
+        console.log("Execution paused for target selection - stopping all execution until targets provided");
+        addLogMessage(`Waiting for you to select targets for ${currentCard.name}...`);
+        return false;
+      }
     }
     
     return allComplete;
