@@ -282,9 +282,9 @@ export function getEnhancedStartingDeck(): EnhancedCard[] {
     { ...ENHANCED_CREDIT_CHIP },
     { ...ENHANCED_CREDIT_CHIP },
     { ...ENHANCED_CREDIT_CHIP },
-    // Personal Data doesn't have components yet, so using the original
-    { ...PERSONAL_DATA },
-    { ...PERSONAL_DATA },
-    { ...PERSONAL_DATA }
+    // Personal Data with empty components array to match EnhancedCard interface
+    { ...PERSONAL_DATA, components: [] },
+    { ...PERSONAL_DATA, components: [] },
+    { ...PERSONAL_DATA, components: [] }
   ];
 }

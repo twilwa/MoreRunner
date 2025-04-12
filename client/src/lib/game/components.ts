@@ -948,22 +948,22 @@ export class ScanEntity implements Component {
   }
 }
 
-// Enhanced Card interface with components
-export interface EnhancedCard extends Card {
-  components?: Component[];
-}
+// We're using the EnhancedCard interface already defined at the top of the file
 
 // Function to apply all components of a card
 export function executeCardComponents(card: EnhancedCard, context: GameContext): void {
-  if (!card.components || card.components.length === 0) {
+  // Ensure card has components array (dealing with TypeScript null checks)
+  const cardComponents = card.components || [];
+  
+  if (cardComponents.length === 0) {
     context.log(`${card.name} has no components to execute.`);
     return;
   }
   
-  console.log(`executeCardComponents for ${card.name}, has ${card.components.length} components`);
+  console.log(`executeCardComponents for ${card.name}, has ${cardComponents.length} components`);
   
   // Process components in order
-  for (const component of card.components) {
+  for (const component of cardComponents) {
     console.log(`Applying component: ${component.type}`);
     
     // Skip further processing if execution is paused
@@ -986,26 +986,30 @@ export function executeCardComponents(card: EnhancedCard, context: GameContext):
     const activePlayer = context.gameState.players[context.gameState.activePlayerIndex];
     
     // If the card is in play area, move it to discard
-    const cardInPlayIndex = activePlayer.inPlay.findIndex((c: Card | CardType) => c.id === card.id);
+    const cardInPlayIndex = activePlayer.inPlay.findIndex((c: any) => c.id === card.id);
     if (cardInPlayIndex >= 0) {
       // Add to discard pile
       console.log(`Moving ${card.name} from play area to discard pile`);
       const cardToDiscard = activePlayer.inPlay[cardInPlayIndex];
       
       // Update card zone tracking - remove inQueue/inPlay and add inDiscard
-      if (card.components) {
-        // Remove old zone components
-        card.components = card.components.filter(comp => 
-          comp.type !== 'InMarketZone' && 
-          comp.type !== 'InDeckZone' && 
-          comp.type !== 'InHandZone' && 
-          comp.type !== 'InQueueZone' &&
-          comp.type !== 'InPlayZone'
-        );
-        
-        // Add inDiscard component
-        card.components.push(new InDiscardZone());
-      }
+      // Clone the components to avoid modifying the original card
+      // This ensures we have a clean array to work with
+      card.components = [...cardComponents];
+      
+      // Remove old zone components
+      card.components = card.components.filter(comp => 
+        comp.type !== 'InMarketZone' && 
+        comp.type !== 'InDeckZone' && 
+        comp.type !== 'InHandZone' && 
+        comp.type !== 'InQueueZone' &&
+        comp.type !== 'InPlayZone'
+      );
+      
+      // Add inDiscard component
+      card.components.push(new InDiscardZone());
+      
+      console.log(`Updated ${card.name} with InDiscardZone component after execution`);
       
       activePlayer.discard.push(cardToDiscard);
       
