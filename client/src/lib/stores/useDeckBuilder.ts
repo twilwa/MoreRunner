@@ -24,7 +24,7 @@ import {
   TargetSelectionCallback,
 } from "../game/cardExecutionService";
 import { getEnhancedCard } from "../game/enhancedCards";
-import { Component } from "../game/components";
+import { Component, EnhancedCard } from "../game/components";
 
 // Define the entity status type for tracking action potentials and played cards
 export interface EntityStatus {
@@ -39,7 +39,7 @@ interface DeckBuilderState {
   entityStatuses: EntityStatus[]; // Track entity action potentials and played cards
 
   // Helper for card enhancement
-  enhanceCard: (card: CardType) => CardType;
+  enhanceCard: (card: CardType) => EnhancedCard;
 
   // Game initialization
   initializeGame: (playerNames: string[]) => void;
