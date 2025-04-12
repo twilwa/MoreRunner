@@ -215,6 +215,21 @@ export class CardExecutionService {
   getCurrentIndex(): number {
     return this.executionState.currentIndex;
   }
+  
+  // Cancel execution, resetting the state when a user cancels a target selection
+  cancelExecution(): void {
+    this.executionState.isPaused = false;
+    this.executionState.awaitingTargetSelection = false;
+    this.executionState.selectedTargets = [];
+    
+    // If we have a context, update it
+    if (this.executionState.context) {
+      this.executionState.context.executionPaused = false;
+      this.executionState.context.awaitingTargetSelection = false;
+    }
+    
+    // Do not reset the queue or current index, as we may want to continue execution later
+  }
 }
 
 // Singleton instance
