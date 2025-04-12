@@ -4,6 +4,7 @@ interface ResourceActionsProps {
   onDrawCard: () => void;
   onGainCredit: () => void;
   onShuffleDiscard: () => void;
+  onGainAction?: () => void;  // New property for gaining an action
   isPlayerTurn: boolean;
   compact?: boolean;
   hasCardsInDiscard?: boolean;  // To disable the button when discard is empty
@@ -13,6 +14,7 @@ const ResourceActions: React.FC<ResourceActionsProps> = ({
   onDrawCard,
   onGainCredit,
   onShuffleDiscard,
+  onGainAction,
   isPlayerTurn,
   compact = false,
   hasCardsInDiscard = false
@@ -39,6 +41,16 @@ const ResourceActions: React.FC<ResourceActionsProps> = ({
         >
           <span>💰</span>
         </button>
+
+        {onGainAction && (
+          <button
+            onClick={onGainAction}
+            title="Gain 1 action"
+            className="w-8 h-8 bg-amber-700 hover:bg-amber-600 text-white rounded-md flex items-center justify-center"
+          >
+            <span>⚡</span>
+          </button>
+        )}
 
         <button
           onClick={onShuffleDiscard}
@@ -74,6 +86,19 @@ const ResourceActions: React.FC<ResourceActionsProps> = ({
           <span className="mr-2">💰</span> CREDIT
         </button>
       </div>
+
+      {/* Add gain action button if provided */}
+      {onGainAction && (
+        <div className="mt-2">
+          <button
+            onClick={onGainAction}
+            className="w-full px-3 py-2 bg-gradient-to-r from-amber-800 to-orange-800 hover:from-amber-700 hover:to-orange-700
+              text-white rounded-md font-mono text-sm flex items-center justify-center"
+          >
+            <span className="mr-2">⚡</span> GAIN ACTION
+          </button>
+        </div>
+      )}
 
       {/* Add a full width shuffle discard button in its own row */}
       <div className="mt-2">
