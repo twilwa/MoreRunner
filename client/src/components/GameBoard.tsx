@@ -76,11 +76,12 @@ const GameBoard: React.FC = () => {
   useEffect(() => {
     // Check if card execution service is awaiting target selection
     if (cardExecutionService.isAwaitingTargetSelection()) {
+      console.log("Execution is awaiting target selection - showing modal");
       setIsTargetingModalOpen(true);
     } else {
       setIsTargetingModalOpen(false);
     }
-  }, [gameState?.turnNumber, gameState?.logs.length]); // Check after game state updates
+  }, [gameState?.turnNumber, gameState?.logs.length, gameState?.phase]); // Check after game state updates
   
   // Only show game if state is initialized and in playing phase
   if (!gameState || phase !== 'playing') {
@@ -143,7 +144,16 @@ const GameBoard: React.FC = () => {
     if (isPlayerTurn) {
       if (activePlayer.inPlay.length > 0) {
         executeQueuedCards();
-        addLogMessage('Executed all queued cards. You can continue to play more cards.');
+        
+        // Check if execution was paused for targeting
+        if (cardExecutionService.isExecutionPaused()) {
+          console.log("Execution paused, awaiting targets:", cardExecutionService.isAwaitingTargetSelection());
+          if (cardExecutionService.isAwaitingTargetSelection()) {
+            setIsTargetingModalOpen(true);
+          }
+        } else {
+          addLogMessage('Executed all queued cards. You can continue to play more cards.');
+        }
       } else {
         addLogMessage('No cards in queue to execute.');
       }
@@ -177,6 +187,19 @@ const GameBoard: React.FC = () => {
     // Execute any queued cards first if player has cards in queue
     if (isPlayerTurn && activePlayer.inPlay.length > 0) {
       executeQueuedCards();
+      
+      // If the execution was paused for targeting, we need to handle it
+      // before ending the phase
+      if (cardExecutionService.isExecutionPaused()) {
+        console.log("End phase - execution paused, awaiting targets:", cardExecutionService.isAwaitingTargetSelection());
+        if (cardExecutionService.isAwaitingTargetSelection()) {
+          setIsTargetingModalOpen(true);
+          // Don't end the phase yet, wait for targets to be selected
+          addLogMessage('Card execution requires target selection. Please select targets before ending phase.');
+          return;
+        }
+      }
+      
       addLogMessage('Executing all queued programs.');
     }
     

@@ -50,24 +50,41 @@ const CardTargetingModal: React.FC<CardTargetingModalProps> = ({
     );
     
     if (!targetComponent) {
+      console.log("No targeting component found in card:", card);
       return [];
     }
+    
+    console.log("Found targeting component:", targetComponent.type);
     
     const targets: TargetEntity[] = [];
     
     // Add location threats as targets
     if (locationDeck?.currentLocation) {
       locationDeck.currentLocation.threats.forEach(threat => {
-        targets.push({
-          id: threat.id,
-          name: threat.name,
-          type: 'threat',
-          // Use defenseValue as health since LocationThreat doesn't have health property
-          health: threat.defenseValue,
-          // LocationThreat doesn't have faction so we'll use a default
-          faction: 'Corp',
-          description: `Danger Level: ${threat.dangerLevel}`
-        });
+        // Add specific logic to filter threats based on component conditions (if needed)
+        const shouldAdd = true; // Default to including all threats
+        
+        // If we have a SingleEntityTarget with a filter
+        if (targetComponent.type === 'SingleEntityTarget' && 
+            targetComponent.targetType === 'threat' && 
+            targetComponent.filter) {
+          // This is a simplified check, we can't directly call the filter function
+          // as it's not accessible here in this simplified model
+          // In a full implementation, we would check against the filter criteria
+        }
+        
+        if (shouldAdd) {
+          targets.push({
+            id: threat.id,
+            name: threat.name,
+            type: 'threat',
+            // Use defenseValue as health since LocationThreat doesn't have health property
+            health: threat.defenseValue,
+            // LocationThreat doesn't have faction so we'll use a default
+            faction: 'Corp',
+            description: `Danger Level: ${threat.dangerLevel}`
+          });
+        }
       });
     }
     
@@ -156,9 +173,14 @@ const CardTargetingModal: React.FC<CardTargetingModalProps> = ({
           <p className="text-cyan-300 font-mono">
             Select target for {card.name}
           </p>
-          <p className="text-gray-400 text-sm mt-1">
-            {`Selected: ${selectedTargets.length}/${potentialTargets.length > 0 ? 1 : 0}`}
-          </p>
+          <div className="bg-gray-700 p-3 rounded mt-2 border border-cyan-900 text-left">
+            <p className="text-gray-300 text-sm">
+              {card.description || "Choose a valid target to continue execution."}
+            </p>
+            <p className="text-cyan-400 text-sm mt-2">
+              {`Selected: ${selectedTargets.length}/${potentialTargets.length > 0 ? 1 : 0} required targets`}
+            </p>
+          </div>
         </div>
         
         {/* Target selection */}

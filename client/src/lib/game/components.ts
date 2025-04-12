@@ -729,6 +729,7 @@ export class PauseQueue implements Component {
   
   apply(context: GameContext): void {
     context.executionPaused = true;
+    context.awaitingTargetSelection = true; // This was missing!
     context.log(this.message);
   }
 }
