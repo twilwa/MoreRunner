@@ -301,6 +301,37 @@ export const TRACE_PROGRAM: Card = {
   description: 'Trace opponent for 2. If successful, they discard a card and you draw a card.',
 };
 
+// Define our new Anarch-themed high-risk/high-reward cards
+export const DESPERATE_HACK: Card = {
+  id: 'desperate_hack',
+  name: 'Desperate Hack',
+  cost: 2, // Low credit cost but high risk
+  faction: 'Runner', // Anarch faction
+  cardType: 'Event',
+  keywords: ['Virus', 'Program', 'Rare'],
+  effects: [
+    { type: 'push_luck', value: 4 }, // High value for push_luck
+    { type: 'damage_opponent', value: 4 } // High damage if successful
+  ],
+  description: 'Take a risky action - 60% chance to deal 4 damage, 40% chance to take 2 damage yourself. If you have a Virus card in play, deal +1 damage.',
+  riskLevel: 3 // High risk level
+};
+
+export const CIRCUIT_BREAKER: Card = {
+  id: 'circuit_breaker',
+  name: 'Circuit Breaker',
+  cost: 3,
+  faction: 'Runner', // Anarch faction
+  cardType: 'Program',
+  keywords: ['Virus', 'Hardware', 'Rare'],
+  effects: [
+    { type: 'trash_cards', value: 1 }, // Trash a card as part of the cost
+    { type: 'damage_opponent', value: 3 } // Deal damage based on trashed card
+  ],
+  description: 'Trash a program you control. Deal damage equal to the trashed program\'s cost +1 to a target threat.',
+  riskLevel: 2
+};
+
 // Market card pool - all cards available for purchase
 export const MARKET_CARD_POOL: Card[] = [
   CRYPTO_WALLET,
@@ -316,7 +347,9 @@ export const MARKET_CARD_POOL: Card[] = [
   AMBUSH_PROTOCOL,
   BACKDOOR,
   RISKY_HACK,
-  TRACE_PROGRAM
+  TRACE_PROGRAM,
+  DESPERATE_HACK,
+  CIRCUIT_BREAKER
 ];
 
 // Get starting deck for players

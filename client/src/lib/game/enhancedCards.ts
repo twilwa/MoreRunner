@@ -16,7 +16,9 @@ import {
   AMBUSH_PROTOCOL,
   BACKDOOR,
   RISKY_HACK,
-  TRACE_PROGRAM
+  TRACE_PROGRAM,
+  DESPERATE_HACK,
+  CIRCUIT_BREAKER
 } from './cards';
 
 import {
@@ -202,17 +204,8 @@ export const ICE_BREAKER: EnhancedCard = createCardWithComponents(
 );
 
 // New Anarch card showcasing high-risk/high-reward mechanics
-export const DESPERATE_HACK: EnhancedCard = createCardWithComponents(
-  {
-    id: 'desperate_hack',
-    name: 'Desperate Hack',
-    cost: 2, // Low credit cost but high risk
-    faction: 'Runner', // Specifically Anarch in flavor
-    cardType: 'Event',
-    keywords: ['Virus', 'Program'], // Using valid keywords from CardKeyword
-    effects: [], // Using components instead
-    description: 'Target a threat. Take a risky action - 60% chance to deal 4 damage, 40% chance to take 2 damage yourself. If you have a Virus card in play, deal +1 damage.'
-  },
+export const ENHANCED_DESPERATE_HACK: EnhancedCard = createCardWithComponents(
+  DESPERATE_HACK, // Using the base card defined in cards.ts
   [
     new CreditCost(2), // Cheap but risky
     new ActionCost(1),
@@ -230,17 +223,8 @@ export const DESPERATE_HACK: EnhancedCard = createCardWithComponents(
 );
 
 // New Anarch card showcasing trash/recycle mechanics
-export const CIRCUIT_BREAKER: EnhancedCard = createCardWithComponents(
-  {
-    id: 'circuit_breaker',
-    name: 'Circuit Breaker',
-    cost: 3,
-    faction: 'Runner', // Specifically Anarch in flavor
-    cardType: 'Program',
-    keywords: ['Virus', 'Hardware'], // Using valid keywords from CardKeyword
-    effects: [], // Using components instead
-    description: 'Trash a program you control. Deal damage equal to the trashed program\'s cost +1 to a target threat.'
-  },
+export const ENHANCED_CIRCUIT_BREAKER: EnhancedCard = createCardWithComponents(
+  CIRCUIT_BREAKER, // Using the base card defined in cards.ts
   [
     new CreditCost(1), // Very cheap because you're sacrificing another card
     new ActionCost(1),
@@ -267,8 +251,8 @@ export const ENHANCED_CARDS: EnhancedCard[] = [
   ENHANCED_DATA_BREACH,
   NETWORK_SCANNER,
   ICE_BREAKER,
-  DESPERATE_HACK,
-  CIRCUIT_BREAKER
+  ENHANCED_DESPERATE_HACK,
+  ENHANCED_CIRCUIT_BREAKER
 ];
 
 // Helper function to get the enhanced version of a card by ID
