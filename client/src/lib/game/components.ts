@@ -89,13 +89,18 @@ export class MultiEntityTarget implements Component {
   ) {}
   
   apply(context: GameContext): void {
+    console.log(`MultiEntityTarget applying for ${context.card.name}, target type: ${this.targetType}, max targets: ${this.maxTargets}`);
+    
     if (this.allowTargetSelection) {
       // Signal that we need player input for target selection
+      console.log(`Pausing execution for multiple target selection (${this.targetType})`);
       context.executionPaused = true;
       context.awaitingTargetSelection = true;
+      context.log(`Select up to ${this.maxTargets} targets for ${context.card.name}...`);
       
       // This will be completed when player selects targets
       // The targets will be stored in context.targets
+      return; // Exit early to ensure no more components are processed
     } else {
       // Auto-select targets based on target type
       let candidateTargets: any[] = [];

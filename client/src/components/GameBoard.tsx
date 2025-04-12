@@ -79,13 +79,19 @@ const GameBoard: React.FC = () => {
                 cardExecutionService.isExecutionPaused(), 
                 cardExecutionService.isAwaitingTargetSelection());
     
-    if (cardExecutionService.isAwaitingTargetSelection()) {
+    if (cardExecutionService.isExecutionPaused() && cardExecutionService.isAwaitingTargetSelection()) {
       console.log("Execution is awaiting target selection - showing modal");
       setIsTargetingModalOpen(true);
     } else {
       setIsTargetingModalOpen(false);
     }
-  }, [gameState?.turnNumber, gameState?.logs.length, gameState?.phase]); // Check after game state updates
+  }, [
+    gameState?.turnNumber, 
+    gameState?.logs.length, 
+    gameState?.phase, 
+    cardExecutionService.isAwaitingTargetSelection(),
+    cardExecutionService.isExecutionPaused()
+  ]); // Check after game state updates or execution state changes
   
   // Only show game if state is initialized and in playing phase
   if (!gameState || phase !== 'playing') {
