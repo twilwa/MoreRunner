@@ -3,12 +3,6 @@
 
 import { Card, CardKeyword, CardFaction, CardType } from './cards';
 
-// Base Component interface
-export interface Component {
-  type: string;
-  apply(context: GameContext): void;
-}
-
 // Game context passed to components when they are applied
 export interface GameContext {
   card: Card;
@@ -23,6 +17,110 @@ export interface GameContext {
   gameState: any; // Full game state object
   log: (message: string) => void; // For logging game events
   recentlyTrashed?: Card; // Card that was recently trashed (for RecycleGain component)
+}
+
+// Enhanced card with components
+export interface EnhancedCard extends Card {
+  components: Component[];
+}
+
+// Zone types for the inZone component system
+export type CardZone = 'inMarket' | 'inDiscard' | 'inDeck' | 'inHand' | 'inQueue' | 'inPlay';
+
+// Base Component interface
+export interface Component {
+  type: string;
+  apply(context: GameContext): void;
+}
+
+// ----- ZONE COMPONENTS -----
+
+// Base Zone component - abstract class for all zone components
+export abstract class ZoneComponent implements Component {
+  type: string;
+  zone: CardZone;
+  
+  constructor(zone: CardZone) {
+    this.zone = zone;
+    this.type = `${zone}Zone`;
+  }
+  
+  apply(context: GameContext): void {
+    console.log(`Card ${context.card.name} is in zone ${this.zone}`);
+  }
+}
+
+// Market Zone - card can be bought from market with credits
+export class InMarketZone extends ZoneComponent {
+  constructor() {
+    super('inMarket');
+  }
+  
+  apply(context: GameContext): void {
+    super.apply(context);
+    // Implementation for market zone behavior
+  }
+}
+
+// Discard Zone - card is in discard pile
+export class InDiscardZone extends ZoneComponent {
+  constructor() {
+    super('inDiscard');
+  }
+  
+  apply(context: GameContext): void {
+    super.apply(context);
+    // Implementation for discard zone behavior
+  }
+}
+
+// Deck Zone - card is in player's deck
+export class InDeckZone extends ZoneComponent {
+  constructor(public deckPosition?: number) {
+    super('inDeck');
+  }
+  
+  apply(context: GameContext): void {
+    super.apply(context);
+    // Implementation for deck zone behavior
+  }
+}
+
+// Hand Zone - card is in player's hand
+export class InHandZone extends ZoneComponent {
+  constructor() {
+    super('inHand');
+  }
+  
+  apply(context: GameContext): void {
+    super.apply(context);
+    // Implementation for hand zone behavior
+  }
+}
+
+// Queue Zone - card is in the execution queue
+export class InQueueZone extends ZoneComponent {
+  constructor(public queuePosition: number = 0) {
+    super('inQueue');
+  }
+  
+  apply(context: GameContext): void {
+    super.apply(context);
+    context.queuePosition = this.queuePosition;
+    // Implementation for queue zone behavior
+  }
+}
+
+// Play Zone - card is in the play area
+export class InPlayZone extends ZoneComponent {
+  constructor() {
+    super('inPlay');
+  }
+  
+  apply(context: GameContext): void {
+    super.apply(context);
+    // Implementation for play zone behavior
+  }
 }
 
 // ----- TARGET COMPONENTS -----
@@ -893,6 +991,22 @@ export function executeCardComponents(card: EnhancedCard, context: GameContext):
       // Add to discard pile
       console.log(`Moving ${card.name} from play area to discard pile`);
       const cardToDiscard = activePlayer.inPlay[cardInPlayIndex];
+      
+      // Update card zone tracking - remove inQueue/inPlay and add inDiscard
+      if (card.components) {
+        // Remove old zone components
+        card.components = card.components.filter(comp => 
+          comp.type !== 'InMarketZone' && 
+          comp.type !== 'InDeckZone' && 
+          comp.type !== 'InHandZone' && 
+          comp.type !== 'InQueueZone' &&
+          comp.type !== 'InPlayZone'
+        );
+        
+        // Add inDiscard component
+        card.components.push(new InDiscardZone());
+      }
+      
       activePlayer.discard.push(cardToDiscard);
       
       // Update play area (without modifying the original array that could be in use)
