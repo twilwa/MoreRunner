@@ -75,6 +75,10 @@ const GameBoard: React.FC = () => {
   // Effect to check if we need to show targeting modal
   useEffect(() => {
     // Check if card execution service is awaiting target selection
+    console.log("Checking for awaiting target selection:", 
+                cardExecutionService.isExecutionPaused(), 
+                cardExecutionService.isAwaitingTargetSelection());
+    
     if (cardExecutionService.isAwaitingTargetSelection()) {
       console.log("Execution is awaiting target selection - showing modal");
       setIsTargetingModalOpen(true);
