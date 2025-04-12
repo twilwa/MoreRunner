@@ -311,7 +311,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
     
     // Queue a card from hand to the inPlay area
     queueCard: (cardIndex) => {
-      const { gameState } = get();
+      const { gameState, enhanceCard } = get();
       if (!gameState) return;
       
       const activePlayer = gameState.players[gameState.activePlayerIndex];
@@ -358,13 +358,16 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         // Remove the card from hand
         activePlayer.hand.splice(cardIndex, 1);
         
-        // Add to inPlay (queued cards)
-        activePlayer.inPlay.push(card);
+        // Make sure the card has components by enhancing it
+        const enhancedCard = enhanceCard(card);
+        
+        // Add enhanced card to inPlay (queued cards)
+        activePlayer.inPlay.push(enhancedCard);
         
         // Log message
         const updatedGameState = addLog(
           gameState, 
-          `You queued ${card.name} for execution. Card costs ${card.cost} credits, total queue cost: ${totalCost} credits.`
+          `You queued ${enhancedCard.name} for execution. Card costs ${enhancedCard.cost} credits, total queue cost: ${totalCost} credits.`
         );
         set({ gameState: updatedGameState });
       }
@@ -372,7 +375,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
     
     // Return a queued card from inPlay back to hand
     returnQueuedCard: (cardIndex) => {
-      const { gameState } = get();
+      const { gameState, enhanceCard } = get();
       if (!gameState) return;
       
       const activePlayer = gameState.players[gameState.activePlayerIndex];
@@ -384,13 +387,16 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         // Remove from inPlay
         activePlayer.inPlay.splice(cardIndex, 1);
         
-        // Add back to hand
-        activePlayer.hand.push(card);
+        // Make sure the card has components by enhancing it
+        const enhancedCard = enhanceCard(card);
+        
+        // Add enhanced card back to hand
+        activePlayer.hand.push(enhancedCard);
         
         // Log message
         const updatedGameState = addLog(
           gameState, 
-          `You returned ${card.name} to your hand.`
+          `You returned ${enhancedCard.name} to your hand.`
         );
         set({ gameState: updatedGameState });
       }
