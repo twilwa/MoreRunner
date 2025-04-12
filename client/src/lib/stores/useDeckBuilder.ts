@@ -569,15 +569,26 @@ export const useDeckBuilder = create<DeckBuilderState>()(
           }
         }
 
-        // If all cards were executed successfully, move them to discard
-        queuedCards.forEach((card) => {
-          activePlayer.discard.push(card);
-        });
-
-        // Clear the queue
-        activePlayer.inPlay = [];
-
-        // Consume an action point
+        // Check if the queue was completed
+        if (cardExecutionService.getCurrentIndex() >= cardExecutionService.getQueue().length) {
+          console.log("Card execution completed successfully");
+          
+          // Cards should be moved to discard automatically by the component system
+          // We just need to make sure the play area is cleared and update game state
+          
+          // Clear any remaining cards (should already be handled by component system)
+          activePlayer.inPlay = [];
+          
+          // Update the game state with any changes from execution
+          // Note: Cards should already be moved to discard by the component system
+          updatedGameState = { ...executionGameState };
+          
+          // Consume an action point
+        } else {
+          console.log("Card execution paused or incomplete - not advancing to AI turn");
+          set({ gameState: updatedGameState });
+          return; // Don't proceed to AI turn if execution didn't complete
+        }
         activePlayer.actions--;
       } else {
         // Use the original effect-based execution for backward compatibility

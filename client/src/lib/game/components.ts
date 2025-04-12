@@ -888,7 +888,7 @@ export function executeCardComponents(card: EnhancedCard, context: GameContext):
     const activePlayer = context.gameState.players[context.gameState.activePlayerIndex];
     
     // If the card is in play area, move it to discard
-    const cardInPlayIndex = activePlayer.inPlay.findIndex(c => c.id === card.id);
+    const cardInPlayIndex = activePlayer.inPlay.findIndex((c: Card | CardType) => c.id === card.id);
     if (cardInPlayIndex >= 0) {
       // Add to discard pile
       console.log(`Moving ${card.name} from play area to discard pile`);
