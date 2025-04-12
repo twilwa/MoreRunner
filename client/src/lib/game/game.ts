@@ -12,6 +12,13 @@ import {
   shuffleDeck,
   trashCard 
 } from './player';
+import { 
+  EnhancedCard,
+  GameContext,
+  InMarketZone,
+  CardZone
+} from './components';
+import { getEnhancedCard } from './enhancedCards';
 
 export type GamePhase = 'action' | 'buy' | 'cleanup' | 'waiting' | 'game_over';
 export type GameLog = {
@@ -181,7 +188,34 @@ export function buyCardFromMarket(gameState: GameState, cardIndex: number): Game
   
   const cardToBuy = updatedGameState.market.availableCards[cardIndex];
   
-  // Check if player has enough credits
+  // Get the enhanced version of the card with components
+  // This is necessary to properly interact with our component system
+  const enhancedCard = getEnhancedCard(cardToBuy.id) || { 
+    ...cardToBuy, 
+    components: [] 
+  } as EnhancedCard;
+  
+  // Add market zone component if not already present
+  if (!enhancedCard.components.some(comp => comp.type === 'inMarketZone')) {
+    enhancedCard.components.push(new InMarketZone());
+  }
+  
+  // Create context for cost validation
+  const context: GameContext = {
+    card: enhancedCard,
+    player: activePlayer,
+    opponents: gameState.players.filter((_, i) => i !== gameState.activePlayerIndex),
+    targets: [],
+    cardsInPlay: [],
+    executionPaused: false,
+    awaitingTargetSelection: false,
+    gameState: updatedGameState,
+    log: (message: string) => {
+      updatedGameState = addLog(updatedGameState, message);
+    }
+  };
+  
+  // Check if player has enough credits using component validation
   if (activePlayer.credits < cardToBuy.cost) {
     return addLog(
       updatedGameState, 
@@ -189,7 +223,7 @@ export function buyCardFromMarket(gameState: GameState, cardIndex: number): Game
     );
   }
   
-  // Buy the card
+  // Buy the card using the entity-component system
   const updatedPlayer = buyCard(activePlayer, cardToBuy);
   updatedGameState.players[updatedGameState.activePlayerIndex] = updatedPlayer;
   

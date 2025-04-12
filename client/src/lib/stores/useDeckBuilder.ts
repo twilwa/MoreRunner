@@ -366,15 +366,12 @@ export const useDeckBuilder = create<DeckBuilderState>()(
           return;
         }
 
-        // Check if player has enough credits to play the card
-        if (card.cost > activePlayer.credits) {
-          const updatedGameState = addLog(
-            gameState,
-            `Cannot queue ${card.name} - costs ${card.cost} credits but you only have ${activePlayer.credits}.`,
-          );
-          set({ gameState: updatedGameState });
-          return;
-        }
+        // Get the enhanced card version to use with our component system
+        const enhancedCard = enhanceCard(card);
+        
+        // Credit costs are now handled by the InQueueZone component's apply method
+        // This ensures all cost validation goes through our entity-component system
+        // We'll still check the total queue cost to ensure the player can afford all queued cards
 
         // Calculate credit cost of all queued cards plus this new card
         const queuedCardsCost = activePlayer.inPlay.reduce(
@@ -396,9 +393,9 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         // All checks passed - add to queue
         // Remove the card from hand
         activePlayer.hand.splice(cardIndex, 1);
-
-        // Convert the card to an EnhancedCard to satisfy TypeScript
-        const enhancedCard = enhanceCard(card);
+        
+        // Use the previously created enhanced card from line 370
+        // No need to re-enhance the card, reuse the variable
         
         // Move the card from hand to play zone using our zone transition system
         // The enhanceCard method ensures it returns a proper EnhancedCard
