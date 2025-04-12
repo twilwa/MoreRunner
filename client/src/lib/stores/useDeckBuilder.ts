@@ -396,11 +396,11 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       
       // Check if there are cards to execute
       if (activePlayer.inPlay.length === 0) {
-        const updatedGameState = addLog(
+        const noCardsGameState = addLog(
           gameState, 
           `No cards queued for execution.`
         );
-        set({ gameState: updatedGameState });
+        set({ gameState: noCardsGameState });
         return;
       }
       
@@ -410,11 +410,11 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       
       // Check if player has enough credits to pay for all queued cards
       if (totalQueueCost > activePlayer.credits) {
-        const updatedGameState = addLog(
+        const insufficientCreditsGameState = addLog(
           gameState, 
           `Cannot execute cards - total cost is ${totalQueueCost} credits but you only have ${activePlayer.credits}.`
         );
-        set({ gameState: updatedGameState });
+        set({ gameState: insufficientCreditsGameState });
         return;
       }
       
