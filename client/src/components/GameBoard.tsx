@@ -237,51 +237,10 @@ const GameBoard: React.FC = () => {
       console.log("Execution service is awaiting target selection, providing targets");
       
       // Provide the selected targets to the execution service
+      // The improved provideTargets method will automatically resume execution
       cardExecutionService.provideTargets(targets);
       
-      // Create a log function to pass to executeAllCards
-      const logMessage = (message: string) => {
-        addLogMessage(message);
-      };
-      
-      // Resume execution with the provided targets
-      console.log("Resuming execution with targets");
-      const executionComplete = cardExecutionService.executeAllCards(gameState, logMessage);
-      console.log("Execution resumed, complete:", executionComplete);
-      
-      // If execution is still paused, we'll wait for another target selection
-      // Otherwise, we should move executed cards to discard
-      if (!cardExecutionService.isExecutionPaused()) {
-        console.log("Execution is no longer paused, moving completed cards to discard");
-        
-        // If execution is complete, move all cards from inPlay to discard
-        if (executionComplete) {
-          // Move all cards from inPlay to discard
-          activePlayer.inPlay.forEach(card => {
-            activePlayer.discard.push({ ...card }); // Create a copy to avoid reference issues
-          });
-          
-          // Clear the queue
-          activePlayer.inPlay = [];
-          
-          // Update state (since we're modifying the gameState directly)
-          addLogMessage('Execution complete. All programs moved to discard pile.');
-        } else {
-          // Move executed cards up to the current index
-          const currentIndex = cardExecutionService.getCurrentIndex();
-          console.log("Moving executed cards to discard up to index:", currentIndex);
-          
-          // Move only executed cards to discard
-          const executedCards = activePlayer.inPlay.splice(0, currentIndex);
-          executedCards.forEach(card => {
-            activePlayer.discard.push({ ...card }); // Create a copy to avoid reference issues
-          });
-          
-          addLogMessage(`Executed ${executedCards.length} programs.`);
-        }
-      } else {
-        console.log("Execution still paused, waiting for more input");
-      }
+      console.log("Targets provided to execution service, execution will resume automatically");
     }
   };
   
