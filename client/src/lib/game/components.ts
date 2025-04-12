@@ -879,6 +879,31 @@ export function executeCardComponents(card: EnhancedCard, context: GameContext):
     // Log status after each component
     console.log(`After ${component.type} - executionPaused: ${context.executionPaused}, awaitingTargetSelection: ${context.awaitingTargetSelection}`);
   }
+  
+  // If execution completed successfully (not paused), move the card to discard
+  if (!context.executionPaused && context.gameState) {
+    console.log(`Card execution completed for ${card.name}, moving to discard`);
+    
+    // Get active player
+    const activePlayer = context.gameState.players[context.gameState.activePlayerIndex];
+    
+    // If the card is in play area, move it to discard
+    const cardInPlayIndex = activePlayer.inPlay.findIndex(c => c.id === card.id);
+    if (cardInPlayIndex >= 0) {
+      // Add to discard pile
+      console.log(`Moving ${card.name} from play area to discard pile`);
+      const cardToDiscard = activePlayer.inPlay[cardInPlayIndex];
+      activePlayer.discard.push(cardToDiscard);
+      
+      // Update play area (without modifying the original array that could be in use)
+      activePlayer.inPlay = [
+        ...activePlayer.inPlay.slice(0, cardInPlayIndex),
+        ...activePlayer.inPlay.slice(cardInPlayIndex + 1)
+      ];
+      
+      context.log(`${card.name} moved to discard after execution.`);
+    }
+  }
 }
 
 // Factory function to create a card with components
