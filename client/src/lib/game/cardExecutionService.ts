@@ -4,7 +4,9 @@
 import { 
   EnhancedCard, 
   GameContext, 
-  executeCardComponents 
+  executeCardComponents,
+  InQueueZone,
+  InDiscardZone
 } from './components';
 import { Card } from './cards';
 import { getEnhancedCard } from './enhancedCards';
@@ -39,7 +41,30 @@ export class CardExecutionService {
   
   // Add a card to the execution queue
   queueCard(card: EnhancedCard): void {
-    this.executionState.queue.push(card);
+    console.log(`Queueing card ${card.name} for execution`);
+    
+    // Make a copy of the card to avoid modifying the original
+    const cardCopy = { ...card, components: [...(card.components || [])] };
+    
+    // Remove any existing zone components before adding the inQueue zone
+    if (cardCopy.components) {
+      cardCopy.components = cardCopy.components.filter(comp => 
+        comp.type !== 'inMarketZone' && 
+        comp.type !== 'inDeckZone' && 
+        comp.type !== 'inHandZone' && 
+        comp.type !== 'inQueueZone' &&
+        comp.type !== 'inPlayZone' &&
+        comp.type !== 'inDiscardZone'
+      );
+      
+      // Add the inQueue zone component with position = current queue length
+      const queuePosition = this.executionState.queue.length;
+      cardCopy.components.push(new InQueueZone(queuePosition));
+      
+      console.log(`Added InQueueZone component with position ${queuePosition} to ${cardCopy.name}`);
+    }
+    
+    this.executionState.queue.push(cardCopy);
   }
   
   // Remove a card from the execution queue

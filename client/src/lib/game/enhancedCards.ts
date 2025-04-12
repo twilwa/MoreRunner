@@ -43,7 +43,15 @@ import {
   PauseQueue,
   CancelCard,
   RevealCard,
-  ScanEntity
+  ScanEntity,
+  // Zone components
+  InMarketZone,
+  InHandZone,
+  InDeckZone,
+  InDiscardZone,
+  InQueueZone,
+  InPlayZone,
+  GameContext
 } from './components';
 
 // Basic Resources
