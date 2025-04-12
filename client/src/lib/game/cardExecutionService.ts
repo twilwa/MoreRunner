@@ -6,7 +6,12 @@ import {
   GameContext, 
   executeCardComponents,
   InQueueZone,
-  InDiscardZone
+  InDiscardZone,
+  InMarketZone,
+  InDeckZone,
+  InHandZone,
+  InPlayZone,
+  CardZone
 } from './components';
 import { Card } from './cards';
 import { getEnhancedCard } from './enhancedCards';
@@ -325,6 +330,51 @@ export class CardExecutionService {
   // Get the current execution index
   getCurrentIndex(): number {
     return this.executionState.currentIndex;
+  }
+  
+  // Helper method to move a card from one zone to another
+  moveCardToZone(card: EnhancedCard, fromZone: CardZone, toZone: CardZone): EnhancedCard {
+    console.log(`Moving card ${card.name} from ${fromZone} to ${toZone}`);
+    
+    // Make a copy of the card to avoid modifying the original
+    const cardCopy = { ...card, components: [...(card.components || [])] };
+    
+    // Remove any existing zone components
+    cardCopy.components = cardCopy.components.filter(comp => 
+      comp.type !== 'inMarketZone' && 
+      comp.type !== 'inDeckZone' && 
+      comp.type !== 'inHandZone' && 
+      comp.type !== 'inQueueZone' &&
+      comp.type !== 'inPlayZone' &&
+      comp.type !== 'inDiscardZone'
+    );
+    
+    // Add the appropriate zone component based on the target zone
+    switch (toZone) {
+      case 'inMarket':
+        cardCopy.components.push(new InMarketZone());
+        break;
+      case 'inDeck':
+        cardCopy.components.push(new InDeckZone());
+        break;
+      case 'inHand':
+        cardCopy.components.push(new InHandZone());
+        break;
+      case 'inQueue':
+        cardCopy.components.push(new InQueueZone());
+        break;
+      case 'inPlay':
+        cardCopy.components.push(new InPlayZone());
+        break;
+      case 'inDiscard':
+        cardCopy.components.push(new InDiscardZone());
+        break;
+      default:
+        console.error(`Unknown zone: ${toZone}`);
+    }
+    
+    console.log(`Added ${toZone} component to ${cardCopy.name}`);
+    return cardCopy;
   }
 }
 

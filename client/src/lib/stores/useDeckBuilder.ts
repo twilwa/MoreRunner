@@ -24,6 +24,7 @@ import {
   TargetSelectionCallback,
 } from "../game/cardExecutionService";
 import { getEnhancedCard } from "../game/enhancedCards";
+import { Component } from "../game/components";
 
 // Define the entity status type for tracking action potentials and played cards
 export interface EntityStatus {
@@ -522,16 +523,20 @@ export const useDeckBuilder = create<DeckBuilderState>()(
 
         // Queue each card for execution
         queuedCards.forEach((card) => {
-          // If card already has components, use it directly
-          // Otherwise, try to get the enhanced version
-          const enhancedCard = card.components
-            ? card
-            : getEnhancedCard(card.id);
-          if (enhancedCard) {
-            cardExecutionService.queueCard(enhancedCard);
+          // Try to get the enhanced version from our library
+          const enhancedVersion = getEnhancedCard(card.id);
+          
+          if (enhancedVersion) {
+            // Use the pre-built enhanced card
+            cardExecutionService.queueCard(enhancedVersion);
           } else {
-            // If no enhanced version exists, still queue the original card
-            cardExecutionService.queueCard(card);
+            // If no enhanced version exists, create a minimal enhanced version of the card
+            // This ensures we satisfy the TypeScript EnhancedCard requirement
+            const minimalEnhancedCard = {
+              ...card,
+              components: [] // Empty components array to match EnhancedCard interface
+            };
+            cardExecutionService.queueCard(minimalEnhancedCard);
           }
         });
 
@@ -545,19 +550,15 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         let queueCompleted = false;
         let executionPaused = false;
         
-        // Execute cards one by one until we finish the queue or pause
-        while (!queueCompleted && !executionPaused) {
-          // Execute the next card in the queue
-          const currentResult = cardExecutionService.executeNextCard(executionGameState, addLogMessage);
-          
-          // Check if we're paused (e.g., for targeting)
-          executionPaused = cardExecutionService.isExecutionPaused();
-          
-          // Check if we've completed the queue
-          queueCompleted = currentResult === true;
-          
-          console.log(`Card execution step: completed=${queueCompleted}, paused=${executionPaused}`);
-        }
+        // Execute all cards until we finish the queue or pause for targeting
+        console.log("Executing all queued cards...");
+        const allExecutionComplete = cardExecutionService.executeAllCards(executionGameState, addLogMessage);
+        
+        // Update our state flags based on the execution result
+        queueCompleted = allExecutionComplete;
+        executionPaused = cardExecutionService.isExecutionPaused();
+        
+        console.log(`Card execution complete: finished=${queueCompleted}, paused=${executionPaused}`);
 
         // Check if execution was paused for target selection
         if (cardExecutionService.isExecutionPaused()) {
