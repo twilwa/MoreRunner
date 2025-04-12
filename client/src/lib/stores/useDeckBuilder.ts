@@ -275,20 +275,45 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       
       const activePlayer = gameState.players[gameState.activePlayerIndex];
       
-      // Check if player has actions left
-      if (activePlayer.actions <= 0) {
-        const updatedGameState = addLog(
-          gameState, 
-          `Cannot queue cards without actions left.`
-        );
-        set({ gameState: updatedGameState });
-        return;
-      }
-      
-      // Take the card from hand and add to inPlay area
+      // Take the card from hand and check requirements
       if (cardIndex >= 0 && cardIndex < activePlayer.hand.length) {
         const card = activePlayer.hand[cardIndex];
         
+        // Check if player has actions left
+        if (activePlayer.actions <= 0) {
+          const updatedGameState = addLog(
+            gameState, 
+            `Cannot queue ${card.name} - no actions left.`
+          );
+          set({ gameState: updatedGameState });
+          return;
+        }
+        
+        // Check if player has enough credits to play the card
+        if (card.cost > activePlayer.credits) {
+          const updatedGameState = addLog(
+            gameState, 
+            `Cannot queue ${card.name} - costs ${card.cost} credits but you only have ${activePlayer.credits}.`
+          );
+          set({ gameState: updatedGameState });
+          return;
+        }
+        
+        // Calculate credit cost of all queued cards plus this new card
+        const queuedCardsCost = activePlayer.inPlay.reduce((total, queuedCard) => total + queuedCard.cost, 0);
+        const totalCost = queuedCardsCost + card.cost;
+        
+        // Check if player has enough credits to pay for all queued cards
+        if (totalCost > activePlayer.credits) {
+          const updatedGameState = addLog(
+            gameState, 
+            `Cannot queue ${card.name} - total queue cost would be ${totalCost} credits but you only have ${activePlayer.credits}.`
+          );
+          set({ gameState: updatedGameState });
+          return;
+        }
+        
+        // All checks passed - add to queue
         // Remove the card from hand
         activePlayer.hand.splice(cardIndex, 1);
         
@@ -298,7 +323,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         // Log message
         const updatedGameState = addLog(
           gameState, 
-          `You queued ${card.name} for execution.`
+          `You queued ${card.name} for execution. Card costs ${card.cost} credits, total queue cost: ${totalCost} credits.`
         );
         set({ gameState: updatedGameState });
       }
@@ -379,14 +404,31 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         return;
       }
       
+      // Calculate total cost of queued cards
+      const queuedCards = [...activePlayer.inPlay];
+      const totalQueueCost = queuedCards.reduce((total, card) => total + card.cost, 0);
+      
+      // Check if player has enough credits to pay for all queued cards
+      if (totalQueueCost > activePlayer.credits) {
+        const updatedGameState = addLog(
+          gameState, 
+          `Cannot execute cards - total cost is ${totalQueueCost} credits but you only have ${activePlayer.credits}.`
+        );
+        set({ gameState: updatedGameState });
+        return;
+      }
+      
+      // Deduct the cost of the cards from player's credits
+      activePlayer.credits -= totalQueueCost;
+      let updatedGameState = addLog(
+        gameState, 
+        `Paid ${totalQueueCost} credits to execute ${queuedCards.length} card${queuedCards.length > 1 ? 's' : ''}.`
+      );
+      
       // Use imported cardExecutionService and related utilities from top of file
       
       // Track entity statuses
       let updatedEntityStatuses = [...entityStatuses];
-      
-      // Apply effects for each card in the queue
-      let updatedGameState = gameState;
-      const queuedCards = [...activePlayer.inPlay];
       
       // First, check if we have any enhanced cards that need to use the component system
       const hasEnhancedCards = queuedCards.some(card => 
