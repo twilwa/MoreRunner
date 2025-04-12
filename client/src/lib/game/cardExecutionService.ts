@@ -210,6 +210,27 @@ export class CardExecutionService {
     this.executionState.isPaused = false;
     this.executionState.awaitingTargetSelection = false;
     
+    console.log("Targets provided, resuming execution for index:", this.executionState.currentIndex);
+    
+    // Resume execution for the current card with the provided targets
+    if (this.executionState.context && this.executionState.context.gameState) {
+      const addLogMessage = (message: string) => {
+        if (this.executionState.context && this.executionState.context.log) {
+          this.executionState.context.log(message);
+        }
+      };
+      
+      // Resume execution of the current card
+      this.executeNextCard(this.executionState.context.gameState, addLogMessage);
+      
+      // If we're not paused after resuming the current card, continue with the rest of the queue
+      if (!this.executionState.isPaused) {
+        this.executeAllCards(this.executionState.context.gameState, addLogMessage);
+      }
+    } else {
+      console.error("Cannot resume execution: Missing context or gameState");
+    }
+    
     // Call the callback if provided
     if (this.executionState.targetSelectionCallback) {
       this.executionState.targetSelectionCallback(targets);

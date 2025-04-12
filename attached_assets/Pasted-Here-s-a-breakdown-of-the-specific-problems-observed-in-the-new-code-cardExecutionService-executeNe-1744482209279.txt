@@ -1,0 +1,97 @@
+Here's a breakdown of the specific problems observed in the new code:
+cardExecutionService.executeNextCard Logic:
+Lines 121-132: It calls executeCardComponents(enhancedCard, context). This function iterates through all components of the card. If a component (like SingleEntityTarget or PauseQueue) sets context.executionPaused = true, the executeCardComponents function does break its loop (lines 860-863 in components.ts).
+Lines 126-132 (in executeNextCard): After executeCardComponents returns, it checks context.executionPaused. If true, it correctly sets this.executionState.isPaused = true and this.executionState.awaitingTargetSelection = true. This part seems correct for initiating the pause.
+Lines 139-140: Problem: Regardless of whether the card execution paused mid-way through its components, this.executionState.currentIndex++ is always called unless the pause happened. This means if a card successfully executes but is not the last card, the index moves on. If a card pauses, the index does not increment, which is correct for resuming later.
+cardExecutionService.executeAllCards Logic:
+Lines 167-186: It loops calling executeNextCard as long as !this.executionState.isPaused. When executeNextCard returns because it paused (isPaused becomes true), this loop correctly stops.
+Problem: This function attempts to run the entire queue synchronously until a pause occurs.
+cardExecutionService.provideTargets Logic:
+Lines 195-207: It correctly stores targets and updates the context.
+Lines 210-211: It resets this.executionState.isPaused = false and this.executionState.awaitingTargetSelection = false.
+Major Issue: It does not call executeNextCard or any resume function. It simply resets the pause flags. This means execution stops here, and nothing triggers the continuation of the paused card's components or the rest of the queue.
+useDeckBuilder.executeQueuedCards Logic:
+Line 512: Calls cardExecutionService.executeAllCards(executionGameState, addLogMessage). As noted, this tries to run everything synchronously until a pause.
+Lines 515-534: Checks if isExecutionPaused. If paused and isAwaitingTargetSelection, it correctly stops the useDeckBuilder action (returns early). This relies on the useEffect in GameBoard to show the modal.
+Lines 537-546: If execution wasn't paused (meaning executeAllCards completed the whole queue), it manually moves cards to discard and clears inPlay. This is okay only if the entire queue finished without pausing.
+Missing Resume Trigger: There is no action or mechanism initiated here to resume the execution after targets are selected.
+GameBoard.handleTargetSelection Logic:
+Line 240: Calls cardExecutionService.provideTargets(targets). This resets the pause flags in the service but doesn't restart execution.
+Line 249: Calls cardExecutionService.executeAllCards(...) again. This is the workaround currently attempting to resume, but it's incorrect. It tries to restart the entire execution from currentIndex (which wasn't incremented during the pause), potentially re-applying costs or effects that already happened for the current card before the pause, and it doesn't correctly handle resuming mid-component-list for the paused card.
+Lines 254-282: Manual state mutation is still present and should be removed.
+Confirmation and Refined Diagnosis:
+The core issue is the combination of:
+cardExecutionService.provideTargets not triggering the resumption of execution.
+GameBoard.handleTargetSelection incorrectly trying to resume by calling executeAllCards again instead of a dedicated resume mechanism.
+The overall execution model relying on running the whole queue (executeAllCards) rather than a step-by-step (executeNext) approach managed by the service itself upon starting and resuming.
+How to Fix (Specific Steps):
+Modify cardExecutionService.provideTargets:
+After resetting the pause flags (line 211), add a call to continue execution for the current card using the provided targets. Since executeNextCard handles pausing and context, calling it seems appropriate here.
+// Inside cardExecutionService.ts -> provideTargets method
+provideTargets(targets: any[], callback?: TargetSelectionCallback): void {
+  // ... (existing code from 195-207) ...
+
+  // Resume execution
+  this.executionState.isPaused = false;
+  this.executionState.awaitingTargetSelection = false;
+  console.log("Targets provided, resuming execution for index:", this.executionState.currentIndex);
+
+  // Re-call executeNextCard for the *same* index to process remaining components
+  // We need the gameState and log function again - consider storing them or passing them.
+  // This assumes executeNextCard can pick up mid-component execution based on context.
+  // A more robust way might be to have a dedicated 'resume' function in the service.
+  // For now, let's try re-calling executeNext:
+  if (this.executionState.context && this.executionState.context.gameState && this.executionState.context.log) {
+      // **Crucially, don't increment currentIndex here.**
+      // We need to re-process the components of the *current* card.
+      // The executeNextCard function needs to be smart enough to use the
+      // targets now available in the context and skip components already applied.
+      // --> This highlights a potential need to refine executeNextCard or components
+      //     to handle resumption properly (e.g., checking if targets exist before pausing).
+
+      // Let's simplify: Assume executeNext handles resumption if targets are present.
+      this.executeNextCard(this.executionState.context.gameState, this.executionState.context.log);
+  } else {
+      console.error("Cannot resume execution: Missing context, gameState, or log function.");
+  }
+
+
+  // ... (callback logic from 214-217) ...
+}
+Use code with caution.
+TypeScript
+(Self-correction during thought process: Simply calling executeNextCard might re-run initial components. The executeCardComponents function needs to be aware of the context's state, specifically if targets are now available. The SingleEntityTarget component itself might need modification to not pause if context.targets already has the required targets.)
+Alternative/Better Fix in provideTargets: Instead of calling executeNextCard, have a dedicated internal method like resumeCurrentCardExecution that knows how to finish the components for the currentIndex. Or, make executeNextCard smarter.
+Modify components.ts - SingleEntityTarget.apply:
+Check if targets are already provided in the context before pausing.
+// Inside components.ts -> SingleEntityTarget.apply
+apply(context: GameContext): void {
+    console.log(`SingleEntityTarget applying for ${context.card.name}, target type: ${this.targetType}, allow selection: ${this.allowTargetSelection}`);
+
+    // Check if targets are already provided (e.g., from provideTargets)
+    if (context.targets && context.targets.length > 0) {
+        console.log("Targets already provided in context, skipping pause.");
+        return; // Don't pause if targets are already set
+    }
+
+    if (this.allowTargetSelection) {
+        // Signal that we need player input for target selection
+        console.log(`Pausing execution for target selection (${this.targetType})`);
+        context.executionPaused = true;
+        context.awaitingTargetSelection = true;
+        context.log(`Selecting target for ${context.card.name}...`);
+        return; // Exit early
+    } else {
+        // ... (auto-select logic remains the same) ...
+    }
+}
+Use code with caution.
+TypeScript
+(Similar logic should apply to MultiEntityTarget and potentially TrashCost if it pauses).
+Modify GameBoard.tsx - handleTargetSelection:
+Remove the call to cardExecutionService.executeAllCards(...) (line 249). The service should resume itself via the change in step 1.
+Remove all the manual state mutation code (lines 260-281). Card effects should modify state via the store.
+Modify useDeckBuilder.ts - executeQueuedCards:
+Change the call from cardExecutionService.executeAllCards(...) to just cardExecutionService.executeNextCard(...) (or a dedicated startExecution method) to process only the first step. The service will then handle continuing or pausing internally.
+The logic after the execution call (lines 537-629) needs rethinking. Moving cards to discard should happen as part of the card component effects (e.g., a MoveToDiscard component at the end of each card's component list) or triggered by the service upon successful completion of a card, not manually in the store action after attempting the whole queue.
+The AI turn logic (setTimeout) should only trigger after the entire queue has successfully completed without pausing.

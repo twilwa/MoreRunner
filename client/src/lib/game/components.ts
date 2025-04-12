@@ -39,6 +39,12 @@ export class SingleEntityTarget implements Component {
   apply(context: GameContext): void {
     console.log(`SingleEntityTarget applying for ${context.card.name}, target type: ${this.targetType}, allow selection: ${this.allowTargetSelection}`);
     
+    // Check if targets are already provided in context
+    if (context.targets && context.targets.length > 0) {
+      console.log("Targets already provided in context, skipping pause:", context.targets);
+      return; // Skip target selection if targets are already available
+    }
+    
     if (this.allowTargetSelection) {
       // Signal that we need player input for target selection
       console.log(`Pausing execution for target selection (${this.targetType})`);
@@ -90,6 +96,12 @@ export class MultiEntityTarget implements Component {
   
   apply(context: GameContext): void {
     console.log(`MultiEntityTarget applying for ${context.card.name}, target type: ${this.targetType}, max targets: ${this.maxTargets}`);
+    
+    // Check if targets are already provided in context
+    if (context.targets && context.targets.length > 0) {
+      console.log("Targets already provided in context, skipping pause:", context.targets);
+      return; // Skip target selection if targets are already available
+    }
     
     if (this.allowTargetSelection) {
       // Signal that we need player input for target selection
