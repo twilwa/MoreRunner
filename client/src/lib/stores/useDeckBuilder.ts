@@ -618,8 +618,28 @@ export const useDeckBuilder = create<DeckBuilderState>()(
             // Track entities that have full action potential
             const activatedEntities: LocationThreat[] = [];
             
+            // Filter out dead entities
+            const aliveThreats = locationThreats.filter(threat => !(threat.isDead || threat.defenseValue <= 0));
+            
+            if (aliveThreats.length === 0) {
+              updatedGameState = addLog(
+                updatedGameState, 
+                `All entities at this location have been neutralized.`
+              );
+            }
+            
             // Check which entities should fully activate
-            locationThreats.forEach(threat => {
+            aliveThreats.forEach(threat => {
+              // Mark threats with defenseValue <= 0 as dead
+              if (threat.defenseValue <= 0) {
+                threat.isDead = true;
+                updatedGameState = addLog(
+                  updatedGameState, 
+                  `${threat.name} has been neutralized.`
+                );
+                return; // Skip dead threats
+              }
+              
               const entityStatus = latestEntityStatuses.find(
                 status => status.threatId === threat.id
               );
@@ -687,8 +707,8 @@ export const useDeckBuilder = create<DeckBuilderState>()(
             });
             
             // Have any remaining entities potentially play facedown cards
-            locationThreats
-              .filter(threat => !activatedEntities.some(ae => ae.id === threat.id))
+            aliveThreats
+              .filter(threat => !activatedEntities.some(ae => ae.id === threat.id) && !(threat.isDead || threat.defenseValue <= 0))
               .forEach((threat, index) => {
                 // Only 30% chance to play a card if not fully activated
                 if (Math.random() < 0.3) {
@@ -783,8 +803,19 @@ export const useDeckBuilder = create<DeckBuilderState>()(
     
     // Entity status management
     updateEntityActionPotential: (threatId, newPotentials) => {
-      const { entityStatuses } = get();
+      const { entityStatuses, locationDeck } = get();
       const existingIndex = entityStatuses.findIndex(status => status.threatId === threatId);
+      
+      // Check if the threat is dead
+      const isDead = locationDeck?.currentLocation?.threats.some(
+        threat => threat.id === threatId && (threat.isDead || threat.defenseValue <= 0)
+      ) || false;
+      
+      // If the entity is dead, don't update its action potential
+      if (isDead) {
+        console.log(`Entity ${threatId} is dead, skipping action potential update.`);
+        return;
+      }
       
       let updatedStatuses = [...entityStatuses];
       
@@ -807,9 +838,20 @@ export const useDeckBuilder = create<DeckBuilderState>()(
     },
     
     addEntityPlayedCard: (threatId, card) => {
-      const { entityStatuses } = get();
-      const existingIndex = entityStatuses.findIndex(status => status.threatId === threatId);
+      const { entityStatuses, locationDeck } = get();
       
+      // Check if the threat is dead
+      const isDead = locationDeck?.currentLocation?.threats.some(
+        threat => threat.id === threatId && (threat.isDead || threat.defenseValue <= 0)
+      ) || false;
+      
+      // Dead entities can't play cards
+      if (isDead) {
+        console.log(`Entity ${threatId} is dead, can't play cards.`);
+        return;
+      }
+      
+      const existingIndex = entityStatuses.findIndex(status => status.threatId === threatId);
       let updatedStatuses = [...entityStatuses];
       
       if (existingIndex >= 0) {
