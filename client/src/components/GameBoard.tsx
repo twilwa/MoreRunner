@@ -33,6 +33,7 @@ const GameBoard: React.FC = () => {
     drawLocation,
     drawCard,
     gainCredit,
+    gainAction,
     shuffleDiscard,
     queueCard,
     returnQueuedCard,
@@ -279,6 +280,7 @@ const GameBoard: React.FC = () => {
                 <ResourceActions
                   onDrawCard={drawCard}
                   onGainCredit={gainCredit}
+                  onGainAction={gainAction}
                   onShuffleDiscard={shuffleDiscard}
                   isPlayerTurn={isPlayerTurn}
                   compact={true}
@@ -373,6 +375,7 @@ const GameBoard: React.FC = () => {
                   <ResourceActions
                     onDrawCard={drawCard}
                     onGainCredit={gainCredit}
+                    onGainAction={gainAction}
                     onShuffleDiscard={shuffleDiscard}
                     isPlayerTurn={isPlayerTurn}
                     compact={true}

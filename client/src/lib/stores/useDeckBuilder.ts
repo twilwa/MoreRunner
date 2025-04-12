@@ -30,6 +30,7 @@ interface DeckBuilderState {
   drawLocation: () => void;
   drawCard: () => void;
   gainCredit: () => void;
+  gainAction: () => void;
   shuffleDiscard: () => void;
   
   // Card action queue system
@@ -202,6 +203,24 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       const updatedGameState = addLog(
         gameState, 
         `You gained 1 credit.`
+      );
+      set({ gameState: updatedGameState });
+    },
+    
+    gainAction: () => {
+      const { gameState } = get();
+      if (!gameState) return;
+      
+      // Get the active player
+      const activePlayer = gameState.players[gameState.activePlayerIndex];
+      
+      // Add one action to the player
+      activePlayer.actions += 1;
+      
+      // Log message
+      const updatedGameState = addLog(
+        gameState, 
+        `You gained 1 action.`
       );
       set({ gameState: updatedGameState });
     },
