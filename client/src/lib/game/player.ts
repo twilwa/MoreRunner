@@ -1,4 +1,4 @@
-import { Card } from './cards';
+import { Card, CardFaction } from './cards';
 import { cardExecutionService } from './cardExecutionService';
 import { CardZone, EnhancedCard } from './components';
 import { getEnhancedCard } from './enhancedCards';
@@ -70,13 +70,59 @@ export function drawCards(player: Player, count: number): { player: Player, draw
       if (updatedPlayer.discard.length === 0) {
         break; // No cards to draw
       }
-      updatedPlayer.deck = shuffleDeck([...updatedPlayer.discard]);
+      
+      // When shuffling discard into deck, we need to apply zone transition for each card
+      const shuffledCards = shuffleDeck([...updatedPlayer.discard]);
+      
+      // Apply zone transition for each card moved from discard to deck
+      updatedPlayer.discard.forEach(card => {
+        // Get the enhanced version of the card with components
+        const enhancedCard = getEnhancedCard(card.id) || { 
+          ...card, 
+          components: [] 
+        } as EnhancedCard;
+        
+        // Use zone transition to move the card from discard to deck
+        const fromZone: CardZone = 'inDiscard';
+        const toZone: CardZone = 'inDeck';
+        
+        // Apply zone transition using the execution service
+        const updatedCard = cardExecutionService.moveCardToZone(
+          enhancedCard,
+          fromZone,
+          toZone
+        );
+        
+        console.log(`Card ${card.name} moved from ${fromZone} to ${toZone} during shuffle`);
+      });
+      
+      updatedPlayer.deck = shuffledCards;
       updatedPlayer.discard = [];
     }
 
     // Draw the top card of the deck
     if (updatedPlayer.deck.length > 0) {
       const card = updatedPlayer.deck[0];
+      
+      // Get the enhanced version of the card with components
+      const enhancedCard = getEnhancedCard(card.id) || { 
+        ...card, 
+        components: [] 
+      } as EnhancedCard;
+      
+      // Use zone transition to move the card from deck to hand
+      const fromZone: CardZone = 'inDeck';
+      const toZone: CardZone = 'inHand';
+      
+      // Apply zone transition using the execution service
+      const updatedCard = cardExecutionService.moveCardToZone(
+        enhancedCard,
+        fromZone,
+        toZone
+      );
+      
+      console.log(`Card ${card.name} drawn from ${fromZone} to ${toZone}`);
+      
       drawnCards.push(card);
       updatedPlayer.hand.push(card);
       updatedPlayer.deck = updatedPlayer.deck.slice(1);
@@ -98,6 +144,26 @@ export function discardCard(player: Player, cardIndex: number): Player {
   
   if (cardIndex >= 0 && cardIndex < updatedPlayer.hand.length) {
     const card = updatedPlayer.hand[cardIndex];
+    
+    // Get the enhanced version of the card with components
+    const enhancedCard = getEnhancedCard(card.id) || { 
+      ...card, 
+      components: [] 
+    } as EnhancedCard;
+    
+    // Use zone transition to move the card from hand to discard
+    const fromZone: CardZone = 'inHand';
+    const toZone: CardZone = 'inDiscard';
+    
+    // Apply zone transition using the execution service
+    const updatedCard = cardExecutionService.moveCardToZone(
+      enhancedCard,
+      fromZone,
+      toZone
+    );
+    
+    console.log(`Card ${card.name} discarded from ${fromZone} to ${toZone}`);
+    
     updatedPlayer.discard.push(card);
     updatedPlayer.hand = updatedPlayer.hand.filter((_, i) => i !== cardIndex);
   }
@@ -108,6 +174,29 @@ export function discardCard(player: Player, cardIndex: number): Player {
 // Discard the entire hand
 export function discardHand(player: Player): Player {
   const updatedPlayer = { ...player };
+  
+  // Apply zone transition for each card in hand
+  updatedPlayer.hand.forEach(card => {
+    // Get the enhanced version of the card with components
+    const enhancedCard = getEnhancedCard(card.id) || { 
+      ...card, 
+      components: [] 
+    } as EnhancedCard;
+    
+    // Use zone transition to move the card from hand to discard
+    const fromZone: CardZone = 'inHand';
+    const toZone: CardZone = 'inDiscard';
+    
+    // Apply zone transition using the execution service
+    const updatedCard = cardExecutionService.moveCardToZone(
+      enhancedCard,
+      fromZone,
+      toZone
+    );
+    
+    console.log(`Card ${card.name} discarded from ${fromZone} to ${toZone} (mass discard)`);
+  });
+  
   updatedPlayer.discard = [...updatedPlayer.discard, ...updatedPlayer.hand];
   updatedPlayer.hand = [];
   return updatedPlayer;
@@ -265,9 +354,11 @@ export function trashCard(player: Player, cardIndex: number): { player: Player, 
     
     // In the component system, we need to trigger any "on trash" effects
     // These would be faction specific recycling mechanics, etc.
-    if (card.faction === 'Anarch') {
-      console.log(`Anarch card ${card.name} trashed - triggering recycling effects`);
-      // Note: Anarch recycling would be handled by special recycling components
+    // Runner faction has special recycling mechanics
+    const runnerFaction: CardFaction = 'Runner';
+    if (card.faction === runnerFaction) {
+      console.log(`${runnerFaction} faction card ${card.name} trashed - triggering recycling effects`);
+      // Note: Runner recycling would be handled by special recycling components
       // which will be evaluated in the game context
     }
     
@@ -349,6 +440,26 @@ export function forceDiscard(player: Player, count: number): { player: Player, d
   for (let i = 0; i < count && updatedPlayer.hand.length > 0; i++) {
     const randomIndex = Math.floor(Math.random() * updatedPlayer.hand.length);
     const card = updatedPlayer.hand[randomIndex];
+    
+    // Get the enhanced version of the card with components
+    const enhancedCard = getEnhancedCard(card.id) || { 
+      ...card, 
+      components: [] 
+    } as EnhancedCard;
+    
+    // Use zone transition to move the card from hand to discard
+    const fromZone: CardZone = 'inHand';
+    const toZone: CardZone = 'inDiscard';
+    
+    // Apply zone transition using the execution service
+    const updatedCard = cardExecutionService.moveCardToZone(
+      enhancedCard,
+      fromZone,
+      toZone
+    );
+    
+    console.log(`Card ${card.name} force discarded from ${fromZone} to ${toZone}`);
+    
     discardedCards.push(card);
     updatedPlayer.discard.push(card);
     updatedPlayer.hand = updatedPlayer.hand.filter((_, i) => i !== randomIndex);
