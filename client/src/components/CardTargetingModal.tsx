@@ -3,6 +3,7 @@ import { EnhancedCard } from '../lib/game/components';
 import Card from './Card';
 import { cardExecutionService } from '../lib/game/cardExecutionService';
 import { useDeckBuilder } from '../lib/stores/useDeckBuilder';
+import { useIsMobile } from '../hooks/use-is-mobile';
 
 // Simplified version of target entity interface
 interface TargetEntity {
@@ -27,6 +28,7 @@ const CardTargetingModal: React.FC<CardTargetingModalProps> = ({
 }) => {
   const [selectedTargets, setSelectedTargets] = useState<TargetEntity[]>([]);
   const { gameState, locationDeck } = useDeckBuilder();
+  const isMobile = useIsMobile();
   
   // Get execution context to determine what card is being played and what targets are valid
   const context = cardExecutionService.getExecutionContext();
@@ -148,45 +150,61 @@ const CardTargetingModal: React.FC<CardTargetingModalProps> = ({
   
   return (
     <div className={`fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 
-      ${isOpen ? 'visible' : 'invisible'}`}>
-      <div className="bg-gray-800 rounded-lg p-6 max-w-lg w-full mx-4 border border-cyan-700 shadow-xl">
+      ${isOpen ? 'visible' : 'invisible'}`}
+      // Add touch detection for mobile - to catch touches/taps that might be missed
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className={`bg-gray-800 rounded-lg p-4 sm:p-6 ${isMobile ? 'w-[95%]' : 'max-w-lg w-full mx-4'} border border-cyan-700 shadow-xl`}>
         <div className="flex justify-between items-start mb-4">
           <h2 className="text-xl font-bold text-cyan-400">Target Selection</h2>
           <button 
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-200"
+            className="text-gray-400 hover:text-gray-200 p-2"
           >
             ✕
           </button>
         </div>
         
         {/* Card being played */}
-        <div className="mb-4">
+        <div className={`mb-4 ${isMobile ? 'hidden' : 'block'}`}>
           <h3 className="text-sm font-medium text-gray-300 mb-2">Playing:</h3>
           <div className="flex justify-center">
             <Card card={card} disabled={true} />
           </div>
         </div>
         
+        {/* Mobile version shows just card name */}
+        {isMobile && (
+          <div className="mb-4 text-center">
+            <span className="px-3 py-1 bg-cyan-900/50 rounded-full text-cyan-300 text-xs font-mono">
+              {card.name}
+            </span>
+          </div>
+        )}
+        
         {/* Targeting instructions */}
         <div className="mb-4 text-center">
-          <p className="text-cyan-300 font-mono">
-            Select target for {card.name}
+          <p className="text-cyan-300 font-mono text-sm sm:text-base">
+            {isMobile ? 'SELECT TARGET' : `Select target for ${card.name}`}
           </p>
-          <div className="bg-gray-700 p-3 rounded mt-2 border border-cyan-900 text-left">
-            <p className="text-gray-300 text-sm">
-              {card.description || "Choose a valid target to continue execution."}
-            </p>
-            <p className="text-cyan-400 text-sm mt-2">
+          <div className="bg-gray-700 p-2 sm:p-3 rounded mt-2 border border-cyan-900 text-left">
+            {!isMobile && (
+              <p className="text-gray-300 text-sm">
+                {card.description || "Choose a valid target to continue execution."}
+              </p>
+            )}
+            <p className="text-cyan-400 text-sm mt-1">
               {`Selected: ${selectedTargets.length}/${potentialTargets.length > 0 ? 1 : 0} required targets`}
             </p>
           </div>
         </div>
         
         {/* Target selection */}
-        <div className="mb-6">
+        <div className="mb-4">
           <h3 className="text-sm font-medium text-gray-300 mb-2">Possible Targets:</h3>
-          <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+          <div className={`space-y-2 ${isMobile ? 'max-h-36' : 'max-h-48'} overflow-y-auto pr-2`}>
             {potentialTargets.length === 0 ? (
               <p className="text-gray-500 text-center py-4">No valid targets available</p>
             ) : (
@@ -194,6 +212,7 @@ const CardTargetingModal: React.FC<CardTargetingModalProps> = ({
                 <div 
                   key={target.id}
                   onClick={() => toggleTarget(target)}
+                  onTouchEnd={() => toggleTarget(target)}
                   className={`p-3 rounded cursor-pointer transition-colors flex items-center
                     ${selectedTargets.some(t => t.id === target.id) 
                       ? 'bg-cyan-900 border border-cyan-500' 
@@ -224,14 +243,14 @@ const CardTargetingModal: React.FC<CardTargetingModalProps> = ({
         <div className="flex justify-between gap-4">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded"
+            className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded text-sm sm:text-base"
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
             disabled={selectedTargets.length === 0}
-            className={`flex-1 px-4 py-2 rounded
+            className={`flex-1 px-4 py-3 rounded text-sm sm:text-base
               ${selectedTargets.length > 0 
                 ? 'bg-gradient-to-r from-cyan-800 to-blue-800 hover:from-cyan-700 hover:to-blue-700 text-white' 
                 : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`}

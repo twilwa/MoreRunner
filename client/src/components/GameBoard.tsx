@@ -225,8 +225,10 @@ const GameBoard: React.FC = () => {
   
   // Handle target selection from the targeting modal
   const handleTargetSelection = (targets: any[]) => {
+    console.log("Target selection handler called with targets:", targets);
+    
     if (cardExecutionService.isAwaitingTargetSelection()) {
-      console.log("Providing targets:", targets);
+      console.log("Execution service is awaiting target selection, providing targets");
       
       // Provide the selected targets to the execution service
       cardExecutionService.provideTargets(targets);
@@ -237,6 +239,7 @@ const GameBoard: React.FC = () => {
       };
       
       // Resume execution with the provided targets
+      console.log("Resuming execution with targets");
       const executionComplete = cardExecutionService.executeAllCards(gameState, logMessage);
       console.log("Execution resumed, complete:", executionComplete);
       

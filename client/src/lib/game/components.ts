@@ -79,34 +79,45 @@ export class MultiEntityTarget implements Component {
   constructor(
     public targetType: 'players' | 'opponents' | 'threats' | 'cards',
     public maxTargets: number = Infinity,
+    public allowTargetSelection: boolean = true,
     public filter?: (target: any) => boolean
   ) {}
   
   apply(context: GameContext): void {
-    let candidateTargets: any[] = [];
-    
-    switch (this.targetType) {
-      case 'players':
-        candidateTargets = [context.player, ...context.opponents];
-        break;
-      case 'opponents':
-        candidateTargets = [...context.opponents];
-        break;
-      case 'threats':
-        candidateTargets = context.locationThreats || [];
-        break;
-      case 'cards':
-        candidateTargets = context.cardsInPlay;
-        break;
+    if (this.allowTargetSelection) {
+      // Signal that we need player input for target selection
+      context.executionPaused = true;
+      context.awaitingTargetSelection = true;
+      
+      // This will be completed when player selects targets
+      // The targets will be stored in context.targets
+    } else {
+      // Auto-select targets based on target type
+      let candidateTargets: any[] = [];
+      
+      switch (this.targetType) {
+        case 'players':
+          candidateTargets = [context.player, ...context.opponents];
+          break;
+        case 'opponents':
+          candidateTargets = [...context.opponents];
+          break;
+        case 'threats':
+          candidateTargets = context.locationThreats || [];
+          break;
+        case 'cards':
+          candidateTargets = context.cardsInPlay;
+          break;
+      }
+      
+      // Apply filter if provided
+      if (this.filter) {
+        candidateTargets = candidateTargets.filter(this.filter);
+      }
+      
+      // Limit to max targets
+      context.targets = candidateTargets.slice(0, this.maxTargets);
     }
-    
-    // Apply filter if provided
-    if (this.filter) {
-      candidateTargets = candidateTargets.filter(this.filter);
-    }
-    
-    // Limit to max targets
-    context.targets = candidateTargets.slice(0, this.maxTargets);
   }
 }
 
