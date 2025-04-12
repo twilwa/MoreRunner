@@ -98,6 +98,7 @@ const LocationCard: React.FC<LocationCardProps> = ({
   // Render a threat item
   const renderThreat = (threat: LocationThreat, index: number) => {
     const isSelected = selectedThreat === index;
+    const isDead = threat.isDead || threat.defenseValue <= 0;
     
     // Check if we have entity status data for this threat
     const entityStatus = entityStatuses.find(status => status.threatId === threat.id);
@@ -113,17 +114,25 @@ const LocationCard: React.FC<LocationCardProps> = ({
       <div 
         key={index} 
         className={`bg-gray-800 rounded p-2 mb-2 last:mb-0 cursor-pointer transition-all duration-200
+          ${isDead ? 'opacity-60 grayscale' : ''}
           ${isSelected ? 'border border-cyan-600' : 'hover:bg-gray-750'}`}
         onClick={() => handleThreatClick(index)}
       >
         <div className="flex justify-between items-center">
-          <div className="font-bold text-sm">{threat.name}</div>
+          <div className="font-bold text-sm flex items-center">
+            {threat.name}
+            {isDead && (
+              <span className="ml-2 text-xs bg-gray-700 text-red-400 px-2 py-0.5 rounded">
+                OFFLINE
+              </span>
+            )}
+          </div>
           <div className="flex space-x-2">
             <span className="px-2 py-0.5 bg-orange-900 text-orange-100 rounded text-xs">
               ATK: {threat.attack}
             </span>
-            <span className="px-2 py-0.5 bg-blue-900 text-blue-100 rounded text-xs">
-              DEF: {threat.defenseValue}
+            <span className={`px-2 py-0.5 ${isDead ? 'bg-red-900 text-red-100' : 'bg-blue-900 text-blue-100'} rounded text-xs`}>
+              DEF: {isDead ? 0 : threat.defenseValue}
             </span>
           </div>
         </div>
@@ -133,15 +142,19 @@ const LocationCard: React.FC<LocationCardProps> = ({
         <div className="flex items-center space-x-1 mt-2">
           <span className="text-xs text-gray-400">Action Potential:</span>
           <div className="flex space-x-1">
-            {actionPotentials.map((isActive, dotIndex) => (
-              <div 
-                key={dotIndex}
-                className={`w-3 h-3 rounded-full ${isActive 
-                  ? 'bg-red-500' 
-                  : 'bg-gray-600'
-                }`}
-              />
-            ))}
+            {!isDead ? (
+              actionPotentials.map((isActive, dotIndex) => (
+                <div 
+                  key={dotIndex}
+                  className={`w-3 h-3 rounded-full ${isActive 
+                    ? 'bg-red-500' 
+                    : 'bg-gray-600'
+                  }`}
+                />
+              ))
+            ) : (
+              <span className="text-xs text-red-400">System disabled</span>
+            )}
           </div>
         </div>
         

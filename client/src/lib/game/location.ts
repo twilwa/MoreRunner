@@ -9,8 +9,9 @@ export type LocationThreat = {
   name: string;
   description: string;
   dangerLevel: number; // 1-5
-  defenseValue: number;
+  defenseValue: number; // Health/defense points
   attack: number; // Damage this threat can deal to player
+  isDead?: boolean; // Flag indicating if the threat has been defeated (defenseValue <= 0)
 };
 
 export interface Location {
