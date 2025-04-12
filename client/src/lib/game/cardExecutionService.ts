@@ -53,20 +53,23 @@ export class CardExecutionService {
     
     // Remove any existing zone components before adding the inQueue zone
     if (cardCopy.components) {
+      // Also remove any CreditCost components - credit costs only apply in market
       cardCopy.components = cardCopy.components.filter(comp => 
         comp.type !== 'inMarketZone' && 
         comp.type !== 'inDeckZone' && 
         comp.type !== 'inHandZone' && 
         comp.type !== 'inQueueZone' &&
         comp.type !== 'inPlayZone' &&
-        comp.type !== 'inDiscardZone'
+        comp.type !== 'inDiscardZone' &&
+        // Important: Remove CreditCost components to ensure they don't apply in queue
+        comp.type !== 'CreditCost'
       );
       
       // Add the inQueue zone component with position = current queue length
       const queuePosition = this.executionState.queue.length;
       cardCopy.components.push(new InQueueZone(queuePosition));
       
-      console.log(`Added InQueueZone component with position ${queuePosition} to ${cardCopy.name}`);
+      console.log(`Added InQueueZone component with position ${queuePosition} to ${cardCopy.name}, removed any credit costs`);
     }
     
     this.executionState.queue.push(cardCopy);
@@ -143,6 +146,12 @@ export class CardExecutionService {
     if (enhancedCard.components) {
       console.log(`Executing components for card: ${enhancedCard.name}`);
       
+      // IMPORTANT: Make sure CreditCost components are not present in the queue
+      // Credit costs are only checked when buying cards from the market
+      enhancedCard.components = enhancedCard.components.filter(comp => 
+        comp.type !== 'CreditCost'
+      );
+      
       // Log component types before execution for debugging
       if (enhancedCard.components) {
         console.log("Components to execute:", enhancedCard.components.map(c => c.type));
@@ -157,6 +166,9 @@ export class CardExecutionService {
         console.log(`PAUSING EXECUTION for ${enhancedCard.name} - needs target selection: ${context.awaitingTargetSelection}`);
         this.executionState.isPaused = true;
         this.executionState.awaitingTargetSelection = context.awaitingTargetSelection;
+        
+        // Add a helpful log message
+        addLogMessage(`Waiting for you to select targets for ${enhancedCard.name}...`);
         
         return false; // Execution did not complete
       }
@@ -245,9 +257,26 @@ export class CardExecutionService {
     
     // Resume execution for the current card with the provided targets
     if (this.executionState.context && this.executionState.context.gameState) {
+      // Create a safe log function that won't cause infinite recursion
       const addLogMessage = (message: string) => {
-        if (this.executionState.context && this.executionState.context.log) {
-          this.executionState.context.log(message);
+        // Use direct console.log for debugging instead of the context log function
+        // to avoid potential circular reference and stack overflow
+        console.log(`LOG: ${message}`);
+        
+        // Only call the context log if it's a direct function, not another wrapper
+        if (this.executionState.context) {
+          // Add a flag to the original log function to avoid recursion
+          const safeLog = this.executionState.context.gameState.addLog || 
+                         ((state: any, msg: string) => {
+                           console.log("Fallback log:", msg);
+                           return state;
+                         });
+                         
+          // Update game state with the log message
+          this.executionState.context.gameState = safeLog(
+            this.executionState.context.gameState,
+            message
+          );
         }
       };
       
@@ -341,21 +370,34 @@ export class CardExecutionService {
     const cardCopy = { ...card, components: [...(card.components || [])] };
     
     // Remove any existing zone components
-    cardCopy.components = cardCopy.components.filter(comp => 
-      comp.type !== 'inMarketZone' && 
-      comp.type !== 'inDeckZone' && 
-      comp.type !== 'inHandZone' && 
-      comp.type !== 'inQueueZone' &&
-      comp.type !== 'inPlayZone' &&
-      comp.type !== 'inDiscardZone' &&
-      // Also check for class-based component types
-      comp.type !== 'InMarketZone' && 
-      comp.type !== 'InDeckZone' && 
-      comp.type !== 'InHandZone' && 
-      comp.type !== 'InQueueZone' &&
-      comp.type !== 'InPlayZone' &&
-      comp.type !== 'InDiscardZone'
-    );
+    cardCopy.components = cardCopy.components.filter(comp => {
+      // Remove zone components
+      if (
+        comp.type === 'inMarketZone' || 
+        comp.type === 'inDeckZone' || 
+        comp.type === 'inHandZone' || 
+        comp.type === 'inQueueZone' ||
+        comp.type === 'inPlayZone' ||
+        comp.type === 'inDiscardZone' ||
+        // Also check for class-based component types
+        comp.type === 'InMarketZone' || 
+        comp.type === 'InDeckZone' || 
+        comp.type === 'InHandZone' || 
+        comp.type === 'InQueueZone' ||
+        comp.type === 'InPlayZone' ||
+        comp.type === 'InDiscardZone'
+      ) {
+        return false;
+      }
+      
+      // Remove CreditCost when moving to queue (only matters in market)
+      if (toZone === 'inQueue' && comp.type === 'CreditCost') {
+        console.log(`Removing CreditCost component from ${card.name} when moving to queue`);
+        return false;
+      }
+      
+      return true;
+    });
     
     // Add the appropriate zone component based on the target zone
     switch (toZone) {
