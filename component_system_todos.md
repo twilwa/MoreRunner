@@ -28,7 +28,7 @@ This document outlines the tasks needed to implement the component-based card sy
 - [x] Implement `TrashCost` (Self - targeting own cards) - **Priority 1 (Anarch)**
 - [x] Implement `HealthCost` (Self - Meat/Brain damage) - **Priority 1 (Anarch)**
 - [ ] Implement `KeywordRequirement` (Check for installed keywords) - **Priority 2 (Shaper)**
-- [ ] Add visual feedback when costs cannot be paid - **Priority 2**
+- [x] Add visual feedback when costs cannot be paid - **Priority 2**
 
 ### Effect Components
 - [x] Implement `GainCredits` - **Priority 1**

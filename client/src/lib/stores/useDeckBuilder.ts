@@ -421,11 +421,12 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       
       // Deduct the cost of the cards from player's credits
       activePlayer.credits -= totalQueueCost;
-      // Use a different variable name to avoid duplicate declarations
+      // Define both variable names to avoid runtime errors
       let executionGameState = addLog(
         gameState, 
         `Paid ${totalQueueCost} credits to execute ${queuedCards.length} card${queuedCards.length > 1 ? 's' : ''}.`
       );
+      let updatedGameState = executionGameState; // Make sure both variables are initialized
       
       // Use imported cardExecutionService and related utilities from top of file
       
