@@ -540,11 +540,24 @@ export const useDeckBuilder = create<DeckBuilderState>()(
           executionGameState = addLog(executionGameState, message);
         };
 
-        // Execute first card or start execution and pause for target selection if needed
-        // Instead of executing all cards at once, we start with just the first one
-        // The card execution service will handle continuing execution after targets are provided
-        const executionStarted = cardExecutionService.executeNextCard(executionGameState, addLogMessage);
-        console.log("Execution started with first card, result:", executionStarted);
+        // Execute all cards in the queue until paused or completed
+        // Loop through the queue to process each card in sequence
+        let queueCompleted = false;
+        let executionPaused = false;
+        
+        // Execute cards one by one until we finish the queue or pause
+        while (!queueCompleted && !executionPaused) {
+          // Execute the next card in the queue
+          const currentResult = cardExecutionService.executeNextCard(executionGameState, addLogMessage);
+          
+          // Check if we're paused (e.g., for targeting)
+          executionPaused = cardExecutionService.isExecutionPaused();
+          
+          // Check if we've completed the queue
+          queueCompleted = currentResult === true;
+          
+          console.log(`Card execution step: completed=${queueCompleted}, paused=${executionPaused}`);
+        }
 
         // Check if execution was paused for target selection
         if (cardExecutionService.isExecutionPaused()) {

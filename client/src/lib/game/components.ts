@@ -1,7 +1,7 @@
 // Card Component System for Cyberpunk Deck-Builder
 // This implements an entity-component architecture for card mechanics
 
-import { Card, CardKeyword, CardFaction } from './cards';
+import { Card, CardKeyword, CardFaction, CardType } from './cards';
 
 // Base Component interface
 export interface Component {
