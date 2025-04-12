@@ -92,8 +92,10 @@ export class InDiscardZone extends ZoneComponent {
     }
     
     // When in recycling phase, some cards might trigger effects from discard
-    const isAnarchCard = context.card.faction === 'red'; // Using 'red' for Anarch faction
-    const hasRecycleKeyword = context.card.keywords?.includes('recycle'); // Using lowercase for consistency
+    // Using Runner faction as equivalent to Anarchs in our game
+    const isAnarchCard = context.card.faction === 'Runner'; 
+    // For recycling mechanics - using 'Virus' as our equivalent for recycle
+    const hasRecycleKeyword = context.card.keywords?.includes('Virus');
     
     if (isAnarchCard && hasRecycleKeyword) {
       context.log(`${context.card.name} is in the discard pile. Anarch cards with Recycle keyword may have special abilities when trashed.`);
@@ -167,7 +169,8 @@ export class InHandZone extends ZoneComponent {
     
     // Apply any effects specific to cards while they're in hand
     // (for example, some cards might have abilities that work from hand)
-    const hasHandAbility = context.card.keywords?.includes('reaction'); // using lowercase for consistency
+    // Using 'Stealth' for cards that can be played as reactions from hand
+    const hasHandAbility = context.card.keywords?.includes('Stealth');
     if (hasHandAbility) {
       console.log(`${context.card.name} has abilities that can be used from hand.`);
     }
@@ -202,9 +205,10 @@ export class InQueueZone extends ZoneComponent {
     }
     
     // Cards in queue zone might have special abilities that trigger while waiting
-    const hasPrepEffect = context.card.keywords?.includes('prep');
+    // Using 'Virus' keyword for cards that have prep effects
+    const hasPrepEffect = context.card.keywords?.includes('Virus');
     if (hasPrepEffect) {
-      console.log(`${context.card.name} has a prep effect that triggers while in the queue.`);
+      console.log(`${context.card.name} has a Virus effect that triggers while in the queue.`);
     }
   }
 }
@@ -230,16 +234,20 @@ export class InPlayZone extends ZoneComponent {
     // Handle persistent effects
     
     // Check for activation abilities that can be used while in play
-    const hasActivation = context.card.cardType === 'program' || context.card.cardType === 'hardware';
+    // Use proper CardType from our system - check if the card has specific keywords
+    const hasActivation = context.card.keywords.includes('Program') || context.card.keywords.includes('Hardware');
     
     if (hasActivation) {
       console.log(`${context.card.name} has abilities that can be activated while in play.`);
     }
     
     // Handle installed card mechanics (for hardware, programs, etc.)
-    const duration = context.card.duration || 'permanent';
-    if (duration !== 'permanent') {
-      console.log(`${context.card.name} will remain in play for ${duration}.`);
+    // We need to check the card effects to determine duration since it's not a direct property
+    const hasTimedEffect = context.card.effects.some(e => e.type === 'gain_action' || e.type === 'draw_cards');
+    if (hasTimedEffect) {
+      console.log(`${context.card.name} has timed effects that will activate during play.`);
+    } else {
+      console.log(`${context.card.name} has permanent effects while in play.`);
     }
     
     // Cards in play contribute to faction synergies
