@@ -111,10 +111,20 @@ export class CardExecutionService {
     
     // Execute the card's components
     if (enhancedCard.components) {
+      console.log(`Executing components for card: ${enhancedCard.name}`);
+      
+      // Log component types before execution for debugging
+      if (enhancedCard.components) {
+        console.log("Components to execute:", enhancedCard.components.map(c => c.type));
+      }
+      
       executeCardComponents(enhancedCard, context);
       
       // Check if execution was paused (e.g., for target selection)
+      console.log(`After components execution - executionPaused: ${context.executionPaused}, awaitingTargetSelection: ${context.awaitingTargetSelection}`);
+      
       if (context.executionPaused) {
+        console.log(`PAUSING EXECUTION for ${enhancedCard.name} - needs target selection: ${context.awaitingTargetSelection}`);
         this.executionState.isPaused = true;
         this.executionState.awaitingTargetSelection = context.awaitingTargetSelection;
         

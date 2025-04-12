@@ -840,14 +840,22 @@ export function executeCardComponents(card: EnhancedCard, context: GameContext):
     return;
   }
   
+  console.log(`executeCardComponents for ${card.name}, has ${card.components.length} components`);
+  
   // Process components in order
   for (const component of card.components) {
+    console.log(`Applying component: ${component.type}`);
+    
     // Skip further processing if execution is paused
     if (context.executionPaused) {
+      console.log(`Execution already paused before applying ${component.type} - stopping component execution`);
       break;
     }
     
     component.apply(context);
+    
+    // Log status after each component
+    console.log(`After ${component.type} - executionPaused: ${context.executionPaused}, awaitingTargetSelection: ${context.awaitingTargetSelection}`);
   }
 }
 
