@@ -370,26 +370,17 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         // enhanceCard adds components, handling and validates costs via InQueueZone component
         const cardWithComponents = enhanceCard(card);
         
-        // Credit costs are now handled by the InQueueZone component's apply method
-        // This ensures all cost validation goes through our entity-component system
-        // We'll still check the total queue cost to ensure the player can afford all queued cards
-
-        // Calculate credit cost of all queued cards plus this new card
-        const queuedCardsCost = activePlayer.inPlay.reduce(
-          (total, queuedCard) => total + queuedCard.cost,
-          0,
-        );
-        const totalCost = queuedCardsCost + card.cost;
-
-        // Check if player has enough credits to pay for all queued cards
-        if (totalCost > activePlayer.credits) {
-          const updatedGameState = addLog(
-            gameState,
-            `Cannot queue ${card.name} - total queue cost would be ${totalCost} credits but you only have ${activePlayer.credits}.`,
-          );
-          set({ gameState: updatedGameState });
-          return;
-        }
+        // IMPORTANT: We no longer check credit costs for cards going into the queue
+        // Credit costs are ONLY checked when buying cards from the market
+        // When queueing cards from hand, we ONLY check action costs, not credit costs
+        
+        // This is a change to how the zone system works:
+        // - InMarketZone: Validates CREDIT costs when buying cards
+        // - InHandZone: Validates ACTION availability when playing cards
+        // - InQueueZone: Validates ACTION costs during execution
+        
+        // We already checked actions above, so we don't need to do any additional cost checking here
+        // The component system will handle execution validation through the cardExecutionService
 
         // All checks passed - add to queue
         // Remove the card from hand
@@ -409,10 +400,11 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         // Add transitioned card to inPlay (queued cards)
         activePlayer.inPlay.push(cardWithZone);
 
-        // Log message
+        // Log message - no longer include credit cost information in queue messages
+        // This is part of separating credit costs (market only) from action costs (queue only)
         const updatedGameState = addLog(
           gameState,
-          `You queued ${cardWithComponents.name} for execution. Card costs ${cardWithComponents.cost} credits, total queue cost: ${totalCost} credits.`,
+          `You queued ${cardWithComponents.name} for execution.`,
         );
         set({ gameState: updatedGameState });
       }
