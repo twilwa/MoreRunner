@@ -14,6 +14,7 @@ export interface GameContext {
   queuePosition?: number; // Position in the execution queue
   executionPaused: boolean; // Whether execution is paused for player input
   awaitingTargetSelection: boolean; // Whether waiting for player to select targets
+  targetsConfirmed: boolean; // Whether targets have been confirmed by the player
   gameState: any; // Full game state object
   log: (message: string) => void; // For logging game events
   recentlyTrashed?: Card; // Card that was recently trashed (for RecycleGain component)
@@ -287,6 +288,19 @@ export class InPlayZone extends ZoneComponent {
 }
 
 // ----- TARGET COMPONENTS -----
+
+// Component to track whether targets have been confirmed
+export class TargetsConfirmed implements Component {
+  type = 'TargetsConfirmed';
+  
+  constructor(public isConfirmed: boolean = false) {}
+  
+  apply(context: GameContext): void {
+    // Simply set the context flag based on the component's state
+    context.targetsConfirmed = this.isConfirmed;
+    console.log(`TargetsConfirmed component set to ${this.isConfirmed} for ${context.card.name}`);
+  }
+}
 
 export class SingleEntityTarget implements Component {
   type = 'SingleEntityTarget';
@@ -1125,20 +1139,104 @@ export function executeCardComponents(card: EnhancedCard, context: GameContext):
   
   console.log(`executeCardComponents for ${card.name}, has ${cardComponents.length} components`);
   
-  // Process components in order
-  for (const component of cardComponents) {
-    console.log(`Applying component: ${component.type}`);
+  // Initialize targetsConfirmed if not already set
+  if (context.targetsConfirmed === undefined) {
+    context.targetsConfirmed = false;
+  }
+  
+  // Separate components by type for the new execution order: choose targets > pay costs > execute effects
+  const targetingComponents = cardComponents.filter(comp => 
+    comp.type === 'SingleEntityTarget' || 
+    comp.type === 'MultiEntityTarget' || 
+    comp.type === 'SelfTarget'
+  );
+  
+  const targetsConfirmedComponents = cardComponents.filter(comp => 
+    comp.type === 'TargetsConfirmed'
+  );
+  
+  const costComponents = cardComponents.filter(comp => 
+    comp.type === 'CreditCost' || 
+    comp.type === 'ActionCost' || 
+    comp.type === 'KeywordRequirement' || 
+    comp.type === 'TrashCost'
+  );
+  
+  const effectComponents = cardComponents.filter(comp => 
+    !targetingComponents.includes(comp) && 
+    !costComponents.includes(comp) &&
+    !targetsConfirmedComponents.includes(comp)
+  );
+  
+  console.log(`Components breakdown - Targeting: ${targetingComponents.length}, Costs: ${costComponents.length}, Effects: ${effectComponents.length}`);
+  
+  // First process all targeting components
+  for (const component of targetingComponents) {
+    console.log(`Applying targeting component: ${component.type}`);
     
     // Skip further processing if execution is paused
     if (context.executionPaused) {
-      console.log(`Execution already paused before applying ${component.type} - stopping component execution`);
-      break;
+      console.log(`Execution paused during targeting - stopping component execution`);
+      return;
     }
     
     component.apply(context);
     
     // Log status after each component
     console.log(`After ${component.type} - executionPaused: ${context.executionPaused}, awaitingTargetSelection: ${context.awaitingTargetSelection}`);
+  }
+  
+  // If we have targets confirmed, proceed with costs and effects
+  // This is set by the provideTargets method when the player confirms targets
+  if (!context.executionPaused && (context.targets?.length > 0 || targetingComponents.length === 0)) {
+    console.log(`Targets confirmed or no targeting needed, proceeding to costs and effects`);
+    
+    // Mark targets as confirmed by applying the TargetsConfirmed component if it exists
+    for (const component of targetsConfirmedComponents) {
+      console.log(`Applying ${component.type}`);
+      component.apply(context);
+    }
+    
+    // If no TargetsConfirmed component exists, set the flag directly
+    if (targetsConfirmedComponents.length === 0 && !context.targetsConfirmed) {
+      context.targetsConfirmed = true;
+      console.log(`Setting targets confirmed flag directly`);
+    }
+    
+    // Process all cost components
+    for (const component of costComponents) {
+      console.log(`Applying cost component: ${component.type}`);
+      
+      // Skip further processing if execution is paused
+      if (context.executionPaused) {
+        console.log(`Execution paused during cost application - stopping component execution`);
+        return;
+      }
+      
+      component.apply(context);
+      
+      // Log status after each component
+      console.log(`After ${component.type} - executionPaused: ${context.executionPaused}`);
+    }
+    
+    // If all costs paid successfully, proceed to effects
+    if (!context.executionPaused) {
+      // Process all effect components
+      for (const component of effectComponents) {
+        console.log(`Applying effect component: ${component.type}`);
+        
+        // Skip further processing if execution is paused
+        if (context.executionPaused) {
+          console.log(`Execution paused during effect application - stopping component execution`);
+          return;
+        }
+        
+        component.apply(context);
+        
+        // Log status after each component
+        console.log(`After ${component.type} - executionPaused: ${context.executionPaused}`);
+      }
+    }
   }
   
   // If execution completed successfully (not paused), move the card to discard

@@ -134,6 +134,7 @@ export class CardExecutionService {
       cardsInPlay: gameState.players.reduce((all: Card[], p: {inPlay: Card[]}) => [...all, ...p.inPlay], [] as Card[]),
       executionPaused: false,
       awaitingTargetSelection: false,
+      targetsConfirmed: false, // Initialize the new targetsConfirmed flag to false
       queuePosition: this.executionState.currentIndex,
       gameState,
       log: addLogMessage
@@ -247,6 +248,11 @@ export class CardExecutionService {
       this.executionState.context.targets = targets;
       this.executionState.context.executionPaused = false;
       this.executionState.context.awaitingTargetSelection = false;
+      
+      // Also set the targetsConfirmed flag to true
+      // This is part of the new flow: choose targets > pay costs > execute effects
+      this.executionState.context.targetsConfirmed = true;
+      console.log(`Setting targetsConfirmed flag to true for ${this.executionState.context.card.name}`);
     }
     
     // Resume execution
