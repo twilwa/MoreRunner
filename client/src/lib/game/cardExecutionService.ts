@@ -235,16 +235,27 @@ export class CardExecutionService {
   
   // Provide targets for a paused execution
   provideTargets(targets: any[], callback?: TargetSelectionCallback): void {
+    console.log("provideTargets called with targets:", targets);
+    
     // Store the selected targets
     this.executionState.selectedTargets = targets;
     
     // Store the callback if provided
     if (callback) {
+      console.log("Storing callback for later use");
       this.executionState.targetSelectionCallback = callback;
     }
     
     // If we have a context, update it with the selected targets
     if (this.executionState.context) {
+      console.log("Current execution context before updates:", {
+        card: this.executionState.context.card.name,
+        executionPaused: this.executionState.context.executionPaused,
+        awaitingTargetSelection: this.executionState.context.awaitingTargetSelection,
+        targetsConfirmed: this.executionState.context.targetsConfirmed || false
+      });
+      
+      // Update the context with selected targets
       this.executionState.context.targets = targets;
       this.executionState.context.executionPaused = false;
       this.executionState.context.awaitingTargetSelection = false;
@@ -253,6 +264,16 @@ export class CardExecutionService {
       // This is part of the new flow: choose targets > pay costs > execute effects
       this.executionState.context.targetsConfirmed = true;
       console.log(`Setting targetsConfirmed flag to true for ${this.executionState.context.card.name}`);
+      
+      console.log("Updated execution context:", {
+        card: this.executionState.context.card.name,
+        executionPaused: this.executionState.context.executionPaused,
+        awaitingTargetSelection: this.executionState.context.awaitingTargetSelection,
+        targetsConfirmed: this.executionState.context.targetsConfirmed,
+        targets: this.executionState.context.targets.map(t => t.name || t.id)
+      });
+    } else {
+      console.error("No execution context available when providing targets");
     }
     
     // Resume execution

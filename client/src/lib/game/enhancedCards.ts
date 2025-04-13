@@ -27,6 +27,7 @@ import {
   SingleEntityTarget,
   MultiEntityTarget,
   SelfTarget,
+  TargetsConfirmed, // Add the new TargetsConfirmed component
   CreditCost,
   ActionCost,
   KeywordRequirement,
@@ -68,13 +69,16 @@ export const ENHANCED_CREDIT_CHIP: EnhancedCard = createCardWithComponents(
 export const ENHANCED_MALICIOUS_CODE: EnhancedCard = createCardWithComponents(
   MALICIOUS_CODE,
   [
+    // First step: Choose targets
+    new SingleEntityTarget('threat', true, threat => threat.health !== undefined),
+    // Mark targets as needing confirmation
+    new TargetsConfirmed(false),
+    
+    // Second step: Pay costs (after targets confirmed)
     new CreditCost(5),
     new ActionCost(1),
-    // Targeting component directly to handle target selection
-    // This is implemented as an inQueue cost component that will be checked
-    // before the card can be played from the queue
-    new SingleEntityTarget('threat', true, threat => threat.health !== undefined),
-    // After targets are selected, these components will execute
+    
+    // Third step: Execute effects (after costs paid)
     new DealDamage(2),
     new KeywordSynergy('Virus', 'DealDamage', 1)
   ]
@@ -184,11 +188,17 @@ export const NETWORK_SCANNER: EnhancedCard = createCardWithComponents(
     description: 'Scan a target to reveal its details. Draw a card if you have a Stealth card in play.'
   },
   [
+    // Define targeting components first
+    new SingleEntityTarget('threat', true),
+    
+    // Add TargetsConfirmed with default false
+    new TargetsConfirmed(false),
+    
+    // Then cost components
     new CreditCost(4),
     new ActionCost(1),
-    // Directly use SingleEntityTarget without PauseQueue
-    // The targeting component is now treated as a cost component in the inQueue zone
-    new SingleEntityTarget('threat', true),
+    
+    // Then effect components
     new ScanEntity(true),
     new KeywordRequirement('Stealth', 1, 'play'),
     new DrawCards(1)
