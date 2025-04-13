@@ -118,7 +118,11 @@ const CardTargetingModal: React.FC<CardTargetingModalProps> = ({
   
   const potentialTargets = getPotentialTargets();
   
-  const toggleTarget = (target: TargetEntity, event?: React.MouseEvent | React.TouchEvent) => {
+  // Use a more generic event type to handle keyboard events
+  const toggleTarget = (
+    target: TargetEntity, 
+    event?: React.MouseEvent<Element> | React.TouchEvent<Element> | React.KeyboardEvent<Element>
+  ) => {
     // Stop event propagation to prevent issues on mobile
     if (event) {
       event.preventDefault();

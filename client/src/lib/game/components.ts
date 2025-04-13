@@ -1191,6 +1191,14 @@ export function executeCardComponents(card: EnhancedCard, context: GameContext):
   if (!context.executionPaused && (context.targets?.length > 0 || targetingComponents.length === 0)) {
     console.log(`Targets confirmed or no targeting needed, proceeding to costs and effects`);
     
+    // First check if we have confirmed targets
+    if (!context.targetsConfirmed) {
+      console.log(`Targets not yet confirmed - stopping execution flow until confirmation`);
+      return;
+    }
+    
+    console.log(`Targets are confirmed (${context.targetsConfirmed}), proceeding with costs and effects`);
+    
     // Mark targets as confirmed by applying the TargetsConfirmed component if it exists
     for (const component of targetsConfirmedComponents) {
       console.log(`Applying ${component.type}`);

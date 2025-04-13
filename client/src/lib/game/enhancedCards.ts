@@ -155,9 +155,15 @@ export const ENHANCED_BACKDOOR: EnhancedCard = createCardWithComponents(
 export const ENHANCED_TRACE_PROGRAM: EnhancedCard = createCardWithComponents(
   TRACE_PROGRAM,
   [
+    // Step 1: Choose targets
+    new SingleEntityTarget('opponent', true),
+    new TargetsConfirmed(false), // Set to false initially - will be set to true after target selection
+    
+    // Step 2: Pay costs (after targets confirmed)
     new CreditCost(5),
     new ActionCost(1),
-    new SingleEntityTarget('opponent', true),
+    
+    // Step 3: Execute effects (after costs paid)
     // Trace component would go here
     new DiscardCards(1, true) // Random discard
   ]
@@ -166,9 +172,15 @@ export const ENHANCED_TRACE_PROGRAM: EnhancedCard = createCardWithComponents(
 export const ENHANCED_DATA_BREACH: EnhancedCard = createCardWithComponents(
   DATA_BREACH,
   [
+    // Step 1: Choose targets
+    new MultiEntityTarget('opponents', 1), // Target one opponent
+    new TargetsConfirmed(false), // Set to false initially - will be set to true after target selection
+    
+    // Step 2: Pay costs (after targets confirmed)
     new CreditCost(4),
     new ActionCost(1),
-    new MultiEntityTarget('opponents', 1), // Target one opponent
+    
+    // Step 3: Execute effects (after costs paid)
     new DrawCards(2),
     new DiscardCards(1, true), // Random discard
     new KeywordSynergy('Stealth', 'DiscardCards', 1) // +1 card discard with Stealth synergy
@@ -217,10 +229,16 @@ export const ICE_BREAKER: EnhancedCard = createCardWithComponents(
     description: 'Cancel a card with ICE keyword. Deal 2 damage to a corp entity.'
   },
   [
+    // Step 1: Choose targets
+    new SingleEntityTarget('threat', true, threat => threat.faction === 'Corp'),
+    new TargetsConfirmed(false), // Set to false initially - will be set to true after target selection
+    
+    // Step 2: Pay costs (after targets confirmed)
     new CreditCost(5),
     new ActionCost(1),
+    
+    // Step 3: Execute effects (after costs paid)
     new CancelCard(undefined, card => card.keywords.includes('ICE')),
-    new SingleEntityTarget('threat', true, threat => threat.faction === 'Corp'),
     new DealDamage(2)
   ]
 );
@@ -229,10 +247,15 @@ export const ICE_BREAKER: EnhancedCard = createCardWithComponents(
 export const ENHANCED_DESPERATE_HACK: EnhancedCard = createCardWithComponents(
   DESPERATE_HACK, // Using the base card defined in cards.ts
   [
+    // Step 1: Choose targets
+    new SingleEntityTarget('threat', true, threat => threat.health !== undefined),
+    new TargetsConfirmed(false), // Set to false initially - will be set to true after target selection
+    
+    // Step 2: Pay costs (after targets confirmed)
     new CreditCost(2), // Cheap but risky
     new ActionCost(1),
-    // Direct targeting component instead of PauseQueue
-    new SingleEntityTarget('threat', true, threat => threat.health !== undefined),
+    
+    // Step 3: Execute effects (after costs paid)
     new RiskReward(
       'health', // Risk type - player takes damage if failed
       'damage', // Reward type - deal damage if successful
@@ -248,12 +271,17 @@ export const ENHANCED_DESPERATE_HACK: EnhancedCard = createCardWithComponents(
 export const ENHANCED_CIRCUIT_BREAKER: EnhancedCard = createCardWithComponents(
   CIRCUIT_BREAKER, // Using the base card defined in cards.ts
   [
+    // Step 1: Choose targets
+    new SingleEntityTarget('threat', true, threat => threat.health !== undefined),
+    new TargetsConfirmed(false), // Set to false initially - will be set to true after target selection
+    
+    // Step 2: Pay costs (after targets confirmed)
     new CreditCost(1), // Very cheap because you're sacrificing another card
     new ActionCost(1),
     // TrashCost is handled directly as a cost component
     new TrashCost('program', false), // Trash any program
-    // Direct targeting component
-    new SingleEntityTarget('threat', true, threat => threat.health !== undefined),
+    
+    // Step 3: Execute effects (after costs paid)
     new DealDamage(3), // Base damage value (gets modified in real gameplay based on trashed card's cost)
     new ComboEffect('Virus', { type: 'damage', amount: 1 }) // +1 damage if you have a Virus card in play
   ]
