@@ -118,11 +118,7 @@ const CardTargetingModal: React.FC<CardTargetingModalProps> = ({
   
   const potentialTargets = getPotentialTargets();
   
-  // Use a more generic event type to handle keyboard events
-  const toggleTarget = (
-    target: TargetEntity, 
-    event?: React.MouseEvent<Element> | React.TouchEvent<Element> | React.KeyboardEvent<Element>
-  ) => {
+  const toggleTarget = (target: TargetEntity, event?: React.MouseEvent | React.TouchEvent) => {
     // Stop event propagation to prevent issues on mobile
     if (event) {
       event.preventDefault();
@@ -148,16 +144,9 @@ const CardTargetingModal: React.FC<CardTargetingModalProps> = ({
   const handleConfirm = () => {
     if (selectedTargets.length > 0) {
       console.log("CardTargetingModal: Confirming target selection:", selectedTargets);
-      console.log("CardTargetingModal: Current context before providing targets:", 
-                  cardExecutionService.getExecutionContext());
-      
       // Call the onTargetSelect callback to pass targets back to parent component
       onTargetSelect(selectedTargets);
-      
       console.log("CardTargetingModal: onTargetSelect callback completed");
-      console.log("CardTargetingModal: Context after targets provided:", 
-                  cardExecutionService.getExecutionContext());
-      
       // Close the modal
       onClose();
       console.log("CardTargetingModal: Modal closed");
@@ -254,7 +243,7 @@ const CardTargetingModal: React.FC<CardTargetingModalProps> = ({
                   }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
-                      toggleTarget(target); // Don't pass the keyboard event
+                      toggleTarget(target, e);
                     }
                   }}
                   role="button"
