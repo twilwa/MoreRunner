@@ -51,7 +51,10 @@ node_modules/
 
 # Task files
 tasks.json
-tasks/
+
+
+tasks/ 
+
 
 # Coverage directory used by testing tools
 coverage

@@ -191,6 +191,7 @@ describe('GameBoard', () => {
     expect(screen.getByTestId('targeting-modal')).toBeInTheDocument();
   });
 
+
   it('calls provideTargets when confirming target selection in modal', () => {
     act(() => {
       mockStoreState.isTargetingModalOpen = true;
@@ -217,4 +218,5 @@ describe('GameBoard', () => {
     fireEvent.click(cancelButton);
     expect(mockStoreState.cancelTargeting).toHaveBeenCalled();
   });
+
 });

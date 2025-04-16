@@ -484,7 +484,9 @@ export class ActionCost implements Component {
 
 export class HealthCost implements Component {
   type = 'HealthCost';
+
   constructor(public amount: number, public damageType: DamageType) {}
+
 
   canApply(context: GameContext): boolean {
     // Allow if player has more health than the cost (prevents self-defeat)
