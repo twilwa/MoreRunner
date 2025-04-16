@@ -239,18 +239,8 @@ export function playCard(player: Player, cardIndex: number): { player: Player, p
       fromZone,
       toZone
     );
-<<<<<<< ours
     console.log(`Card ${card.name} played from ${fromZone} to ${toZone}`);
     updatedPlayer.inPlay.push(updatedCard);
-||||||| ancestor
-
-    console.log(`Card ${card.name} moved from ${fromZone} to ${toZone}`);
-
-    // Remove the card from hand
-=======
-    console.log(`Card ${cardToPlay.name} played from ${fromZone} to ${toZone}`);
-    updatedPlayer.inPlay.push(updatedCard);
->>>>>>> theirs
     updatedPlayer.hand = updatedPlayer.hand.filter((_, i) => i !== cardIndex);
 
     // Legacy effect handling for backward compatibility
