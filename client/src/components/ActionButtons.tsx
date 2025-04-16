@@ -79,15 +79,18 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
       <p className="text-sm text-cyan-300 text-center font-mono">{actionDescription}</p>
       
       <div className="grid grid-cols-1 gap-3">
-        <button
-          onClick={onEndPhase}
-          className={`px-6 py-4 rounded-md text-white font-mono text-md
-            bg-gradient-to-r ${buttonColor}
-            transform transition-all duration-200
-            shadow-lg active:scale-95`}
-        >
-          {buttonText}
-        </button>
+        {buttonText !== 'WAIT...' && (
+          <button
+            onClick={onEndPhase}
+            data-testid="end-phase-btn"
+            className={`px-6 py-4 rounded-md text-white font-mono text-md
+              bg-gradient-to-r ${buttonColor}
+              transform transition-all duration-200
+              shadow-lg active:scale-95`}
+          >
+            {buttonText}
+          </button>
+        )}
         
         <button
           onClick={onViewDeck}

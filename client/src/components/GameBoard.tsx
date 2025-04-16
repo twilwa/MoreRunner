@@ -318,7 +318,7 @@ const GameBoard: React.FC = () => {
   };
   
   return (
-    <div className="h-screen bg-gray-900 text-gray-200 flex flex-col overflow-hidden">
+    <div className="h-screen bg-gray-900 text-gray-200 flex flex-col overflow-hidden" data-testid="game-board">
       {/* Sound toggle */}
       <button 
         onClick={toggleMute}
