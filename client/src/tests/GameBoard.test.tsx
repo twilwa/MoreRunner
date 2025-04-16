@@ -191,5 +191,32 @@ describe('GameBoard', () => {
     expect(screen.getByTestId('targeting-modal')).toBeInTheDocument();
   });
 
-  // Add tests for modal interactions calling provideTargets/cancelTargeting as you implement them
+
+  it('calls provideTargets when confirming target selection in modal', () => {
+    act(() => {
+      mockStoreState.isTargetingModalOpen = true;
+      mockStoreState.currentTargetingRequest = { message: 'Select Target', validTargets: [{ id: 't1', name: 'Target 1' }] } as TargetingRequest;
+    });
+    render(<GameBoard />);
+    // Simulate selecting the first target (checkbox or button)
+    const targetOption = screen.getByTestId('target-option-t1');
+    fireEvent.click(targetOption);
+    // Simulate clicking the confirm/submit button
+    const confirmButton = screen.getByTestId('targeting-confirm-btn');
+    fireEvent.click(confirmButton);
+    expect(mockStoreState.provideTargets).toHaveBeenCalled();
+  });
+
+  it('calls cancelTargeting when cancel button is clicked in modal', () => {
+    act(() => {
+      mockStoreState.isTargetingModalOpen = true;
+      mockStoreState.currentTargetingRequest = { message: 'Select Target', validTargets: [{ id: 't1', name: 'Target 1' }] } as TargetingRequest;
+    });
+    render(<GameBoard />);
+    // Simulate clicking the cancel button
+    const cancelButton = screen.getByTestId('targeting-cancel-btn');
+    fireEvent.click(cancelButton);
+    expect(mockStoreState.cancelTargeting).toHaveBeenCalled();
+  });
+
 });

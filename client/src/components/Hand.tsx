@@ -4,7 +4,7 @@ import { Card as CardType } from '../lib/game/cards';
 
 interface HandProps {
   cards: CardType[];
-  onCardClick: (index: number) => void;
+  onCardClick: (id: string) => void;
   canPlayCards: boolean;
   title?: string;
 }
@@ -21,12 +21,14 @@ const Hand: React.FC<HandProps> = ({ cards, onCardClick, canPlayCards, title }) 
   return (
     <div data-testid={"hand-container"}>
       <div className="flex flex-wrap gap-2 justify-center">
-        {cards.map((card, index) => (
+
+        {cards.map((card) => (
           <div
-            key={card.id || index}
+            key={card.id}
             className={`transform transition-all hover:z-10`}
-            data-testid={`hand-card-${card.id ?? index}`}
-            onClick={() => onCardClick(index)}
+            data-testid={`hand-card-${card.id}`}
+            onClick={() => onCardClick(card.id)}
+
             role="button"
             tabIndex={0}
           >
