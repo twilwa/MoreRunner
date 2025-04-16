@@ -455,7 +455,7 @@ export class ActionCost implements Component {
 
 export class HealthCost implements Component {
   type = 'HealthCost';
-  constructor(public amount: number, public damageType: 'Meat' | 'Net' | 'Brain') {}
+  constructor(public amount: number, public damageType: DamageType) {}
 
   canApply(context: GameContext): boolean {
     // Allow if player has more health than the cost (prevents self-defeat)
@@ -829,8 +829,8 @@ export class RiskReward implements Component {
   type = 'RiskReward';
   
   constructor(
-    public riskType: 'health' | 'resources' | 'cards',
-    public rewardType: 'credits' | 'damage' | 'cards' | 'actions' | 'resources_and_cards',
+    public riskType: RiskType,
+    public rewardType: RewardType,
     public chance: number, // 0 to 100
     public riskAmount: number = 1,
     public rewardAmount: number = 3

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   CreditCost, ActionCost, GainCredits, DealDamage, SingleEntityTarget,
-  GameContext, EnhancedCard, Card, CardZone, TrashCost, HealthCost, KeywordRequirement
+  GameContext, EnhancedCard, Card, CardZone, TrashCost, HealthCost, KeywordRequirement, DamageType
 } from './components';
 import { Player } from './player';
 import { GameState } from './game';
@@ -178,21 +178,21 @@ describe('Component System', () => {
   it('HealthCost canApply returns true if player has enough health', () => {
     const player = { id: 'p1', name: 'Player 1', credits: 5, actions: 1, buys: 1, health: 5, hand: [], inPlay: [], discard: [], deck: [], factionReputation: { Corp: 0, Runner: 0, Street: 0 }, installedCards: [], faceDownCards: [] } as Player;
     const context = createMockContext({ player });
-    const comp = new HealthCost(3, 'Meat');
+    const comp = new HealthCost(3, DamageType.Meat);
     expect(comp.canApply(context)).toBe(true);
   });
 
   it('HealthCost canApply returns false if player does not have enough health', () => {
     const player = { id: 'p1', name: 'Player 1', credits: 5, actions: 1, buys: 1, health: 2, hand: [], inPlay: [], discard: [], deck: [], factionReputation: { Corp: 0, Runner: 0, Street: 0 }, installedCards: [], faceDownCards: [] } as Player;
     const context = createMockContext({ player });
-    const comp = new HealthCost(3, 'Net');
+    const comp = new HealthCost(3, DamageType.Net);
     expect(comp.canApply(context)).toBe(false);
   });
 
   it('HealthCost apply subtracts health if enough health is present', () => {
     const player = { id: 'p1', name: 'Player 1', credits: 5, actions: 1, buys: 1, health: 5, hand: [], inPlay: [], discard: [], deck: [], factionReputation: { Corp: 0, Runner: 0, Street: 0 }, installedCards: [], faceDownCards: [] } as Player;
     const context = createMockContext({ player });
-    const comp = new HealthCost(2, 'Brain');
+    const comp = new HealthCost(2, DamageType.Brain);
     comp.apply(context);
     expect(player.health).toBe(3);
     expect(context.executionPaused).not.toBe(true);
@@ -201,7 +201,7 @@ describe('Component System', () => {
   it('HealthCost apply pauses execution if not enough health', () => {
     const player = { id: 'p1', name: 'Player 1', credits: 5, actions: 1, buys: 1, health: 2, hand: [], inPlay: [], discard: [], deck: [], factionReputation: { Corp: 0, Runner: 0, Street: 0 }, installedCards: [], faceDownCards: [] } as Player;
     const context = createMockContext({ player });
-    const comp = new HealthCost(3, 'Meat');
+    const comp = new HealthCost(3, DamageType.Meat);
     comp.apply(context);
     expect(player.health).toBe(2);
     expect(context.executionPaused).toBe(true);
