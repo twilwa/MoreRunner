@@ -7,11 +7,9 @@ interface CardProps {
   disabled?: boolean;
   // Card can display who played it if it's on the board
   showPlayedBy?: boolean;
-  // Explicitly pass data-testid as a prop for standalone card views
-  'data-testid'?: string;
 }
 
-const Card: React.FC<CardProps> = ({ card, onClick, disabled = false, showPlayedBy = false, 'data-testid': dataTestId }) => {
+const Card: React.FC<CardProps> = ({ card, onClick, disabled = false, showPlayedBy = false }) => {
   // Get faction-specific colors
   const getFactionColors = (faction: CardFaction) => {
     switch (faction) {
@@ -112,7 +110,6 @@ const Card: React.FC<CardProps> = ({ card, onClick, disabled = false, showPlayed
 
   return (
     <div 
-      {...(dataTestId && { 'data-testid': dataTestId })}
       className={`relative w-40 h-56 rounded-md border ${
         disabled ? 'opacity-60 cursor-default' : 'cursor-pointer hover:scale-105 hover:shadow-xl hover:shadow-cyan-900/20'
       } bg-gradient-to-b ${colors.bg} ${colors.border}

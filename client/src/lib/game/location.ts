@@ -1,6 +1,3 @@
-// NOTE: Threat AP changes must use the utility functions from threats.ts.
-// Do NOT mutate threat.actionPotential directly. See threats.ts for correct logic.
-
 // Location types and utilities for the cyberpunk runner game
 
 export type LocationType = 'entrance' | 'corridor' | 'server_room' | 'security' | 'exit' | 'objective';
@@ -286,33 +283,6 @@ export function drawNextLocation(locationDeck: LocationDeck): LocationDeck {
     drawPile: restDrawPile,
     currentLocation: nextLocation,
     visitedLocations: updatedVisited,
-    hasFoundObjective: foundObjective,
-    hasReachedExit: reachedExit
-  };
-}
-
-// NEW: Move to previous location (backtrack)
-export function moveToPreviousLocation(locationDeck: LocationDeck): LocationDeck {
-  if (locationDeck.visitedLocations.length === 0) {
-    return locationDeck; // No previous location to go back to
-  }
-  const prevLocation = locationDeck.visitedLocations[locationDeck.visitedLocations.length - 1];
-  const newVisited = locationDeck.visitedLocations.slice(0, -1);
-  // Place the current location back on top of the draw pile
-  const newDrawPile = locationDeck.currentLocation
-    ? [locationDeck.currentLocation, ...locationDeck.drawPile]
-    : locationDeck.drawPile;
-  // Update foundObjective and hasReachedExit flags
-  const foundObjective = prevLocation.hasObjective
-    ? true
-    : locationDeck.hasFoundObjective;
-  const reachedExit = prevLocation.isExit
-    ? true
-    : locationDeck.hasReachedExit;
-  return {
-    drawPile: newDrawPile,
-    currentLocation: prevLocation,
-    visitedLocations: newVisited,
     hasFoundObjective: foundObjective,
     hasReachedExit: reachedExit
   };

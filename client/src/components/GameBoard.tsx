@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useDeckBuilder } from '../lib/stores/useDeckBuilder';
 import { useGame } from '../lib/stores/useGame';
 import { useAudio } from '../lib/stores/useAudio';
-import { useIdentity } from '../lib/stores/useIdentity';
 import { DropResult } from 'react-beautiful-dnd';
 import Hand from './Hand';
 import Market from './Market';
@@ -15,7 +14,6 @@ import ResourceActions from './ResourceActions';
 import DraggableHand from './DraggableHand';
 import ExecuteButton from './ExecuteButton';
 import CardTargetingModal from './CardTargetingModal';
-import IdentitySelectionModal from './IdentitySelectionModal';
 import { Card as CardType } from '../lib/game/cards';
 import { LocationThreat } from '../lib/game/location';
 import { EntityStatus } from '../lib/stores/useDeckBuilder';
@@ -47,7 +45,6 @@ const GameBoard: React.FC = () => {
   } = useDeckBuilder();
   const { phase } = useGame();
   const { toggleMute, isMuted } = useAudio();
-  const { selectedIdentity, setIdentity } = useIdentity();
   
   // State for the DeckViewer modal
   const [isDeckViewerOpen, setIsDeckViewerOpen] = useState(false);
@@ -57,9 +54,6 @@ const GameBoard: React.FC = () => {
   
   // State for card targeting modal
   const [isTargetingModalOpen, setIsTargetingModalOpen] = useState(false);
-  
-  // State for identity selection modal
-  const [isIdentityModalOpen, setIsIdentityModalOpen] = useState(false);
   
   // Effect to initialize entity statuses when a new location is loaded
   useEffect(() => {
@@ -99,35 +93,12 @@ const GameBoard: React.FC = () => {
     cardExecutionService.isExecutionPaused()
   ]); // Check after game state updates or execution state changes
   
-  // Show identity selection modal on mount if no identity is selected
-  useEffect(() => {
-    if (!selectedIdentity) {
-      setIsIdentityModalOpen(true);
-    }
-  }, [selectedIdentity]);
-  
   // Only show game if state is initialized and in playing phase
   if (!gameState || phase !== 'playing') {
-    return null;
+    return <div className="flex items-center justify-center h-screen">Loading game...</div>;
   }
-
-  // Get the active player (assume player 0 is the user)
-  const activePlayer = gameState.players[0];
-  const identity = activePlayer.identity;
-
-  if (isIdentityModalOpen) {
-    return (
-      <IdentitySelectionModal
-        isOpen={isIdentityModalOpen}
-        onSelect={identity => {
-          setIdentity(identity);
-          setIsIdentityModalOpen(false);
-        }}
-        onClose={() => setIsIdentityModalOpen(false)}
-      />
-    );
-  }
-
+  
+  const activePlayer = gameState.players[gameState.activePlayerIndex];
   const otherPlayerIndex = gameState.activePlayerIndex === 0 ? 1 : 0;
   const otherPlayer = gameState.players[otherPlayerIndex];
   const isPlayerTurn = gameState.activePlayerIndex === 0;
@@ -350,22 +321,7 @@ const GameBoard: React.FC = () => {
   };
   
   return (
-    <div className="h-screen bg-gray-900 text-gray-200 flex flex-col overflow-hidden" data-testid="game-board">
-      {/* Display Runner Identity at the top */}
-      {identity && (
-        <div className="flex items-center justify-center py-2 mb-2 bg-cyan-900 bg-opacity-80 rounded-lg shadow border border-cyan-700">
-          {/* Avatar placeholder removed since avatarUrl is not in RunnerIdentity */}
-          <div>
-            <div className="text-cyan-300 font-bold text-lg">{identity.name}</div>
-            <div className="text-cyan-100 text-xs italic">{identity.faction}</div>
-            <div className="text-cyan-200 text-sm mt-1 max-w-xs">{identity.description}</div>
-            {identity.ability && (
-              <div className="text-cyan-400 text-sm mt-1 font-semibold">Ability: {identity.ability}</div>
-            )}
-          </div>
-        </div>
-      )}
-      
+    <div className="h-screen bg-gray-900 text-gray-200 flex flex-col overflow-hidden">
       {/* Sound toggle */}
       <button 
         onClick={toggleMute}
@@ -563,23 +519,13 @@ const GameBoard: React.FC = () => {
         playerDeck={activePlayer.deck}
         playerDiscard={activePlayer.discard}
       />
-
-      {/* Identity Selection Modal */}
-      <IdentitySelectionModal
-        isOpen={isIdentityModalOpen}
-        onSelect={identity => {
-          setIdentity(identity);
-          setIsIdentityModalOpen(false);
-          addLogMessage(`Selected identity: ${identity.name}`);
-        }}
-        onClose={() => setIsIdentityModalOpen(false)}
-      />
-
+      
       {/* Card Targeting Modal */}
       <CardTargetingModal
         isOpen={isTargetingModalOpen}
         onClose={() => {
           setIsTargetingModalOpen(false);
+          // Cancel execution if user closes the modal
           cardExecutionService.cancelExecution();
           addLogMessage('Card execution canceled.');
         }}

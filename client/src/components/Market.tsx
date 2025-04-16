@@ -32,7 +32,7 @@ const Market: React.FC<MarketProps> = ({ market, onCardClick, canBuyCards, playe
           const canAfford = playerCoins >= card.cost;
           
           return (
-            <div key={card.id || index} className="transform transition-all hover:z-10" data-testid={`market-card-${card.id ?? index}`}>
+            <div key={index} className="transform transition-all hover:z-10">
               <Card 
                 card={card} 
                 onClick={() => onCardClick(index)} 
