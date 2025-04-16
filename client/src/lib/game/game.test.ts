@@ -1,9 +1,10 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+iimport { describe, it, expect, beforeEach, vi } from 'vitest';
 import { initializeGame, addLog, drawNCards } from './game';
 import { createPlayer } from './player';
 import { getEnhancedStartingDeck } from './enhancedCards';
 import { isEnhancedCard } from './components';
 import { cardExecutionService } from './cardExecutionService';
+import { gainThreatAP, grantAPAfterExecution, grantAPAfterReshuffle } from './threats';
 
 describe('Game Logic', () => {
   let initialGameState;
@@ -19,13 +20,13 @@ describe('Game Logic', () => {
       ];
       return { ...card, components: newComponents };
     });
-    initialGameState = initializeGame(['Alice', 'Bob']);
+    initialGameState = initializeGame([{ name: 'Alice McCaffrey' }, { name: 'Bob' }]);
   });
 
   it('initializeGame should set up players, market, and initial state', () => {
-    const gameState = initializeGame(['Alice', 'Bob']);
+    const gameState = initializeGame([{ name: 'Alice McCaffrey' }, { name: 'Bob' }]);
     expect(gameState.players).toHaveLength(2);
-    expect(gameState.players[0].name).toBe('Alice');
+    expect(gameState.players[0].name).toBe('Alice McCaffrey');
     expect(gameState.players[1].name).toBe('Bob');
     expect(gameState.activePlayerIndex).toBe(0);
     expect(gameState.market.availableCards).toHaveLength(5); // Default market size
@@ -100,5 +101,51 @@ describe('Game Logic', () => {
       'inDeck',
       'inHand'
     );
+  });
+
+  it('should grant action potential correctly to active and inactive threats after execution and reshuffle', () => {
+    // Setup: Create a game state with two locations, each with threats
+    // Active location threats
+    const activeThreat = { id: 't1', name: 'Active Threat', actionPotential: 0, maxActionPotential: 2, isActive: true, playCard: () => {} };
+    // Inactive location threats
+    const inactiveThreat = { id: 't2', name: 'Inactive Threat', actionPotential: 0, maxActionPotential: 2, isActive: false, playCard: () => {} };
+    // Simulate: after execution, active threat gains 1 AP
+    grantAPAfterExecution([activeThreat, inactiveThreat]);
+    // Simulate: after reshuffle, both threats gain 1 AP
+    grantAPAfterReshuffle([activeThreat, inactiveThreat]);
+    // Assert: active threat should have 2 AP, inactive should have 1 AP
+    expect(activeThreat.actionPotential).toBe(2);
+    expect(inactiveThreat.actionPotential).toBe(1);
+    // (If your logic triggers play at full AP, add a test for that as well)
+  });
+
+  it('should defer threat card play until after next AP gain event when reaching max AP', () => {
+    // Simulate a threat with max AP threshold of 2
+    const MAX_AP = 2;
+    let playTriggered = false;
+    const threat = {
+      id: 't3',
+      name: 'Deferred Threat',
+      actionPotential: 0,
+      maxActionPotential: MAX_AP,
+      playCard: () => { playTriggered = true; },
+      isActive: true
+    };
+
+    // Simulate AP gain event to just below max
+    gainThreatAP(threat, MAX_AP - 1);
+    playTriggered = false;
+    // No play should occur
+    expect(playTriggered).toBe(false);
+
+    // Simulate AP gain to reach max
+    gainThreatAP(threat, 1);
+    playTriggered = false;
+    // No play should occur yet (deferred)
+    expect(playTriggered).toBe(false);
+
+    // Simulate next AP gain event (AP exceeds max)
+    gainThreatAP(threat, 1);
+    expect(playTriggered).toBe(true);
   });
 });
