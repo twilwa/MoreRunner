@@ -1,3 +1,6 @@
+// NOTE: Threat AP changes must use the utility functions from threats.ts.
+// Do NOT mutate threat.actionPotential directly. See threats.ts for correct logic.
+
 import { Card, evaluateCardSynergies, getStartingDeck } from './cards';
 import { Market, createMarket, removeCard, refillMarket } from './market';
 import { 
@@ -20,6 +23,7 @@ import {
   CardZone
 } from './components';
 import { getEnhancedCard } from './enhancedCards';
+import type { RunnerIdentity } from '../../components/IdentitySelectionModal';
 
 export type GamePhase = 'action' | 'buy' | 'cleanup' | 'waiting' | 'game_over';
 export type GameLog = {
@@ -36,21 +40,47 @@ export interface GameState {
   logs: GameLog[];
   // A pile of cards that are completely removed from the game
   trashPile: Card[];
+  runState: { isActive: boolean, flags: {} };
+}
+
+export interface PlayerInit {
+  name: string;
+  identity?: RunnerIdentity;
 }
 
 // Initialize a new game with players and market
-export function initializeGame(playerNames: string[]): GameState {
+export function initializeGame(playerInits: PlayerInit[]): GameState {
   // Create players
   const players: Player[] = [];
-  for (let i = 0; i < playerNames.length; i++) {
-    const player = createPlayer(`player_${i}`, playerNames[i]);
-    
+  for (let i = 0; i < playerInits.length; i++) {
+    const { name, identity } = playerInits[i];
+    let player = createPlayer(`player_${i}`, name, identity);
+
     // Give each player a shuffled starting deck
     const startingDeck = getStartingDeck();
     player.deck = shuffleDeck(startingDeck);
-    
-    // Draw initial hand
-    const updatedPlayer = startTurn(player);
+
+    // Enhance all cards in the deck
+    player.deck = player.deck.map(card => {
+      const enhanced = getEnhancedCard(card.id);
+      if (enhanced) return enhanced;
+      return { ...card, components: [] } as EnhancedCard;
+    });
+
+    let updatedPlayer;
+    if (i === 0) {
+      // Only the first player draws their initial hand
+      updatedPlayer = startTurn(player);
+      updatedPlayer.hand = updatedPlayer.hand.map(card => {
+        const enhanced = getEnhancedCard(card.id);
+        if (enhanced) return enhanced;
+        return { ...card, components: [] } as EnhancedCard;
+      });
+    } else {
+      // All other players start with an empty hand
+      updatedPlayer = { ...player, hand: [] };
+    }
+
     players.push(updatedPlayer);
   }
   
@@ -64,7 +94,8 @@ export function initializeGame(playerNames: string[]): GameState {
     phase: 'action',
     turnNumber: 1,
     logs: [{ message: 'Game started.', timestamp: Date.now() }],
-    trashPile: []
+    trashPile: [],
+    runState: { isActive: false, flags: {} }
   };
 }
 

@@ -16,6 +16,8 @@ interface LocationCardProps {
   hasFoundObjective: boolean;
   hasReachedExit: boolean;
   entityStatuses?: EntityStatus[]; // Optional tracking of entity action potentials and cards
+  onBacktrack?: () => void;
+  canBacktrack?: boolean;
 }
 
 const LocationCard: React.FC<LocationCardProps> = ({
@@ -24,7 +26,9 @@ const LocationCard: React.FC<LocationCardProps> = ({
   canDrawNextLocation,
   hasFoundObjective,
   hasReachedExit,
-  entityStatuses = []
+  entityStatuses = [],
+  onBacktrack,
+  canBacktrack
 }) => {
   const [selectedThreat, setSelectedThreat] = useState<number | null>(null);
   
@@ -267,15 +271,25 @@ const LocationCard: React.FC<LocationCardProps> = ({
           </div>
         </div>
 
-        {/* Navigation button */}
-        {canDrawNextLocation && (
-          <button
-            onClick={onDrawNextLocation}
-            className="w-full mt-2 px-4 py-2 bg-gradient-to-r from-cyan-700 to-blue-700 hover:from-cyan-600 hover:to-blue-600 text-white font-mono rounded flex items-center justify-center"
-          >
-            <span className="mr-1">►</span> MOVE TO NEXT LOCATION
-          </button>
-        )}
+        {/* Navigation buttons */}
+        <div className="flex gap-2 mt-2">
+          {canBacktrack && onBacktrack && (
+            <button
+              onClick={onBacktrack}
+              className="flex-1 px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 text-white font-mono rounded flex items-center justify-center"
+            >
+              <span className="mr-1">◄</span> BACKTRACK
+            </button>
+          )}
+          {canDrawNextLocation && (
+            <button
+              onClick={onDrawNextLocation}
+              className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-700 to-blue-700 hover:from-cyan-600 hover:to-blue-600 text-white font-mono rounded flex items-center justify-center"
+            >
+              <span className="mr-1">►</span> MOVE TO NEXT LOCATION
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

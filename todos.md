@@ -2042,5 +2042,14 @@ onTargetSelect={handleTargetSelection}
 // ... rest of GameBoard
 Use code with caution.
 TypeScript
-This refactored structure provides a much clearer separation of concerns. The CardExecutionService handles the intricate flow, components define behavior without side effects, and the useDeckBuilder store orchestrates interactions and reflects the game state for the UI. Remember to fill in the // TODO: sections with the actual game logic.
 
+---
+
+# COMPLETED: Action Potential (AP) Gain Logic Refactor
+- All threat AP gain and play logic is now centralized in `client/src/lib/game/threats.ts`.
+- No direct mutation of `threat.actionPotential` remains outside these utilities.
+- All tests (including deferred play at max AP) pass.
+- Comments added to all relevant files enforcing use of the utility functions.
+- See `testingplan.md` for test coverage.
+
+---

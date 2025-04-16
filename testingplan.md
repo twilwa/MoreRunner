@@ -1303,3 +1303,13 @@ Action Dispatching: Confirm that button clicks and other interactions call the c
 Rendering: Verify conditional rendering based on game phase, player turn, and execution state works.
 Modal Flow: Test the opening, interaction (calling provideTargets/cancelTargeting), and closing of the targeting modal.
 This structured testing approach should help you catch regressions and verify the functionality of the refactored system at each stage. Remember to adapt and expand these tests as you add more specific game logic and components.
+
+---
+
+# COMPLETED: Threat Action Potential (AP) Gain Logic
+- All threat AP gain/play logic is now routed through `client/src/lib/game/threats.ts` utility functions.
+- No direct mutation of `threat.actionPotential` remains in the codebase.
+- All test cases for AP gain, deferred play at max AP, and related edge cases pass (see `game.test.ts`).
+- The testing plan is in sync with the new implementation and todos.md.
+
+---
