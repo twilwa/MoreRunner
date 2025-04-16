@@ -1,0 +1,74 @@
+# Cyberpunk Deck-Builder: Runner Scenario Mode — Product Requirements Document (PRD)
+
+## 1. Project Overview
+This project is a scenario-focused, component-driven deck-building game inspired by Netrunner, with a focus on the Runner side (Anarch, Criminal, Shaper factions). The goal is to create a modular, extensible card system that allows for robust gameplay, card synergies, and faction-unique mechanics. The architecture should support future expansion, including text-to-component mapping for rapid card prototyping.
+
+## 2. Core Gameplay & Vision
+- **Players**: Control Runner identities, each with unique faction mechanics and playstyles.
+- **Cards**: Built from modular components (costs, effects, conditionals, targeting, etc.).
+- **Game Flow**: Sequential card execution, stateful game context, and clear feedback for actions.
+- **Factions**:
+  - **Anarch (Red)**: Destruction, recycling, high-risk/high-reward, chaos, virus mechanics.
+  - **Criminal (Blue)**: Efficiency, stealth, resourcefulness, control, bypassing obstacles.
+  - **Shaper (Green)**: Engineering, combo-building, setup/engine-building, synergy.
+
+## 3. Card Component System
+- **Entity-Component Pattern**: Each card is a collection of components defining costs, effects, conditions, targeting, etc.
+- **Execution Order**: Costs → Targeting → Pre-conditions → Effects → Post-conditions/Synergies → State Modifications → Info → Control Flow (see docs for detailed flow).
+- **Component Types**: Cost (Credit, Action, Trash, Health, Keyword), Effect (GainCredits, DealDamage, InstallCard, etc.), Targeting, Conditional, Control, State Modification, Information.
+- **Runner Faction Affinities**: Each faction has preferred component types and synergies (see matrices in documentation).
+
+## 4. Technical & Architectural Requirements
+- **GameContext**: Central state object passed to components for stateless, context-aware execution.
+- **CardExecutionService**: Centralized state machine for executing card components in sequence, handling pausing (targeting), resuming, and state updates.
+- **Component Extensibility**: Easy to add new component types, keywords, and card logic.
+- **UI Feedback**: Visual indicators for key state changes (credits, damage, counters, memory units, synergies, etc.).
+- **Text-to-Component System**: Parser and pattern matcher to convert card text into component arrays for rapid prototyping.
+
+## 5. Implementation Phases & Priorities
+### Phase 1: Core Execution & Basic Runner Actions
+- Implement core interfaces and execution flow (Component, GameContext, CardExecutionService)
+- Basic components: CreditCost, ActionCost, SelfTarget, SingleEntityTarget, GainCredits, DrawCards, DiscardCards, InstallCard, DealDamage, BypassSecurity
+- Basic UI: Hand display, play card, show credits/cards drawn
+- Manual test setup
+
+### Phase 2: Faction Mechanics — Criminal & Anarch
+- Components: TrashCost, HealthCost, TrashTargetCard, RunCondition, BypassSecurity (refined), AddCounters (Virus), RecycleCard, RiskReward
+- Keyword system: Basic keywords on cards
+- UI: Show damage, ICE interaction, Virus counters
+- Implement 2-3 core Criminal & Anarch cards
+
+### Phase 3: Shaper Mechanics & Synergy
+- Components: IncreaseMemory, ModifyAttribute, BoostProgram, InstallCard (refined), KeywordRequirement, KeywordSynergy, ComboEffect
+- Keyword tracker in GameContext
+- UI: Show MU, program strength changes
+- Implement 2-3 core Shaper cards
+
+### Phase 4: Refinement & Playtesting
+- Refine component interactions and execution logic
+- Complete remaining Priority 1/2 components
+- Improve UI feedback
+- Balance cards based on playtesting
+- Start text-to-component system implementation
+
+## 6. Testing & Validation
+- **Framework**: Use Vitest for all unit/integration tests
+- **Test Suites**: Cover core components, execution flow, and key card interactions
+- **Coverage**: Ensure all critical paths and edge cases are tested (see testingplan.md)
+- **Manual Playtesting**: Focus on core loops, faction mechanics, and UI feedback
+
+## 7. Documentation & Extensibility
+- Maintain up-to-date docs for all implemented components, execution flow, and text-to-component mapping
+- Provide diagrams and matrices for component relationships, faction affinities, and execution order (see doc/)
+
+## 8. Future-Proofing
+- Design for easy expansion: add new factions, Corp side, advanced scenarios, and AI opponents
+- Continue building out the text-to-component mapping system for rapid card design and prototyping
+
+---
+
+This PRD is synthesized from todos.md, testingplan.md, and all internal documentation. It provides a blueprint for the next steps in the project and ensures alignment between design, implementation, and testing.
+
+### Runner Identities
+- Mr. Santiago: Whenever you successfully overcome an entity (threat) at a location, gain 2 credits.
+- Alice McCaffrey: The first time each turn you add a program or hardware to execution, reduce its cost by 1.

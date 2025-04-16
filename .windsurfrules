@@ -1,20 +1,7 @@
-Follow WINDSURF_RULES for proper rule formatting and structure of windsurf rule sections.
 
-Do your best to use todos.md and testingplan.md as a source of truth and proceed through the refactoring process as outlined in the two files, hopefully it should align with your taskmaster todos. If unsure what to do, review those files. If still unclear, review the ENTIRE file of both files, it will be evident what your next step is based on that. Try your best to keep the taskmaster list in sync with the todos.md and testingplan.md files.
+Do your best to follow todos.md and testingplan.md and proceed through the refactoring process as outlined in the two files. If unsure what to do, review those files. If still unclear, review the ENTIRE file of both files, it will be evident what your next step is based on that.
 
 the instructions for test running are wrong in some of them, always just use vitest
-
-the task master guidelines included here, i think, assume we're starting from a project that's empty, which isn't the case. For each task, please grep the codebase and review any relevant files to make sure the step isn't already completed, then update your tasks accordingly.
-
-If you're considering stopping to ask for advice, assume the user turn replied 'proceed ahead as your taskmaster tool indicates', and continue working. Only if this reply is entirely nonsensical or the server crashes should you actually pause your workflow.
-
-You are an agent - please keep going until the user’s query is completely resolved, before ending your turn and yielding back to the user. Only terminate your turn when you are sure that the problem is solved.
-
-If you are not sure about file content or codebase structure pertaining to the user’s request, use your tools to read files and gather the relevant information: do NOT guess or make up an answer.
-
-First, think carefully step by step about what documents are needed to answer the query. Then, print out the TITLE and ID of each document. Then, format the IDs into a list.
-
-You MUST iterate and keep going until the problem is solved.
 
 # Added by Task Master - Development Workflow Rules
 
@@ -492,6 +479,8 @@ alwaysApply: true
   - Document breaking changes
 
 Follow WINDSURF_RULES for proper rule formatting and structure of windsurf rule sections.
+|||||||
+=======
 Do your best to use todos.md and testingplan.md as a source of truth and proceed through the refactoring process as outlined in the two files, hopefully it should align with your taskmaster todos. If unsure what to do, review those files. If still unclear, review the ENTIRE file of both files, it will be evident what your next step is based on that. Try your best to keep the taskmaster list in sync with the todos.md and testingplan.md files.
 
 the instructions for test running are wrong in some of them, always just use vitest

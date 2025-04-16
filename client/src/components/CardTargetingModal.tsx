@@ -166,14 +166,10 @@ const CardTargetingModal: React.FC<CardTargetingModalProps> = ({
   };
   
   return (
-    <div className={`fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 
-      ${isOpen ? 'visible' : 'invisible'}`}
-      // Add touch detection for mobile - to catch touches/taps that might be missed
-      onTouchStart={(e) => e.stopPropagation()}
-      onTouchMove={(e) => e.stopPropagation()}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className={`bg-gray-800 rounded-lg p-4 sm:p-6 ${isMobile ? 'w-[95%]' : 'max-w-lg w-full mx-4'} border border-cyan-700 shadow-xl`}>
+    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70`} data-testid="targeting-modal">
+      <div className={`w-full max-w-md mx-auto bg-gray-900 rounded-lg shadow-xl border border-cyan-900 p-4 sm:p-8 relative ${isMobile ? 'mt-20 mb-20' : 'mt-0 mb-0'}`}
+        style={{ maxHeight: isMobile ? '80vh' : '90vh', overflowY: 'auto' }}
+      >
         <div className="flex justify-between items-start mb-4">
           <h2 className="text-xl font-bold text-cyan-400">Target Selection</h2>
           <button 
@@ -228,7 +224,6 @@ const CardTargetingModal: React.FC<CardTargetingModalProps> = ({
               potentialTargets.map(target => (
                 <div 
                   key={target.id}
-                  data-testid={`target-option-${target.id}`}
                   onClick={(e) => toggleTarget(target, e)}
                   onTouchStart={(e) => {
                     // Prevent default behavior on mobile
@@ -278,14 +273,12 @@ const CardTargetingModal: React.FC<CardTargetingModalProps> = ({
         {/* Action buttons */}
         <div className="flex justify-between gap-4">
           <button
-            data-testid="targeting-cancel-btn"
             onClick={onClose}
             className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded text-sm sm:text-base"
           >
             Cancel
           </button>
           <button
-            data-testid="targeting-confirm-btn"
             onClick={handleConfirm}
             disabled={selectedTargets.length === 0}
             className={`flex-1 px-4 py-3 rounded text-sm sm:text-base
