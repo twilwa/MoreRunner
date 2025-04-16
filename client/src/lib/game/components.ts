@@ -3,6 +3,35 @@
 
 import { Card, CardKeyword, CardFaction, CardType } from './cards';
 
+// ----- ENUMS FOR COMPONENT TYPES -----
+
+export enum TargetType {
+  Player = 'player',
+  Opponent = 'opponent',
+  Threat = 'threat',
+  Card = 'card',
+}
+
+export enum RiskType {
+  Health = 'health',
+  Resources = 'resources',
+  Cards = 'cards',
+}
+
+export enum RewardType {
+  Credits = 'credits',
+  Damage = 'damage',
+  Cards = 'cards',
+  Actions = 'actions',
+  ResourcesAndCards = 'resources_and_cards',
+}
+
+export enum DamageType {
+  Meat = 'Meat',
+  Net = 'Net',
+  Brain = 'Brain',
+}
+
 // Game context passed to components when they are applied
 export interface GameContext {
   card: Card;
@@ -292,7 +321,7 @@ export class SingleEntityTarget implements Component {
   type = 'SingleEntityTarget';
   
   constructor(
-    public targetType: 'player' | 'opponent' | 'threat' | 'card',
+    public targetType: TargetType,
     public allowTargetSelection: boolean = true,
     public filter?: (target: any) => boolean
   ) {}
@@ -319,14 +348,14 @@ export class SingleEntityTarget implements Component {
     } else {
       // Auto-select target based on target type
       switch (this.targetType) {
-        case 'player':
+        case TargetType.Player:
           context.targets = [context.player];
           break;
-        case 'opponent':
+        case TargetType.Opponent:
           // Select the first opponent by default
           context.targets = context.opponents.length > 0 ? [context.opponents[0]] : [];
           break;
-        case 'threat':
+        case TargetType.Threat:
           // Select threats based on filter or first threat by default
           if (context.locationThreats && context.locationThreats.length > 0) {
             context.targets = this.filter 
@@ -334,7 +363,7 @@ export class SingleEntityTarget implements Component {
               : [context.locationThreats[0]];
           }
           break;
-        case 'card':
+        case TargetType.Card:
           // Select cards based on filter
           if (this.filter && context.cardsInPlay.length > 0) {
             context.targets = context.cardsInPlay.filter(this.filter);
@@ -858,14 +887,14 @@ export class RiskReward implements Component {
   private applyReward(context: GameContext): void {
     // Apply reward based on reward type
     switch (this.rewardType) {
-      case 'credits':
+      case RewardType.Credits:
         if (context.player.credits !== undefined) {
           context.player.credits += this.rewardAmount;
           context.log(`${context.player.name} gained ${this.rewardAmount} credits.`);
         }
         break;
         
-      case 'damage':
+      case RewardType.Damage:
         // Apply damage to each target
         context.targets.forEach(target => {
           if (target.health !== undefined) {
@@ -880,7 +909,7 @@ export class RiskReward implements Component {
         });
         break;
         
-      case 'cards':
+      case RewardType.Cards:
         // Draw cards
         if (context.player.drawCard) {
           for (let i = 0; i < this.rewardAmount; i++) {
@@ -895,14 +924,14 @@ export class RiskReward implements Component {
         }
         break;
         
-      case 'actions':
+      case RewardType.Actions:
         if (context.player.actions !== undefined) {
           context.player.actions += this.rewardAmount;
           context.log(`${context.player.name} gained ${this.rewardAmount} action(s).`);
         }
         break;
         
-      case 'resources_and_cards':
+      case RewardType.ResourcesAndCards:
         // Combination reward - both credits and cards
         if (context.player.credits !== undefined) {
           context.player.credits += this.rewardAmount;
@@ -929,7 +958,7 @@ export class RiskReward implements Component {
   private applyRisk(context: GameContext): void {
     // Apply risk based on risk type
     switch (this.riskType) {
-      case 'health':
+      case RiskType.Health:
         if (context.player.health !== undefined) {
           context.player.health -= this.riskAmount;
           context.log(`${context.player.name} took ${this.riskAmount} damage from the failed risk.`);
@@ -942,7 +971,7 @@ export class RiskReward implements Component {
         }
         break;
         
-      case 'resources':
+      case RiskType.Resources:
         if (context.player.credits !== undefined) {
           // Lose credits, but don't go below 0
           const amountToLose = Math.min(context.player.credits, this.riskAmount);
@@ -951,7 +980,7 @@ export class RiskReward implements Component {
         }
         break;
         
-      case 'cards':
+      case RiskType.Cards:
         if (context.player.hand && context.player.discard) {
           // Random discard
           for (let i = 0; i < Math.min(this.riskAmount, context.player.hand.length); i++) {

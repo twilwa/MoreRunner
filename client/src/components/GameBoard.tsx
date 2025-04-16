@@ -106,16 +106,19 @@ const GameBoard: React.FC = () => {
   // GAME ACTION HANDLERS
   
   // Handlers for game actions
-  const handleQueueCard = (cardIndex: number) => {
+  const handleQueueCard = (cardId: string) => {
     // Queue a card anytime during player's turn
     if (isPlayerTurn && activePlayer.actions > 0) {
-      queueCard(cardIndex);
+      queueCard(cardId);
     } else {
       // Show why the card can't be queued
       if (!isPlayerTurn) {
-        addLogMessage('Cannot queue cards during opponent\'s turn.');
+        addLogMessage("Cannot queue cards during opponent's turn.");
       } else if (activePlayer.actions <= 0) {
-        addLogMessage('No actions remaining for this turn.');
+        // Find the card name for better feedback if possible
+        const card = activePlayer.hand.find((c) => c.id === cardId);
+        const cardName = card ? card.name : 'Card';
+        addLogMessage(`No actions remaining for this turn. Cannot queue ${cardName}.`);
       }
     }
   };

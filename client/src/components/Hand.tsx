@@ -4,7 +4,7 @@ import { Card as CardType } from '../lib/game/cards';
 
 interface HandProps {
   cards: CardType[];
-  onCardClick: (index: number) => void;
+  onCardClick: (id: string) => void;
   canPlayCards: boolean;
   title?: string;
 }
