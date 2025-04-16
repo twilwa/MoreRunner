@@ -453,6 +453,26 @@ export class ActionCost implements Component {
   }
 }
 
+export class HealthCost implements Component {
+  type = 'HealthCost';
+  constructor(public amount: number, public damageType: 'Meat' | 'Net' | 'Brain') {}
+
+  canApply(context: GameContext): boolean {
+    // Allow if player has more health than the cost (prevents self-defeat)
+    return context.player.health > this.amount;
+  }
+
+  apply(context: GameContext): void {
+    if (!this.canApply(context)) {
+      context.log(`Cannot pay health cost: Taking ${this.amount} ${this.damageType} damage would defeat you.`);
+      context.executionPaused = true;
+      return;
+    }
+    context.player.health -= this.amount;
+    context.log(`Paid ${this.amount} ${this.damageType} damage to play ${context.card.name}.`);
+  }
+}
+
 export class KeywordRequirement implements Component {
   type = 'KeywordRequirement';
   
@@ -813,24 +833,43 @@ export class RiskReward implements Component {
     public rewardType: 'credits' | 'damage' | 'cards' | 'actions' | 'resources_and_cards',
     public chance: number, // 0 to 100
     public riskAmount: number = 1,
-    public rewardAmount: number = 3
+    public rewardAmount: number = 3,
+    /**
+     * Optional: for testing, allow injecting a custom RNG function returning a float in [0,1)
+     */
+    private _rng: (() => number) = Math.random
   ) {}
-  
+
+  /**
+   * For testing: allow overriding the RNG used for risk rolls
+   */
+  _setRng(rng: () => number) {
+    this._rng = rng;
+  }
+
   apply(context: GameContext): void {
     // Roll for success
-    const roll = Math.floor(Math.random() * 100) + 1;
+    const roll = Math.floor(this._rng() * 100) + 1;
     const isSuccess = roll <= this.chance;
-    
+
     // Log the roll
-    context.log(`${context.card.name}: Risk roll: ${roll} (Need ${this.chance} or lower)`);
-    
+    context.log(`${context.card?.name || 'Unknown Card'}: Risk roll: ${roll} (Need ${this.chance} or lower)`);
+
     if (isSuccess) {
+      // --- MR. SANTIAGO IDENTITY ABILITY ---
+      if (
+        context.player.identity &&
+        context.player.identity.id === 'mr_santiago'
+      ) {
+        context.player.credits += 2;
+        context.log(`${context.player.name} (Mr. Santiago) gains 2 credits for overcoming an entity at this location!`);
+      }
       // Success: Apply reward
-      context.log(`${context.card.name}: Success! Applying reward.`);
+      context.log(`${context.card?.name || 'Unknown Card'}: Success! Applying reward.`);
       this.applyReward(context);
     } else {
       // Failure: Apply risk
-      context.log(`${context.card.name}: Failed! Applying penalty.`);
+      context.log(`${context.card?.name || 'Unknown Card'}: Failed! Applying penalty.`);
       this.applyRisk(context);
     }
   }
@@ -1113,6 +1152,15 @@ export class ScanEntity implements Component {
 
 // We're using the EnhancedCard interface already defined at the top of the file
 
+// Utility to check if a card is an EnhancedCard
+export function isEnhancedCard(card: unknown): card is EnhancedCard {
+  return !!card && typeof card === 'object' &&
+    'id' in card &&
+    'name' in card &&
+    'components' in card &&
+    Array.isArray((card as any).components);
+}
+
 // Function to apply all components of a card
 export function executeCardComponents(card: EnhancedCard, context: GameContext): void {
   // Ensure card has components array (dealing with TypeScript null checks)
@@ -1183,4 +1231,49 @@ export function createCardWithComponents(
     ...baseCard,
     components
   };
+}
+
+// --- CRIMINAL FACTION COMPONENTS ---
+
+// 1. BypassSecurity: Allows a card to bypass security measures up to a certain level.
+export class BypassSecurity implements Component {
+  type = 'BypassSecurity';
+  constructor(public maxBypassLevel: number, public consequence?: string) {}
+
+  apply(context: GameContext): void {
+    // Assume context.card has a securityLevel property (or target has it)
+    const target = context.targets[0];
+    const securityLevel = target?.securityLevel ?? 0;
+    if (securityLevel <= this.maxBypassLevel) {
+      context.log(`${context.card.name} bypasses security level ${securityLevel} (max allowed: ${this.maxBypassLevel}).`);
+      // Mark as bypassed for subsequent effects
+      target._bypassed = true;
+    } else {
+      context.log(`${context.card.name} cannot bypass security level ${securityLevel} (max allowed: ${this.maxBypassLevel}).`);
+      if (this.consequence) {
+        context.log(`Consequence triggered: ${this.consequence}`);
+        // Handle consequence here if needed
+      }
+      context.executionPaused = true;
+    }
+  }
+}
+
+// 2. RunCondition: Provides benefits when specific conditions are met during a run.
+export class RunCondition implements Component {
+  type = 'RunCondition';
+  constructor(
+    public condition: (context: GameContext) => boolean,
+    public effect: (context: GameContext) => void,
+    public description: string = ''
+  ) {}
+
+  apply(context: GameContext): void {
+    if (this.condition(context)) {
+      context.log(`RunCondition met: ${this.description}`);
+      this.effect(context);
+    } else {
+      context.log(`RunCondition not met: ${this.description}`);
+    }
+  }
 }

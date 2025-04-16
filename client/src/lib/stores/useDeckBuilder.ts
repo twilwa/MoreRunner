@@ -16,6 +16,7 @@ import {
   drawNextLocation,
   Location,
   LocationThreat,
+  moveToPreviousLocation,
 } from "../game/location";
 import { Card as CardType } from "../game/cards";
 import { refillMarket } from "../game/market";
@@ -25,6 +26,9 @@ import {
 } from "../game/cardExecutionService";
 import { getEnhancedCard } from "../game/enhancedCards";
 import { Component, EnhancedCard } from "../game/components";
+import { useIdentity } from './useIdentity';
+import type { PlayerInit } from '../game/game';
+import { set } from "react-hook-form";
 
 // Define the entity status type for tracking action potentials and played cards
 export interface EntityStatus {
@@ -53,6 +57,7 @@ interface DeckBuilderState {
   gainCredit: () => void;
   gainAction: () => void;
   shuffleDiscard: () => void;
+  moveToPreviousLocation: () => void;
 
   // Card action queue system
   queueCard: (cardIndex: number) => void;
@@ -83,32 +88,38 @@ export const useDeckBuilder = create<DeckBuilderState>()(
     enhanceCard: (card: CardType): EnhancedCard => {
       // First try to get a pre-defined enhanced version
       const enhancedVersion = getEnhancedCard(card.id);
-      
+
       if (enhancedVersion) {
         // Return the enhanced version if it exists
         return { ...enhancedVersion };
       } else {
         // Otherwise, convert the basic card to an EnhancedCard with empty components array
-        return { 
-          ...card, 
+        return {
+          ...card,
           components: [] // Ensure it has an empty components array to satisfy EnhancedCard interface
         };
       }
     },
 
     initializeGame: (playerNames) => {
-      // First, initialize the base game with standard cards
-      const gameState = initializeGame(playerNames);
+      // Get selected identity from the identity store
+      const { selectedIdentity } = useIdentity.getState();
+      // Prepare player descriptors for initialization
+      const playerInits: PlayerInit[] = playerNames.map((name, idx) => {
+        if (idx === 0 && selectedIdentity) {
+          return { name, identity: selectedIdentity };
+        }
+        return { name };
+      });
+      const gameState = initializeGame(playerInits);
       const locationDeck = initializeLocationDeck();
-
-      // Create the store methods for enhancing cards
       const { enhanceCard } = get();
 
       if (gameState && gameState.players) {
         console.log("Enhancing cards in all decks and hands...");
 
         // Enhance all players' cards
-        gameState.players.forEach((player) => {
+        gameState.players.forEach((player: { deck: CardType[]; hand: CardType[]; discard: CardType[]; }) => {
           // Enhance deck cards
           player.deck = player.deck.map(enhanceCard);
 
@@ -156,76 +167,24 @@ export const useDeckBuilder = create<DeckBuilderState>()(
     },
 
     drawLocation: () => {
-      const { locationDeck, gameState } = get();
-      if (!locationDeck || !gameState) return;
-
-      // Draw the next location
-      const updatedLocationDeck = drawNextLocation(locationDeck);
-
-      // Get the current location that was just drawn
-      const currentLocation = updatedLocationDeck.currentLocation;
-
-      // Add a log message about the new location
-      let updatedGameState = gameState;
-      if (currentLocation) {
-        // Log the location discovery
-        updatedGameState = addLog(
-          updatedGameState,
-          `You've entered ${currentLocation.name}.`,
-        );
-
-        // Apply location rewards if any
-        if (currentLocation.rewards.credits > 0) {
-          // Add credits to the player
-          const player = updatedGameState.players[0]; // Assuming player is at index 0
-          player.credits += currentLocation.rewards.credits;
-
-          updatedGameState = addLog(
-            updatedGameState,
-            `You found ${currentLocation.rewards.credits} credits!`,
-          );
-        }
-
-        // Draw cards if the location provides them
-        if (currentLocation.rewards.drawCards > 0) {
-          // Create a log message first, then we'll handle actual card drawing separately
-          updatedGameState = addLog(
-            updatedGameState,
-            `Location allows you to draw ${currentLocation.rewards.drawCards} card(s).`,
-          );
-        }
-
-        // Check for objectives and exits
-        if (
-          currentLocation.hasObjective &&
-          !updatedLocationDeck.hasFoundObjective
-        ) {
-          updatedGameState = addLog(
-            updatedGameState,
-            `You've found the objective! Now you need to reach the exit.`,
-          );
-        }
-
-        if (currentLocation.isExit && updatedLocationDeck.hasFoundObjective) {
-          updatedGameState = addLog(
-            updatedGameState,
-            `Mission complete! You've reached the exit with the objective.`,
-          );
-        } else if (
-          currentLocation.isExit &&
-          !updatedLocationDeck.hasFoundObjective
-        ) {
-          updatedGameState = addLog(
-            updatedGameState,
-            `You've reached the exit, but you haven't found the objective yet!`,
-          );
-        }
+      const { gameState, locationDeck } = get();
+      if (!gameState || !locationDeck) return;
+      const player = gameState.players[gameState.activePlayerIndex];
+      if (player.actions <= 0) {
+        set({ gameState: addLog(gameState, "You don't have enough actions to move to the next location.") });
+        return;
       }
-
-      set({
-        locationDeck: updatedLocationDeck,
-        gameState: updatedGameState,
-      });
+      const newLocationDeck = drawNextLocation(locationDeck);
+      // Only allow if location actually changed
+      if (newLocationDeck.currentLocation !== locationDeck.currentLocation) {
+        player.actions -= 1;
+        set({
+          locationDeck: newLocationDeck,
+          gameState: { ...gameState },
+        });
+      } else {
+        set({ gameState: addLog(gameState, "No next location to move to.") });
+      }
     },
 
     drawCard: () => {
@@ -337,6 +296,28 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       set({ gameState: updatedGameState });
     },
 
+    moveToPreviousLocation: () => {
+      const { gameState, locationDeck } = get();
+      if (!gameState || !locationDeck) return;
+      const player = gameState.players[gameState.activePlayerIndex];
+      if (player.actions <= 0) {
+        set({ gameState: addLog(gameState, "You don't have enough actions to backtrack.") });
+        return;
+      }
+      // Move to previous location
+      const newLocationDeck = moveToPreviousLocation(locationDeck);
+      // Only allow if location actually changed
+      if (newLocationDeck.currentLocation !== locationDeck.currentLocation) {
+        player.actions -= 1;
+        set({
+          locationDeck: newLocationDeck,
+          gameState: { ...gameState },
+        });
+      } else {
+        set({ gameState: addLog(gameState, "No previous location to backtrack to.") });
+      }
+    },
+
     addLogMessage: (message) => {
       const { gameState } = get();
       if (!gameState) return;
@@ -369,26 +350,26 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         // Get the enhanced card version to use with our component system
         // enhanceCard adds components, handling and validates costs via InQueueZone component
         const cardWithComponents = enhanceCard(card);
-        
+
         // IMPORTANT: We no longer check credit costs for cards going into the queue
         // Credit costs are ONLY checked when buying cards from the market
         // When queueing cards from hand, we ONLY check action costs, not credit costs
-        
+
         // This is a change to how the zone system works:
         // - InMarketZone: Validates CREDIT costs when buying cards
         // - InHandZone: Validates ACTION availability when playing cards
         // - InQueueZone: Validates ACTION costs during execution
-        
+
         // We already checked actions above, so we don't need to do any additional cost checking here
         // The component system will handle execution validation through the cardExecutionService
 
         // All checks passed - add to queue
         // Remove the card from hand
         activePlayer.hand.splice(cardIndex, 1);
-        
+
         // Use the previously created enhanced card from line 370
         // No need to re-enhance the card, reuse the variable
-        
+
         // Move the card from hand to play zone using our zone transition system
         // The enhanceCard method ensures it returns a proper EnhancedCard
         const cardWithZone = cardExecutionService.moveCardToZone(
@@ -396,7 +377,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
           'inHand',  // from zone
           'inPlay'   // to zone
         );
-        
+
         // Add transitioned card to inPlay (queued cards)
         activePlayer.inPlay.push(cardWithZone);
 
@@ -426,7 +407,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
 
         // Make sure the card has components by enhancing it
         const enhancedCard = enhanceCard(card);
-        
+
         // Move the card from play zone to hand zone using our zone transition system
         const cardWithZone = cardExecutionService.moveCardToZone(
           enhancedCard,
@@ -481,8 +462,8 @@ export const useDeckBuilder = create<DeckBuilderState>()(
     // Execute all queued cards in order and then run AI turn
     // @ts-ignore: Temporarily suppressing errors to maintain functionality
     executeQueuedCards: () => {
-      const { gameState, entityStatuses } = get();
-      if (!gameState) return;
+      const { gameState, locationDeck, entityStatuses } = get();
+      if (!gameState || !locationDeck) return;
 
       const activePlayer = gameState.players[gameState.activePlayerIndex];
 
@@ -499,7 +480,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       // In our updated entity-component system, we no longer need queue-level credit checks
       // Credit costs are only validated during market purchases
       // Action costs are validated when a card is executed from the queue
-      
+
       // Get all queued cards for execution
       const queuedCards = [...activePlayer.inPlay];
       // Define both variable names to avoid runtime errors
@@ -528,7 +509,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         queuedCards.forEach((card) => {
           // Try to get the enhanced version from our library
           const enhancedVersion = getEnhancedCard(card.id);
-          
+
           if (enhancedVersion) {
             // Use the pre-built enhanced card
             cardExecutionService.queueCard(enhancedVersion);
@@ -552,15 +533,15 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         // Loop through the queue to process each card in sequence
         let queueCompleted = false;
         let executionPaused = false;
-        
+
         // Execute all cards until we finish the queue or pause for targeting
         console.log("Executing all queued cards...");
         const allExecutionComplete = cardExecutionService.executeAllCards(executionGameState, addLogMessage);
-        
+
         // Update our state flags based on the execution result
         queueCompleted = allExecutionComplete;
         executionPaused = cardExecutionService.isExecutionPaused();
-        
+
         console.log(`Card execution complete: finished=${queueCompleted}, paused=${executionPaused}`);
 
         // Check if execution was paused for target selection
@@ -589,17 +570,17 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         // Check if the queue was completed
         if (cardExecutionService.getCurrentIndex() >= cardExecutionService.getQueue().length) {
           console.log("Card execution completed successfully");
-          
+
           // Cards should be moved to discard automatically by the component system
           // We just need to make sure the play area is cleared and update game state
-          
+
           // Clear any remaining cards (should already be handled by component system)
           activePlayer.inPlay = [];
-          
+
           // Update the game state with any changes from execution
           // Note: Cards should already be moved to discard by the component system
           updatedGameState = { ...executionGameState };
-          
+
           // Consume an action point
         } else {
           console.log("Card execution paused or incomplete - not advancing to AI turn");
@@ -691,6 +672,35 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         activePlayer.actions--;
       }
 
+      // After execution, tick up action potential for all entities (current + visited locations)
+      const allLocations = [locationDeck.currentLocation, ...locationDeck.visitedLocations].filter(Boolean);
+      updatedEntityStatuses = [...entityStatuses];
+      allLocations.forEach((loc) => {
+        loc.threats.forEach((threat) => {
+          if (threat.isDead || threat.defenseValue <= 0) return;
+          const idx = updatedEntityStatuses.findIndex(s => s.threatId === threat.id);
+          let potentials = idx >= 0 ? [...updatedEntityStatuses[idx].actionPotentials] : [];
+          // Find the first false and set it to true (tick up by 1)
+          const firstInactive = potentials.indexOf(false);
+          if (firstInactive !== -1) {
+            potentials[firstInactive] = true;
+          } else if (potentials.length > 0 && potentials.every(v => v === true)) {
+            // Already full, do nothing
+          } else {
+            // If no potentials, initialize based on threat dangerLevel
+            const numDots = Math.max(1, Math.min(4, Math.ceil(threat.dangerLevel * 0.8)));
+            potentials = Array(numDots).fill(false);
+            potentials[0] = true;
+          }
+          if (idx >= 0) {
+            updatedEntityStatuses[idx] = { ...updatedEntityStatuses[idx], actionPotentials: potentials };
+          } else {
+            updatedEntityStatuses.push({ threatId: threat.id, actionPotentials: potentials, playedCards: [] });
+          }
+        });
+      });
+      set({ entityStatuses: updatedEntityStatuses });
+
       // Run the AI turn after executing all cards
       updatedGameState = addLog(
         updatedGameState,
@@ -698,51 +708,48 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       );
 
       // Update action potentials for entities
-      const { locationDeck } = get();
-      if (locationDeck?.currentLocation) {
-        const threats = locationDeck.currentLocation.threats;
+      const threats = locationDeck.currentLocation.threats;
 
-        // For each threat, advance its action potential
-        threats.forEach((threat) => {
-          // Find current status for this threat
-          const entityStatusIndex = updatedEntityStatuses.findIndex(
-            (status) => status.threatId === threat.id,
-          );
+      // For each threat, advance its action potential
+      threats.forEach((threat) => {
+        // Find current status for this threat
+        const entityStatusIndex = updatedEntityStatuses.findIndex(
+          (status) => status.threatId === threat.id,
+        );
 
-          if (entityStatusIndex >= 0) {
-            const currentStatus = updatedEntityStatuses[entityStatusIndex];
-            const updatedPotentials = [...currentStatus.actionPotentials];
+        if (entityStatusIndex >= 0) {
+          const currentStatus = updatedEntityStatuses[entityStatusIndex];
+          const updatedPotentials = [...currentStatus.actionPotentials];
 
-            // Find first inactive dot and activate it
-            const inactiveIndex = updatedPotentials.findIndex((pot) => !pot);
-            if (inactiveIndex >= 0) {
-              updatedPotentials[inactiveIndex] = true;
+          // Find first inactive dot and activate it
+          const inactiveIndex = updatedPotentials.findIndex((pot) => !pot);
+          if (inactiveIndex >= 0) {
+            updatedPotentials[inactiveIndex] = true;
 
-              // Update the entity status with new action potentials
-              updatedEntityStatuses[entityStatusIndex] = {
-                ...currentStatus,
-                actionPotentials: updatedPotentials,
-              };
+            // Update the entity status with new action potentials
+            updatedEntityStatuses[entityStatusIndex] = {
+              ...currentStatus,
+              actionPotentials: updatedPotentials,
+            };
 
-              // Log action potential increase
-              updatedGameState = addLog(
-                updatedGameState,
-                `${threat.name} is charging up its action potential.`,
-              );
-            }
-
-            // Check if all action potentials are active
-            const allActive = updatedPotentials.every((pot) => pot);
-            if (allActive) {
-              // Log that this entity will act on next turn
-              updatedGameState = addLog(
-                updatedGameState,
-                `${threat.name} has reached full action potential and will act soon!`,
-              );
-            }
+            // Log action potential increase
+            updatedGameState = addLog(
+              updatedGameState,
+              `${threat.name} is charging up its action potential.`,
+            );
           }
-        });
-      }
+
+          // Check if all action potentials are active
+          const allActive = updatedPotentials.every((pot) => pot);
+          if (allActive) {
+            // Log that this entity will act on next turn
+            updatedGameState = addLog(
+              updatedGameState,
+              `${threat.name} has reached full action potential and will act soon!`,
+            );
+          }
+        }
+      });
 
       // Update the entity statuses
       set({ entityStatuses: updatedEntityStatuses });
@@ -754,337 +761,228 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         updatedGameState.activePlayerIndex = aiPlayerIndex;
 
         // Get the current location and its threats/entities
-        const { locationDeck } = get();
-        if (locationDeck && locationDeck.currentLocation) {
-          const currentLocation = locationDeck.currentLocation;
-          const locationThreats = currentLocation.threats || [];
+        const currentLocation = locationDeck.currentLocation;
+        const locationThreats = currentLocation.threats || [];
 
-          // Log the start of location entity actions
-          updatedGameState = addLog(
-            updatedGameState,
-            `The entities at ${currentLocation.name} are responding to your actions...`,
+        // Log the start of location entity actions
+        updatedGameState = addLog(
+          updatedGameState,
+          `The entities at ${currentLocation.name} are responding to your actions...`,
+        );
+
+        // Have entities with full action potentials play cards
+        if (locationThreats.length > 0) {
+          // Get latest entity statuses
+          const latestEntityStatuses = [...updatedEntityStatuses];
+
+          // Track entities that have full action potential
+          const activatedEntities: LocationThreat[] = [];
+
+          // Filter out dead entities
+          const aliveThreats = locationThreats.filter(
+            (threat) =>
+              !threat.isDead && threat.defenseValue > 0,
           );
 
-          // Have entities with full action potentials play cards
-          if (locationThreats.length > 0) {
-            // Get latest entity statuses
-            const latestEntityStatuses = [...updatedEntityStatuses];
-
-            // Track entities that have full action potential
-            const activatedEntities: LocationThreat[] = [];
-
-            // Filter out dead entities
-            const aliveThreats = locationThreats.filter(
-              (threat) => !(threat.isDead || threat.defenseValue <= 0),
-            );
-
-            if (aliveThreats.length === 0) {
-              updatedGameState = addLog(
-                updatedGameState,
-                `All entities at this location have been neutralized.`,
-              );
-            }
-
-            // Check which entities should fully activate
-            aliveThreats.forEach((threat) => {
-              // Mark threats with defenseValue <= 0 as dead
-              if (threat.defenseValue <= 0) {
-                threat.isDead = true;
-                updatedGameState = addLog(
-                  updatedGameState,
-                  `${threat.name} has been neutralized.`,
-                );
-                return; // Skip dead threats
-              }
-
-              const entityStatus = latestEntityStatuses.find(
-                (status) => status.threatId === threat.id,
-              );
-
-              if (entityStatus) {
-                // Check if all action potentials are active
-                const allActive = entityStatus.actionPotentials.every(
-                  (pot) => pot,
-                );
-
-                if (allActive) {
-                  // This entity should activate
-                  activatedEntities.push(threat);
-
-                  // Reset its action potentials for next cycle
-                  const resetPotentials = entityStatus.actionPotentials.map(
-                    () => false,
-                  );
-                  updatedEntityStatuses = updatedEntityStatuses.map((status) =>
-                    status.threatId === threat.id
-                      ? { ...status, actionPotentials: resetPotentials }
-                      : status,
-                  );
-                }
-              }
-            });
-
-            // Update entity statuses with reset action potentials
-            set({ entityStatuses: updatedEntityStatuses });
-
-            // Process entities with full action potential first
-            activatedEntities.forEach((threat, index) => {
-              // Create a card for this activated entity
-              const entityCard: CardType = {
-                id: `entity-card-${Date.now()}-${index}`,
-                name: `${threat.name}'s Attack`,
-                description:
-                  "A card played by a location entity that has reached full action potential.",
-                cost: 0,
-                faction: "Corp",
-                cardType: "Action",
-                keywords: ["ICE", "Weapon"],
-                isFaceDown: false, // Face up for activated entities
-                playedBy: threat.name,
-                effects: [{ type: "damage_player", value: threat.attack }],
-              };
-
-              // Add the card to the AI player's inPlay area at the FRONT (to be resolved first)
-              updatedGameState.players[aiPlayerIndex].inPlay.unshift(
-                entityCard,
-              );
-
-              // Add the card to entity's played cards
-              const entityStatusIndex = updatedEntityStatuses.findIndex(
-                (status) => status.threatId === threat.id,
-              );
-
-              if (entityStatusIndex >= 0) {
-                updatedEntityStatuses[entityStatusIndex] = {
-                  ...updatedEntityStatuses[entityStatusIndex],
-                  playedCards: [
-                    ...updatedEntityStatuses[entityStatusIndex].playedCards,
-                    entityCard,
-                  ],
-                };
-              }
-
-              // Log the entity playing a card
-              updatedGameState = addLog(
-                updatedGameState,
-                `${threat.name} has reached full potential and executes an attack!`,
-              );
-            });
-
-            // Have any remaining entities potentially play facedown cards
-            aliveThreats
-              .filter(
-                (threat) =>
-                  !activatedEntities.some((ae) => ae.id === threat.id) &&
-                  !(threat.isDead || threat.defenseValue <= 0),
-              )
-              .forEach((threat, index) => {
-                // Only 30% chance to play a card if not fully activated
-                if (Math.random() < 0.3) {
-                  // Create a placeholder facedown card for this entity
-                  const entityCard: CardType = {
-                    id: `entity-card-${Date.now()}-passive-${index}`,
-                    name: `${threat.name}'s Card`,
-                    description:
-                      "A face-down card played by a location entity.",
-                    cost: 0,
-                    faction: "Corp",
-                    cardType: "Action",
-                    keywords: ["ICE"],
-                    isFaceDown: true,
-                    playedBy: threat.name,
-                    effects: [
-                      // Weaker effect for non-activated entities
-                      {
-                        type: "damage_player",
-                        value: Math.max(1, Math.floor(threat.attack / 2)),
-                      },
-                    ],
-                  };
-
-                  // Add to AI inPlay AFTER activated cards
-                  updatedGameState.players[aiPlayerIndex].inPlay.push(
-                    entityCard,
-                  );
-
-                  // Log the entity playing a card
-                  updatedGameState = addLog(
-                    updatedGameState,
-                    `${threat.name} played a face-down card.`,
-                  );
-                }
-              });
-          } else {
+          if (aliveThreats.length === 0) {
             updatedGameState = addLog(
               updatedGameState,
-              `No entities at this location to respond.`,
+              `All entities at this location have been neutralized.`,
+            );
+          }
+
+          // Check which entities should fully activate
+          aliveThreats.forEach((threat) => {
+            // Mark threats with defenseValue <= 0 as dead
+            if (threat.defenseValue <= 0) {
+              threat.isDead = true;
+              updatedGameState = addLog(
+                updatedGameState,
+                `${threat.name} has been neutralized.`,
+              );
+              return; // Skip dead threats
+            }
+
+            const entityStatus = latestEntityStatuses.find(
+              (status) => status.threatId === threat.id,
+            );
+
+            if (entityStatus) {
+              // Check if all action potentials are active
+              const allActive = entityStatus.actionPotentials.every(
+                (pot) => pot,
+              );
+
+              if (allActive) {
+                // This entity should activate
+                activatedEntities.push(threat);
+
+                // Reset its action potentials for next cycle
+                const resetPotentials = entityStatus.actionPotentials.map(
+                  () => false,
+                );
+                updatedEntityStatuses = updatedEntityStatuses.map((status) =>
+                  status.threatId === threat.id
+                    ? { ...status, actionPotentials: resetPotentials }
+                    : status,
+                );
+              }
+            }
+          });
+
+          // Update entity statuses with reset action potentials
+          set({ entityStatuses: updatedEntityStatuses });
+
+          // Process entities with full action potential first
+          activatedEntities.forEach((threat, index) => {
+            // Create a card for this activated entity
+            const entityCard: CardType = {
+              id: `entity-card-${Date.now()}-${index}`,
+              name: `${threat.name}'s Attack`,
+              description:
+                "A card played by a location entity that has reached full action potential.",
+              cost: 0,
+              faction: "Corp",
+              cardType: "Action",
+              keywords: ["ICE", "Weapon"],
+              isFaceDown: false, // Face up for activated entities
+              playedBy: threat.name,
+              effects: [{ type: "damage_player", value: threat.attack }],
+            };
+
+            // Add the card to the AI player's inPlay area at the FRONT (to be resolved first)
+            updatedGameState.players[aiPlayerIndex].inPlay.unshift(
+              entityCard,
+            );
+
+            // Add the card to entity's played cards
+            const entityStatusIndex = updatedEntityStatuses.findIndex(
+              (status) => status.threatId === threat.id,
+            );
+
+            if (entityStatusIndex >= 0) {
+              updatedEntityStatuses[entityStatusIndex] = {
+                ...updatedEntityStatuses[entityStatusIndex],
+                playedCards: [
+                  ...updatedEntityStatuses[entityStatusIndex].playedCards,
+                  entityCard,
+                ],
+              };
+            }
+
+            // Log the entity playing a card
+            updatedGameState = addLog(
+              updatedGameState,
+              `${threat.name} has reached full potential and executes an attack!`,
+            );
+          });
+
+          // Have any remaining entities potentially play facedown cards
+          aliveThreats
+            .filter(
+              (threat) =>
+                !activatedEntities.some((ae) => ae.id === threat.id) &&
+                !(threat.isDead || threat.defenseValue <= 0),
+            )
+            .forEach((threat, index) => {
+              // Only 30% chance to play a card if not fully activated
+              if (Math.random() < 0.3) {
+                // Create a placeholder facedown card for this entity
+                const entityCard: CardType = {
+                  id: `entity-card-${Date.now()}-passive-${index}`,
+                  name: `${threat.name}'s Card`,
+                  description:
+                    "A face-down card played by a location entity.",
+                  cost: 0,
+                  faction: "Corp",
+                  cardType: "Action",
+                  keywords: ["ICE"],
+                  isFaceDown: true,
+                  playedBy: threat.name,
+                  effects: [
+                    // Weaker effect for non-activated entities
+                    {
+                      type: "damage_player",
+                      value: Math.max(1, Math.floor(threat.attack / 2)),
+                    },
+                  ],
+                };
+
+                // Add to AI inPlay AFTER activated cards
+                updatedGameState.players[aiPlayerIndex].inPlay.push(
+                  entityCard,
+                );
+
+                // Log the entity playing a card
+                updatedGameState = addLog(
+                  updatedGameState,
+                  `${threat.name} played a face-down card.`,
+                );
+              }
+            });
+        } else {
+          updatedGameState = addLog(
+            updatedGameState,
+            `No entities at this location to respond.`,
+          );
+        }
+      });
+
+      // Simulate the AI processing after entities play cards
+      setTimeout(() => {
+        // Refill the market with new cards
+        if (updatedGameState.market) {
+          // Check if any market spots are empty
+          const emptySlots =
+            updatedGameState.market.availableCards.length <
+            updatedGameState.market.maxSize;
+
+          if (emptySlots) {
+            // Refill the market with new random cards
+            updatedGameState.market = refillMarket(updatedGameState.market);
+
+            updatedGameState = addLog(
+              updatedGameState,
+              `The DataMarket refreshed with new products.`,
             );
           }
         }
 
-        // Simulate the AI processing after entities play cards
-        setTimeout(() => {
-          // Refill the market with new cards
-          if (updatedGameState.market) {
-            // Check if any market spots are empty
-            const emptySlots =
-              updatedGameState.market.availableCards.length <
-              updatedGameState.market.maxSize;
+        // End AI turn and switch back to player
+        updatedGameState.activePlayerIndex = 0; // Switch back to player
 
-            if (emptySlots) {
-              // Refill the market with new random cards
-              updatedGameState.market = refillMarket(updatedGameState.market);
-
-              updatedGameState = addLog(
-                updatedGameState,
-                `The DataMarket refreshed with new products.`,
-              );
-            }
+        // Check if the player's deck is empty
+        const player = updatedGameState.players[0];
+        if (player.deck.length === 0) {
+          // Notify player if they have cards in their discard pile that can be shuffled
+          if (player.discard.length > 0) {
+            updatedGameState = addLog(
+              updatedGameState,
+              `Your deck is empty but you have ${player.discard.length} cards in your discard pile. Use "Shuffle Discard" to recycle these cards.`,
+            );
+          } else {
+            updatedGameState = addLog(
+              updatedGameState,
+              `Your deck and discard pile are both empty.`,
+            );
           }
+        }
 
-          // End AI turn and switch back to player
-          updatedGameState.activePlayerIndex = 0; // Switch back to player
+        // Refresh player's actions and buys
+        player.actions = 1;
+        player.buys = 1;
 
-          // Check if the player's deck is empty
-          const player = updatedGameState.players[0];
-          if (player.deck.length === 0) {
-            // Notify player if they have cards in their discard pile that can be shuffled
-            if (player.discard.length > 0) {
-              updatedGameState = addLog(
-                updatedGameState,
-                `Your deck is empty but you have ${player.discard.length} cards in your discard pile. Use "Shuffle Discard" to recycle these cards.`,
-              );
-            } else {
-              updatedGameState = addLog(
-                updatedGameState,
-                `Your deck and discard pile are both empty.`,
-              );
-            }
-          }
-
-          // Refresh player's actions and buys
-          player.actions = 1;
-          player.buys = 1;
-
-          updatedGameState = addLog(
-            updatedGameState,
-            `Your turn begins. You have ${player.actions} action and unlimited buys.`,
-          );
-
-          set({ gameState: updatedGameState });
-        }, 1500); // Delay to simulate AI thinking
-      }, 1000); // Initial delay before AI turn starts
-
-      set({ gameState: updatedGameState });
-    },
-
-    // Entity status management
-    updateEntityActionPotential: (threatId, newPotentials) => {
-      const { entityStatuses, locationDeck } = get();
-      const existingIndex = entityStatuses.findIndex(
-        (status) => status.threatId === threatId,
-      );
-
-      // Check if the threat is dead
-      const isDead =
-        locationDeck?.currentLocation?.threats.some(
-          (threat) =>
-            threat.id === threatId &&
-            (threat.isDead || threat.defenseValue <= 0),
-        ) || false;
-
-      // If the entity is dead, don't update its action potential
-      if (isDead) {
-        console.log(
-          `Entity ${threatId} is dead, skipping action potential update.`,
+        updatedGameState = addLog(
+          updatedGameState,
+          `Your turn begins. You have ${player.actions} action and unlimited buys.`,
         );
-        return;
-      }
 
-      let updatedStatuses = [...entityStatuses];
-
-      if (existingIndex >= 0) {
-        // Update existing entity status
-        updatedStatuses[existingIndex] = {
-          ...updatedStatuses[existingIndex],
-          actionPotentials: newPotentials,
-        };
-      } else {
-        // Create new entity status
-        updatedStatuses.push({
-          threatId,
-          actionPotentials: newPotentials,
-          playedCards: [],
-        });
-      }
-
-      set({ entityStatuses: updatedStatuses });
+        set({ gameState: updatedGameState });
+      }, 1500); // Delay to simulate AI thinking
     },
-
-    addEntityPlayedCard: (threatId, card) => {
-      const { entityStatuses, locationDeck } = get();
-
-      // Check if the threat is dead
-      const isDead =
-        locationDeck?.currentLocation?.threats.some(
-          (threat) =>
-            threat.id === threatId &&
-            (threat.isDead || threat.defenseValue <= 0),
-        ) || false;
-
-      // Dead entities can't play cards
-      if (isDead) {
-        console.log(`Entity ${threatId} is dead, can't play cards.`);
-        return;
-      }
-
-      const existingIndex = entityStatuses.findIndex(
-        (status) => status.threatId === threatId,
-      );
-      let updatedStatuses = [...entityStatuses];
-
-      if (existingIndex >= 0) {
-        // Add card to existing entity
-        updatedStatuses[existingIndex] = {
-          ...updatedStatuses[existingIndex],
-          playedCards: [...updatedStatuses[existingIndex].playedCards, card],
-        };
-      } else {
-        // Create new entity status with this card
-        updatedStatuses.push({
-          threatId,
-          actionPotentials: [], // Default empty action potentials
-          playedCards: [card],
-        });
-      }
-
-      set({ entityStatuses: updatedStatuses });
-    },
-
-    clearEntityPlayedCards: (threatId) => {
-      const { entityStatuses } = get();
-      const existingIndex = entityStatuses.findIndex(
-        (status) => status.threatId === threatId,
-      );
-
-      if (existingIndex >= 0) {
-        // Clear played cards for this entity
-        let updatedStatuses = [...entityStatuses];
-        updatedStatuses[existingIndex] = {
-          ...updatedStatuses[existingIndex],
-          playedCards: [],
-        };
-
-        set({ entityStatuses: updatedStatuses });
-      }
-    },
-
-    resetGame: () => {
-      set({
-        gameState: null,
-        locationDeck: null,
-        entityStatuses: [],
-      });
-    },
+    updateEntityActionPotential: (threatId, newPotentials) => {},
+    addEntityPlayedCard: (threatId, card) => {},
+    clearEntityPlayedCards: (threatId) => {},
+    resetGame: () => {},
   })),
 );

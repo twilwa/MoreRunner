@@ -17,17 +17,19 @@ const Player: React.FC<PlayerProps> = ({ player, isActive, turnNumber, phase, on
 
   // Display faction reputation as icon and level
   const renderFactionReputation = (faction: keyof PlayerType['factionReputation'], color: string) => {
-    const level = player.factionReputation[faction];
+    const level = player.factionReputation && player.factionReputation[faction] !== undefined
+      ? player.factionReputation[faction]
+      : 0;
     return (
       <div className="flex items-center space-x-1">
-        <div className={`w-2 h-2 rounded-full ${color}`}></div>
-        <span className="text-xs">{level}</span>
+        <div className={`w-3 h-3 rounded-full ${color}`}></div>
+        <span className="font-mono text-xs">{faction}: {level}</span>
       </div>
     );
   };
 
   return (
-    <div className={`rounded-lg ${isActive ? 'ring-2 ring-cyan-500 bg-gray-800/80' : 'bg-gray-800/40'}`}>
+    <div className={`rounded-lg ${isActive ? 'ring-2 ring-cyan-500 bg-gray-800/80' : 'bg-gray-800/40'}`} data-testid={`player-${player.id}`}>
       {/* Player header */}
       <div className="flex justify-between items-center p-2 border-b border-gray-700">
         <div className="flex items-center space-x-2">
