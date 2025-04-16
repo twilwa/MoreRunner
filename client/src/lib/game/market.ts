@@ -1,5 +1,4 @@
 import { Card, getRandomMarketCard } from './cards';
-import { getEnhancedCard } from './enhancedCards';
 
 export interface Market {
   availableCards: Card[];
@@ -11,11 +10,9 @@ export interface Market {
 export function createMarket(size: number = 5): Market {
   const availableCards: Card[] = [];
   
-  // Fill market with random cards, enhancing each card
+  // Fill market with random cards
   for (let i = 0; i < size; i++) {
-    const baseCard = getRandomMarketCard();
-    const enhanced = getEnhancedCard(baseCard.id);
-    availableCards.push(enhanced ? enhanced : { ...baseCard, components: [] });
+    availableCards.push(getRandomMarketCard());
   }
   
   return {

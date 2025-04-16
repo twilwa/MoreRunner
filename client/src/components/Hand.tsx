@@ -19,19 +19,13 @@ const Hand: React.FC<HandProps> = ({ cards, onCardClick, canPlayCards, title }) 
   }
 
   return (
-    <div data-testid={"hand-container"}>
+    <div>
       <div className="flex flex-wrap gap-2 justify-center">
         {cards.map((card, index) => (
-          <div
-            key={card.id || index}
-            className={`transform transition-all hover:z-10`}
-            data-testid={`hand-card-${card.id ?? index}`}
-            onClick={() => onCardClick(index)}
-            role="button"
-            tabIndex={0}
-          >
+          <div key={index} className="transform transition-all hover:z-10">
             <Card 
               card={card} 
+              onClick={() => onCardClick(index)} 
               disabled={!canPlayCards}
             />
           </div>
