@@ -4,17 +4,20 @@ interface ExecuteButtonProps {
   onExecute: () => void;
   disabled?: boolean;
   count: number;
+  isMainActionableButton?: boolean;
 }
 
 const ExecuteButton: React.FC<ExecuteButtonProps> = ({ 
   onExecute, 
   disabled = false,
-  count
+  count,
+  isMainActionableButton = false
 }) => {
   return (
     <button
       onClick={onExecute}
       disabled={disabled || count === 0}
+      data-testid={isMainActionableButton ? "execute-btn" : undefined}
       className={`
         px-4 py-2 rounded-md font-mono text-sm font-bold
         transition-all duration-200

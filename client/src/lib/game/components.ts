@@ -453,6 +453,26 @@ export class ActionCost implements Component {
   }
 }
 
+export class HealthCost implements Component {
+  type = 'HealthCost';
+  constructor(public amount: number, public damageType: 'Meat' | 'Net' | 'Brain') {}
+
+  canApply(context: GameContext): boolean {
+    // Allow if player has more health than the cost (prevents self-defeat)
+    return context.player.health > this.amount;
+  }
+
+  apply(context: GameContext): void {
+    if (!this.canApply(context)) {
+      context.log(`Cannot pay health cost: Taking ${this.amount} ${this.damageType} damage would defeat you.`);
+      context.executionPaused = true;
+      return;
+    }
+    context.player.health -= this.amount;
+    context.log(`Paid ${this.amount} ${this.damageType} damage to play ${context.card.name}.`);
+  }
+}
+
 export class KeywordRequirement implements Component {
   type = 'KeywordRequirement';
   
@@ -1112,6 +1132,15 @@ export class ScanEntity implements Component {
 }
 
 // We're using the EnhancedCard interface already defined at the top of the file
+
+// Utility to check if a card is an EnhancedCard
+export function isEnhancedCard(card: unknown): card is EnhancedCard {
+  return !!card && typeof card === 'object' &&
+    'id' in card &&
+    'name' in card &&
+    'components' in card &&
+    Array.isArray((card as any).components);
+}
 
 // Function to apply all components of a card
 export function executeCardComponents(card: EnhancedCard, context: GameContext): void {

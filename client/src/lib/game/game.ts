@@ -1,7 +1,6 @@
 import { Card, evaluateCardSynergies, getStartingDeck } from './cards';
 import { Market, createMarket, removeCard, refillMarket } from './market';
 import { 
-  Player, 
   createPlayer, 
   startTurn, 
   endTurn, 
@@ -10,8 +9,10 @@ import {
   applyDamage, 
   forceDiscard,
   shuffleDeck,
-  trashCard 
+  trashCard,
+  drawCards
 } from './player';
+import type { Player } from './player';
 import { 
   EnhancedCard,
   GameContext,
@@ -70,10 +71,8 @@ export function initializeGame(playerNames: string[]): GameState {
 // Add a log message to the game state
 export function addLog(gameState: GameState, message: string): GameState {
   const updatedGameState = { ...gameState };
-  updatedGameState.logs = [
-    ...updatedGameState.logs, 
-    { message, timestamp: Date.now() }
-  ];
+  const logs = [...updatedGameState.logs, { message, timestamp: Date.now() }];
+  updatedGameState.logs = logs.slice(-100);
   return updatedGameState;
 }
 
@@ -295,4 +294,17 @@ export function getGameStatus(gameState: GameState): string {
   return `Turn ${gameState.turnNumber} | ${activePlayer.name}'s turn | Phase: ${gameState.phase} | 
   Actions: ${activePlayer.actions} | Buys: ${activePlayer.buys} | Credits: ${activePlayer.credits} | 
   Health: ${activePlayer.health} | Hand: ${activePlayer.hand.length} cards | Deck: ${activePlayer.deck.length} cards`;
+}
+
+// Improved drawNCards to match test expectations
+import { drawCards } from './player';
+import { GameState } from './types';
+
+export function drawNCards(player: Player, n: number, state: GameState) {
+  // Draw cards
+  const { player: updatedPlayer, drawnCards } = drawCards(player, n);
+  // Update player in game state
+  const updatedPlayers = state.players.map(p => p.id === player.id ? updatedPlayer : p);
+  const updatedGameState = { ...state, players: updatedPlayers };
+  return { updatedPlayer, drawnCards, updatedGameState };
 }
