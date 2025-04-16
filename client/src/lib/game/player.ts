@@ -21,7 +21,8 @@ export interface Player {
   };
   installedCards: Card[];  // Permanent card installations
   faceDownCards: Card[];   // Traps and ambushes
-
+  identity?: import('../../components/IdentitySelectionModal').RunnerIdentity;
+  hasUsedAliceDiscountThisTurn?: boolean;
   // Method for drawing a card from the deck
   drawCard?: () => Card | null;
 }
@@ -223,6 +224,8 @@ export function playCard(player: Player, cardIndex: number): { player: Player, p
     // Determine target zone based on card type
     if (card.cardType === 'Install') {
       updatedPlayer.installedCards.push(card);
+    if (card.cardType === 'Install') {
+      updatedPlayer.installedCards.push(card);
       toZone = 'inPlay'; // Installed cards are in play zone
     } else if (card.cardType === 'Trap' && card.isFaceDown) {
       updatedPlayer.faceDownCards.push(card);
@@ -316,6 +319,7 @@ export function buyCard(player: Player, card: Card): Player {
       toZone
     );
 
+
     console.log(`Card ${card.name} purchased and moved from ${fromZone} to ${toZone}`);
 
     // Add card to discard pile (not directly to deck)
@@ -342,6 +346,27 @@ export function trashCard(player: Player, cardIndex: number): { player: Player, 
       ...card,
       components: []
     } as EnhancedCard;
+
+    // Use zone transition to completely remove the card (trash is a special case)
+    // Note: We're intentionally not assigning toZone as the card is being trashed entirely
+    const fromZone: CardZone = 'inHand';
+
+    // Log the trash event
+    console.log(`Card ${card.name} trashed from hand`);
+
+    // In the component system, we need to trigger any "on trash" effects
+    // These would be faction specific recycling mechanics, etc.
+    // Runner faction has special recycling mechanics
+    const runnerFaction: CardFaction = 'Runner';
+    if (card.faction === runnerFaction) {
+      console.log(`${runnerFaction} faction card ${card.name} trashed - triggering recycling effects`);
+      // Note: Runner recycling would be handled by special recycling components
+      // which will be evaluated in the game context
+    }
+
+    // Record the card as "recently trashed" in the game context
+    // This will be used by RecycleGain components
+
 
     // Use zone transition to completely remove the card (trash is a special case)
     // Note: We're intentionally not assigning toZone as the card is being trashed entirely
@@ -394,6 +419,7 @@ export function endTurn(player: Player): Player {
       fromZone,
       toZone
     );
+
 
     console.log(`End turn: Card ${card.name} moved from ${fromZone} to ${toZone}`);
 

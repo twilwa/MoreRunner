@@ -83,14 +83,14 @@ export const useDeckBuilder = create<DeckBuilderState>()(
     enhanceCard: (card: CardType): EnhancedCard => {
       // First try to get a pre-defined enhanced version
       const enhancedVersion = getEnhancedCard(card.id);
-      
+
       if (enhancedVersion) {
         // Return the enhanced version if it exists
         return { ...enhancedVersion };
       } else {
         // Otherwise, convert the basic card to an EnhancedCard with empty components array
-        return { 
-          ...card, 
+        return {
+          ...card,
           components: [] // Ensure it has an empty components array to satisfy EnhancedCard interface
         };
       }
@@ -372,26 +372,26 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         // Get the enhanced card version to use with our component system
         // enhanceCard adds components, handling and validates costs via InQueueZone component
         const cardWithComponents = enhanceCard(card);
-        
+
         // IMPORTANT: We no longer check credit costs for cards going into the queue
         // Credit costs are ONLY checked when buying cards from the market
         // When queueing cards from hand, we ONLY check action costs, not credit costs
-        
+
         // This is a change to how the zone system works:
         // - InMarketZone: Validates CREDIT costs when buying cards
         // - InHandZone: Validates ACTION availability when playing cards
         // - InQueueZone: Validates ACTION costs during execution
-        
+
         // We already checked actions above, so we don't need to do any additional cost checking here
         // The component system will handle execution validation through the cardExecutionService
 
         // All checks passed - add to queue
         // Remove the card from hand
         activePlayer.hand.splice(cardIndex, 1);
-        
+
         // Use the previously created enhanced card from line 370
         // No need to re-enhance the card, reuse the variable
-        
+
         // Move the card from hand to play zone using our zone transition system
         // The enhanceCard method ensures it returns a proper EnhancedCard
         const cardWithZone = cardExecutionService.moveCardToZone(
@@ -399,7 +399,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
           'inHand',  // from zone
           'inPlay'   // to zone
         );
-        
+
         // Add transitioned card to inPlay (queued cards)
         activePlayer.inPlay.push(cardWithZone);
 
@@ -428,7 +428,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
 
         // Make sure the card has components by enhancing it
         const enhancedCard = enhanceCard(card);
-        
+
         // Move the card from play zone to hand zone using our zone transition system
         const cardWithZone = cardExecutionService.moveCardToZone(
           enhancedCard,
@@ -501,7 +501,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
       // In our updated entity-component system, we no longer need queue-level credit checks
       // Credit costs are only validated during market purchases
       // Action costs are validated when a card is executed from the queue
-      
+
       // Get all queued cards for execution
       const queuedCards = [...activePlayer.inPlay];
       // Define both variable names to avoid runtime errors
@@ -530,7 +530,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         queuedCards.forEach((card) => {
           // Try to get the enhanced version from our library
           const enhancedVersion = getEnhancedCard(card.id);
-          
+
           if (enhancedVersion) {
             // Use the pre-built enhanced card
             cardExecutionService.queueCard(enhancedVersion);
@@ -554,15 +554,15 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         // Loop through the queue to process each card in sequence
         let queueCompleted = false;
         let executionPaused = false;
-        
+
         // Execute all cards until we finish the queue or pause for targeting
         console.log("Executing all queued cards...");
         const allExecutionComplete = cardExecutionService.executeAllCards(executionGameState, addLogMessage);
-        
+
         // Update our state flags based on the execution result
         queueCompleted = allExecutionComplete;
         executionPaused = cardExecutionService.isExecutionPaused();
-        
+
         console.log(`Card execution complete: finished=${queueCompleted}, paused=${executionPaused}`);
 
         // Check if execution was paused for target selection
@@ -591,17 +591,17 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         // Check if the queue was completed
         if (cardExecutionService.getCurrentIndex() >= cardExecutionService.getQueue().length) {
           console.log("Card execution completed successfully");
-          
+
           // Cards should be moved to discard automatically by the component system
           // We just need to make sure the play area is cleared and update game state
-          
+
           // Clear any remaining cards (should already be handled by component system)
           activePlayer.inPlay = [];
-          
+
           // Update the game state with any changes from execution
           // Note: Cards should already be moved to discard by the component system
           updatedGameState = { ...executionGameState };
-          
+
           // Consume an action point
         } else {
           console.log("Card execution paused or incomplete - not advancing to AI turn");
