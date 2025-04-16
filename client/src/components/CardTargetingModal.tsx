@@ -228,6 +228,7 @@ const CardTargetingModal: React.FC<CardTargetingModalProps> = ({
               potentialTargets.map(target => (
                 <div 
                   key={target.id}
+                  data-testid={`target-option-${target.id}`}
                   onClick={(e) => toggleTarget(target, e)}
                   onTouchStart={(e) => {
                     // Prevent default behavior on mobile
@@ -277,12 +278,14 @@ const CardTargetingModal: React.FC<CardTargetingModalProps> = ({
         {/* Action buttons */}
         <div className="flex justify-between gap-4">
           <button
+            data-testid="targeting-cancel-btn"
             onClick={onClose}
             className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded text-sm sm:text-base"
           >
             Cancel
           </button>
           <button
+            data-testid="targeting-confirm-btn"
             onClick={handleConfirm}
             disabled={selectedTargets.length === 0}
             className={`flex-1 px-4 py-3 rounded text-sm sm:text-base

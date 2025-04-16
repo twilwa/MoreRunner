@@ -68,12 +68,12 @@ export interface Component {
 export abstract class ZoneComponent implements Component {
   type: string;
   zone: CardZone;
-  
+
   constructor(zone: CardZone) {
     this.zone = zone;
     this.type = `${zone}Zone`;
   }
-  
+
   apply(context: GameContext): void {
     console.log(`Card ${context.card.name} is in zone ${this.zone}`);
   }
@@ -84,10 +84,10 @@ export class InMarketZone extends ZoneComponent {
   constructor() {
     super('inMarket');
   }
-  
+
   apply(context: GameContext): void {
     super.apply(context);
-    
+
     // Market zone behavior:
     // - Cards in the market can be purchased with credits
     // - They cannot be played directly
@@ -96,11 +96,11 @@ export class InMarketZone extends ZoneComponent {
     // Credit validation - check if player has enough credits to buy the card
     // ONLY credit costs are validated in market zone
     const hasCreditCost = context.card.components?.some(comp => comp.type === 'CreditCost');
-    
+
     // If no custom credit cost component, use the default card.cost property
     if (!hasCreditCost && context.card.cost > 0) {
       const hasSufficientCredits = context.player.credits >= context.card.cost;
-      
+
       if (!hasSufficientCredits) {
         console.log(`Warning: ${context.card.name} requires ${context.card.cost} credits but player only has ${context.player.credits}.`);
         context.executionPaused = true;
@@ -108,10 +108,10 @@ export class InMarketZone extends ZoneComponent {
         return;
       }
     }
-    
+
     // When a card is in the market, add a log message
     context.log(`${context.card.name} is available for purchase in the market for ${context.card.cost} credits.`);
-    
+
     // Cards in market can't move to play zone directly
     // Market cards can only be purchased, not played
   }
@@ -122,10 +122,10 @@ export class InDiscardZone extends ZoneComponent {
   constructor() {
     super('inDiscard');
   }
-  
+
   apply(context: GameContext): void {
     super.apply(context);
-    
+
     // Discard zone behavior:
     // - Cards in discard can't be played directly
     // - They can be retrieved by specific effects
@@ -135,13 +135,13 @@ export class InDiscardZone extends ZoneComponent {
     if (context.recentlyTrashed === context.card) {
       context.log(`${context.card.name} was trashed to the discard pile.`);
     }
-    
+
     // When in recycling phase, some cards might trigger effects from discard
     // Using Runner faction as equivalent to Anarchs in our game
-    const isAnarchCard = context.card.faction === 'Runner'; 
+    const isAnarchCard = context.card.faction === 'Runner';
     // For recycling mechanics - using 'Virus' as our equivalent for recycle
     const hasRecycleKeyword = context.card.keywords?.includes('Virus');
-    
+
     if (isAnarchCard && hasRecycleKeyword) {
       context.log(`${context.card.name} is in the discard pile. Anarch cards with Recycle keyword may have special abilities when trashed.`);
     }
@@ -153,15 +153,15 @@ export class InDeckZone extends ZoneComponent {
   constructor(public deckPosition?: number) {
     super('inDeck');
   }
-  
+
   apply(context: GameContext): void {
     super.apply(context);
-    
+
     // Deck zone behavior:
     // - Cards in deck are hidden information
     // - They can be drawn or manipulated by effects
     // - Some effects can look at or arrange the top cards
-    
+
     // If deckPosition is defined, we might want to track position in the deck
     if (this.deckPosition !== undefined) {
       // For "look at top X cards" type effects
@@ -176,7 +176,7 @@ export class InDeckZone extends ZoneComponent {
       // If we're just generic "in deck"
       console.log(`${context.card.name} is somewhere in the deck.`);
     }
-    
+
     // Cards in deck cannot be played directly
     // They need to be drawn first
   }
@@ -187,25 +187,25 @@ export class InHandZone extends ZoneComponent {
   constructor() {
     super('inHand');
   }
-  
+
   apply(context: GameContext): void {
     super.apply(context);
-    
+
     // Hand zone behavior:
     // - Cards in hand are only visible to their owner
     // - They can be played when action requirements are met
     // - They can be targeted by hand disruption effects
-    
+
     // Check if this card can be played from hand based on actions only
     // Credit costs are ONLY checked in market, not here
     const canPlay = context.player.actions > 0;
-                    
+
     if (canPlay) {
       console.log(`${context.card.name} can be played from hand (actions available).`);
     } else {
       console.log(`${context.card.name} cannot be played from hand (no actions left).`);
     }
-    
+
     // Apply any effects specific to cards while they're in hand
     // (for example, some cards might have abilities that work from hand)
     // Using 'Stealth' for cards that can be played as reactions from hand
@@ -221,30 +221,30 @@ export class InQueueZone extends ZoneComponent {
   constructor(public queuePosition: number = 0) {
     super('inQueue');
   }
-  
+
   apply(context: GameContext): void {
     super.apply(context);
-    
+
     // Queue zone behavior:
     // - Cards in queue are waiting to be executed
     // - They have been committed (removed from hand) but not yet resolved
     // - ONLY ACTION costs are checked here; credit costs are checked in market zone
-    
+
     // Set queue position in the context
     context.queuePosition = this.queuePosition;
-    
+
     // Log card's position in the queue (for debugging)
     console.log(`${context.card.name} is in execution queue at position ${this.queuePosition}.`);
-    
+
     // Check if this card has a specific action cost component
     const hasActionCost = context.card.components?.some(comp => comp.type === 'ActionCost');
-    
+
     // By default, all cards require at least 1 action to play unless they have an explicit action cost of 0
     // Credit Chip is a special case as it requires 0 actions
     if (!hasActionCost && context.card.name !== 'Credit Chip') {
       // Check if player has at least 1 action
       const hasSufficientActions = context.player.actions >= 1;
-      
+
       if (!hasSufficientActions) {
         console.log(`Warning: ${context.card.name} requires 1 action but player has ${context.player.actions}.`);
         context.executionPaused = true;
@@ -252,17 +252,17 @@ export class InQueueZone extends ZoneComponent {
         return;
       }
     }
-    
+
     // Special handling for cards with targeting components
-    const hasTargeting = context.card.components?.some(comp => 
-      comp.type === 'SingleEntityTarget' || 
+    const hasTargeting = context.card.components?.some(comp =>
+      comp.type === 'SingleEntityTarget' ||
       comp.type === 'MultiEntityTarget'
     );
-    
+
     if (hasTargeting) {
       console.log(`${context.card.name} has targeting components and may pause execution for targeting.`);
     }
-    
+
     // Cards in queue zone might have special abilities that trigger while waiting
     // Using 'Virus' keyword for cards that have prep effects
     const hasPrepEffect = context.card.keywords?.includes('Virus');
@@ -277,29 +277,29 @@ export class InPlayZone extends ZoneComponent {
   constructor() {
     super('inPlay');
   }
-  
+
   apply(context: GameContext): void {
     super.apply(context);
-    
+
     // Play zone behavior:
     // - Cards in play are active and their effects are ongoing
     // - They can be targeted by other cards
     // - They may have activation abilities
     // - They remain in play until trashed, returned to hand, or the game ends
-    
+
     // Log when a card enters play zone (usually only happens once when a card resolves)
     console.log(`${context.card.name} is in play and active.`);
-    
+
     // Handle persistent effects
-    
+
     // Check for activation abilities that can be used while in play
     // Use proper CardType from our system - check if the card has specific keywords
     const hasActivation = context.card.keywords.includes('Program') || context.card.keywords.includes('Hardware');
-    
+
     if (hasActivation) {
       console.log(`${context.card.name} has abilities that can be activated while in play.`);
     }
-    
+
     // Handle installed card mechanics (for hardware, programs, etc.)
     // We need to check the card effects to determine duration since it's not a direct property
     const hasTimedEffect = context.card.effects.some(e => e.type === 'gain_action' || e.type === 'draw_cards');
@@ -308,7 +308,7 @@ export class InPlayZone extends ZoneComponent {
     } else {
       console.log(`${context.card.name} has permanent effects while in play.`);
     }
-    
+
     // Cards in play contribute to faction synergies
     const faction = context.card.faction || 'neutral';
     console.log(`${context.card.name} contributes to ${faction} faction synergies.`);
@@ -319,29 +319,29 @@ export class InPlayZone extends ZoneComponent {
 
 export class SingleEntityTarget implements Component {
   type = 'SingleEntityTarget';
-  
+
   constructor(
     public targetType: TargetType,
     public allowTargetSelection: boolean = true,
     public filter?: (target: any) => boolean
   ) {}
-  
+
   apply(context: GameContext): void {
     console.log(`SingleEntityTarget applying for ${context.card.name}, target type: ${this.targetType}, allow selection: ${this.allowTargetSelection}`);
-    
+
     // Check if targets are already provided in context
     if (context.targets && context.targets.length > 0) {
       console.log("Targets already provided in context, skipping pause:", context.targets);
       return; // Skip target selection if targets are already available
     }
-    
+
     if (this.allowTargetSelection) {
       // Signal that we need player input for target selection
       console.log(`Pausing execution for target selection (${this.targetType})`);
       context.executionPaused = true;
       context.awaitingTargetSelection = true;
       context.log(`Selecting target for ${context.card.name}...`);
-      
+
       // This will be completed when player selects a target
       // The target will be stored in context.targets
       return; // Exit early to ensure no more components are processed
@@ -358,7 +358,7 @@ export class SingleEntityTarget implements Component {
         case TargetType.Threat:
           // Select threats based on filter or first threat by default
           if (context.locationThreats && context.locationThreats.length > 0) {
-            context.targets = this.filter 
+            context.targets = this.filter
               ? context.locationThreats.filter(this.filter)
               : [context.locationThreats[0]];
           }
@@ -376,37 +376,37 @@ export class SingleEntityTarget implements Component {
 
 export class MultiEntityTarget implements Component {
   type = 'MultiEntityTarget';
-  
+
   constructor(
     public targetType: 'players' | 'opponents' | 'threats' | 'cards',
     public maxTargets: number = Infinity,
     public allowTargetSelection: boolean = true,
     public filter?: (target: any) => boolean
   ) {}
-  
+
   apply(context: GameContext): void {
     console.log(`MultiEntityTarget applying for ${context.card.name}, target type: ${this.targetType}, max targets: ${this.maxTargets}`);
-    
+
     // Check if targets are already provided in context
     if (context.targets && context.targets.length > 0) {
       console.log("Targets already provided in context, skipping pause:", context.targets);
       return; // Skip target selection if targets are already available
     }
-    
+
     if (this.allowTargetSelection) {
       // Signal that we need player input for target selection
       console.log(`Pausing execution for multiple target selection (${this.targetType})`);
       context.executionPaused = true;
       context.awaitingTargetSelection = true;
       context.log(`Select up to ${this.maxTargets} targets for ${context.card.name}...`);
-      
+
       // This will be completed when player selects targets
       // The targets will be stored in context.targets
       return; // Exit early to ensure no more components are processed
     } else {
       // Auto-select targets based on target type
       let candidateTargets: any[] = [];
-      
+
       switch (this.targetType) {
         case 'players':
           candidateTargets = [context.player, ...context.opponents];
@@ -421,12 +421,12 @@ export class MultiEntityTarget implements Component {
           candidateTargets = context.cardsInPlay;
           break;
       }
-      
+
       // Apply filter if provided
       if (this.filter) {
         candidateTargets = candidateTargets.filter(this.filter);
       }
-      
+
       // Limit to max targets
       context.targets = candidateTargets.slice(0, this.maxTargets);
     }
@@ -435,7 +435,7 @@ export class MultiEntityTarget implements Component {
 
 export class SelfTarget implements Component {
   type = 'SelfTarget';
-  
+
   apply(context: GameContext): void {
     // Target the player who played the card
     context.targets = [context.player];
@@ -446,9 +446,9 @@ export class SelfTarget implements Component {
 
 export class CreditCost implements Component {
   type = 'CreditCost';
-  
+
   constructor(public amount: number) {}
-  
+
   apply(context: GameContext): void {
     // Check if player has enough credits
     if (context.player.credits >= this.amount) {
@@ -465,9 +465,9 @@ export class CreditCost implements Component {
 
 export class ActionCost implements Component {
   type = 'ActionCost';
-  
+
   constructor(public amount: number = 1) {}
-  
+
   apply(context: GameContext): void {
     // Check if player has enough actions
     if (context.player.actions >= this.amount) {
@@ -506,16 +506,16 @@ export class HealthCost implements Component {
 
 export class KeywordRequirement implements Component {
   type = 'KeywordRequirement';
-  
+
   constructor(
     public keyword: CardKeyword,
     public count: number = 1,
     public location: 'play' | 'hand' | 'discard' = 'play'
   ) {}
-  
+
   apply(context: GameContext): void {
     let cardsToCheck: Card[] = [];
-    
+
     // Determine which cards to check based on location
     switch (this.location) {
       case 'play':
@@ -528,12 +528,12 @@ export class KeywordRequirement implements Component {
         cardsToCheck = context.player.discard;
         break;
     }
-    
+
     // Count cards with the required keyword
-    const matchCount = cardsToCheck.filter(card => 
+    const matchCount = cardsToCheck.filter(card =>
       card.keywords.includes(this.keyword)
     ).length;
-    
+
     // Check if requirement is met
     if (matchCount >= this.count) {
       context.log(`Requirement met: Found ${matchCount} ${this.keyword} card(s).`);
@@ -547,13 +547,13 @@ export class KeywordRequirement implements Component {
 
 export class TrashCost implements Component {
   type = 'TrashCost';
-  
+
   constructor(
     public targetType: 'program' | 'hardware' | 'resource' | 'self' | 'any',
     public specific: boolean = false,
     public specificType?: string // Keyword or other filter
   ) {}
-  
+
   apply(context: GameContext): void {
     // If self-trash (the card trashes itself)
     if (this.targetType === 'self') {
@@ -573,23 +573,23 @@ export class TrashCost implements Component {
       }
       return;
     }
-    
+
     // For all other trash costs, we need to select a card
     // If we already have targets selected, use those
     if (context.targets && context.targets.length > 0 && context.targets[0].cardType) {
       const targetCard = context.targets[0];
-      
+
       // Validate target matches required type
       let isValidTarget = true;
       if (this.targetType !== 'any' && targetCard.cardType !== this.targetType) {
         isValidTarget = false;
       }
-      
-      if (this.specific && this.specificType && 
+
+      if (this.specific && this.specificType &&
           !(targetCard.keywords && targetCard.keywords.some((k: string) => k === this.specificType as any))) {
         isValidTarget = false;
       }
-      
+
       if (isValidTarget) {
         // Find card in play
         const cardIndex = context.cardsInPlay.findIndex(c => c.id === targetCard.id);
@@ -613,13 +613,13 @@ export class TrashCost implements Component {
       // No targets selected yet, pause execution for player input
       context.executionPaused = true;
       context.awaitingTargetSelection = true;
-      
+
       let targetTypeDescription = this.targetType;
       if (this.specific && this.specificType) {
         // Use concatenation instead of template literals to avoid LSP issues
         targetTypeDescription = this.specificType + " " + this.targetType;
       }
-      
+
       context.log(`Select a ${targetTypeDescription} card to trash.`);
     }
   }
@@ -629,9 +629,9 @@ export class TrashCost implements Component {
 
 export class GainCredits implements Component {
   type = 'GainCredits';
-  
+
   constructor(public amount: number) {}
-  
+
   apply(context: GameContext): void {
     context.targets.forEach(target => {
       if (target.credits !== undefined) {
@@ -644,15 +644,15 @@ export class GainCredits implements Component {
 
 export class DealDamage implements Component {
   type = 'DealDamage';
-  
+
   constructor(public amount: number) {}
-  
+
   apply(context: GameContext): void {
     context.targets.forEach(target => {
       if (target.health !== undefined) {
         target.health -= this.amount;
         context.log(`${context.card.name} dealt ${this.amount} damage to ${target.name}.`);
-        
+
         // Check if target is defeated
         if (target.health <= 0) {
           context.log(`${target.name} was defeated!`);
@@ -665,9 +665,9 @@ export class DealDamage implements Component {
 
 export class PreventDamage implements Component {
   type = 'PreventDamage';
-  
+
   constructor(public amount: number) {}
-  
+
   apply(context: GameContext): void {
     context.targets.forEach(target => {
       if (target.damageProtection !== undefined) {
@@ -683,9 +683,9 @@ export class PreventDamage implements Component {
 
 export class DrawCards implements Component {
   type = 'DrawCards';
-  
+
   constructor(public amount: number) {}
-  
+
   apply(context: GameContext): void {
     context.targets.forEach(target => {
       if (target.drawCard) {
@@ -709,12 +709,12 @@ export class DrawCards implements Component {
 
 export class DiscardCards implements Component {
   type = 'DiscardCards';
-  
+
   constructor(
     public amount: number,
     public random: boolean = false
   ) {}
-  
+
   apply(context: GameContext): void {
     context.targets.forEach(target => {
       if (target.hand && target.discard) {
@@ -750,9 +750,9 @@ export class DiscardCards implements Component {
 
 export class GainAction implements Component {
   type = 'GainAction';
-  
+
   constructor(public amount: number) {}
-  
+
   apply(context: GameContext): void {
     context.targets.forEach(target => {
       if (target.actions !== undefined) {
@@ -765,19 +765,19 @@ export class GainAction implements Component {
 
 export class RecycleGain implements Component {
   type = 'RecycleGain';
-  
+
   constructor(
     public resourceType: 'credits' | 'cards' | 'actions',
     public amount: number,
     public bonusFromCardCost: boolean = false,
     public bonusMultiplier: number = 0.5 // By default gain 50% of the trashed card's cost
   ) {}
-  
+
   apply(context: GameContext): void {
     // Check if there's a recently trashed card in the execution context
     // This requires extension of GameContext with a recentlyTrashed property
     const trashedCard = context.recentlyTrashed || { cost: 0, name: "unknown card" };
-    
+
     // Calculate bonus from trashed card if applicable
     let totalAmount = this.amount;
     if (this.bonusFromCardCost && 'cost' in trashedCard) {
@@ -786,7 +786,7 @@ export class RecycleGain implements Component {
       const cardName = 'name' in trashedCard ? trashedCard.name : "unknown card";
       context.log(`${context.card.name} gained a bonus of ${bonus} from recycling ${cardName}.`);
     }
-    
+
     // Apply the resource gain based on type
     switch (this.resourceType) {
       case 'credits':
@@ -795,7 +795,7 @@ export class RecycleGain implements Component {
           context.log(`${context.player.name} gained ${totalAmount} credits from recycling.`);
         }
         break;
-        
+
       case 'cards':
         if (context.player.drawCard) {
           for (let i = 0; i < totalAmount; i++) {
@@ -809,7 +809,7 @@ export class RecycleGain implements Component {
           }
         }
         break;
-        
+
       case 'actions':
         if (context.player.actions !== undefined) {
           context.player.actions += totalAmount;
@@ -824,19 +824,19 @@ export class RecycleGain implements Component {
 
 export class KeywordSynergy implements Component {
   type = 'KeywordSynergy';
-  
+
   constructor(
     public keyword: CardKeyword,
     public targetComponent: string,
     public bonusAmount: number
   ) {}
-  
+
   apply(context: GameContext): void {
     // Check if any card in play has the required keyword
-    const hasKeyword = context.cardsInPlay.some(card => 
+    const hasKeyword = context.cardsInPlay.some(card =>
       card.id !== context.card.id && card.keywords.includes(this.keyword)
     );
-    
+
     if (hasKeyword) {
       // Find the target component to enhance
       const component = context.card.components?.find((comp: Component) => comp.type === this.targetComponent);
@@ -844,9 +844,9 @@ export class KeywordSynergy implements Component {
         // Temporarily increase the amount for this execution
         const originalAmount = (component as any).amount;
         (component as any).amount += this.bonusAmount;
-        
+
         context.log(`${context.card.name} gained +${this.bonusAmount} to ${this.targetComponent} from ${this.keyword} synergy.`);
-        
+
         // Reset after execution (this would be handled differently in the actual implementation)
         setTimeout(() => {
           component.amount = originalAmount;
@@ -858,7 +858,7 @@ export class KeywordSynergy implements Component {
 
 export class RiskReward implements Component {
   type = 'RiskReward';
-  
+
   constructor(
     public riskType: RiskType,
     public rewardType: RewardType,
@@ -866,15 +866,15 @@ export class RiskReward implements Component {
     public riskAmount: number = 1,
     public rewardAmount: number = 3
   ) {}
-  
+
   apply(context: GameContext): void {
     // Roll for success
     const roll = Math.floor(Math.random() * 100) + 1;
     const isSuccess = roll <= this.chance;
-    
+
     // Log the roll
     context.log(`${context.card.name}: Risk roll: ${roll} (Need ${this.chance} or lower)`);
-    
+
     if (isSuccess) {
       // Success: Apply reward
       context.log(`${context.card.name}: Success! Applying reward.`);
@@ -885,7 +885,7 @@ export class RiskReward implements Component {
       this.applyRisk(context);
     }
   }
-  
+
   private applyReward(context: GameContext): void {
     // Apply reward based on reward type
     switch (this.rewardType) {
@@ -895,14 +895,14 @@ export class RiskReward implements Component {
           context.log(`${context.player.name} gained ${this.rewardAmount} credits.`);
         }
         break;
-        
+
       case RewardType.Damage:
         // Apply damage to each target
         context.targets.forEach(target => {
           if (target.health !== undefined) {
             target.health -= this.rewardAmount;
             context.log(`${context.card.name} dealt ${this.rewardAmount} damage to ${target.name}.`);
-            
+
             // Check if target is defeated
             if (target.health <= 0) {
               context.log(`${target.name} was defeated!`);
@@ -910,7 +910,7 @@ export class RiskReward implements Component {
           }
         });
         break;
-        
+
       case RewardType.Cards:
         // Draw cards
         if (context.player.drawCard) {
@@ -925,21 +925,21 @@ export class RiskReward implements Component {
           }
         }
         break;
-        
+
       case RewardType.Actions:
         if (context.player.actions !== undefined) {
           context.player.actions += this.rewardAmount;
           context.log(`${context.player.name} gained ${this.rewardAmount} action(s).`);
         }
         break;
-        
+
       case RewardType.ResourcesAndCards:
         // Combination reward - both credits and cards
         if (context.player.credits !== undefined) {
           context.player.credits += this.rewardAmount;
           context.log(`${context.player.name} gained ${this.rewardAmount} credits.`);
         }
-        
+
         if (context.player.drawCard) {
           // Draw half as many cards as the reward amount (minimum 1)
           const cardsToDraw = Math.max(1, Math.floor(this.rewardAmount / 2));
@@ -956,7 +956,7 @@ export class RiskReward implements Component {
         break;
     }
   }
-  
+
   private applyRisk(context: GameContext): void {
     // Apply risk based on risk type
     switch (this.riskType) {
@@ -964,7 +964,7 @@ export class RiskReward implements Component {
         if (context.player.health !== undefined) {
           context.player.health -= this.riskAmount;
           context.log(`${context.player.name} took ${this.riskAmount} damage from the failed risk.`);
-          
+
           // Check if player is defeated
           if (context.player.health <= 0) {
             context.log(`${context.player.name} was defeated!`);
@@ -972,7 +972,7 @@ export class RiskReward implements Component {
           }
         }
         break;
-        
+
       case RiskType.Resources:
         if (context.player.credits !== undefined) {
           // Lose credits, but don't go below 0
@@ -981,7 +981,7 @@ export class RiskReward implements Component {
           context.log(`${context.player.name} lost ${amountToLose} credits from the failed risk.`);
         }
         break;
-        
+
       case RiskType.Cards:
         if (context.player.hand && context.player.discard) {
           // Random discard
@@ -999,7 +999,7 @@ export class RiskReward implements Component {
 
 export class ComboEffect implements Component {
   type = 'ComboEffect';
-  
+
   constructor(
     public requiredCardType: string, // The type of card needed for combo
     public bonusEffect: {
@@ -1007,19 +1007,19 @@ export class ComboEffect implements Component {
       amount: number
     }
   ) {}
-  
+
   apply(context: GameContext): void {
     // Check if required card is in play for combo
-    const hasComboCard = context.cardsInPlay.some(card => 
+    const hasComboCard = context.cardsInPlay.some(card =>
       card.id !== context.card.id && (
-        card.keywords.some(k => k === this.requiredCardType as any) || 
+        card.keywords.some(k => k === this.requiredCardType as any) ||
         card.cardType === this.requiredCardType
       )
     );
-    
+
     if (hasComboCard) {
       context.log(`${context.card.name} activated combo with ${this.requiredCardType}!`);
-      
+
       // Apply bonus effect
       switch (this.bonusEffect.type) {
         case 'credits':
@@ -1028,7 +1028,7 @@ export class ComboEffect implements Component {
             context.log(`${context.player.name} gained ${this.bonusEffect.amount} credits from combo effect.`);
           }
           break;
-          
+
         case 'damage':
           context.targets.forEach(target => {
             if (target.health !== undefined) {
@@ -1037,7 +1037,7 @@ export class ComboEffect implements Component {
             }
           });
           break;
-          
+
         case 'cards':
           if (context.player.drawCard) {
             for (let i = 0; i < this.bonusEffect.amount; i++) {
@@ -1051,7 +1051,7 @@ export class ComboEffect implements Component {
             }
           }
           break;
-          
+
         case 'actions':
           if (context.player.actions !== undefined) {
             context.player.actions += this.bonusEffect.amount;
@@ -1067,11 +1067,11 @@ export class ComboEffect implements Component {
 
 export class PauseQueue implements Component {
   type = 'PauseQueue';
-  
+
   constructor(
     public message: string = "Choose targets to continue."
   ) {}
-  
+
   apply(context: GameContext): void {
     context.executionPaused = true;
     context.awaitingTargetSelection = true; // This was missing!
@@ -1081,17 +1081,17 @@ export class PauseQueue implements Component {
 
 export class CancelCard implements Component {
   type = 'CancelCard';
-  
+
   constructor(
     public targetCardIndex?: number, // If undefined, requires selection
     public targetCardCondition?: (card: Card) => boolean
   ) {}
-  
+
   apply(context: GameContext): void {
     // If targeting a specific card in the queue
     if (context.gameState.activePlayer.inPlay) {
       const queue = context.gameState.activePlayer.inPlay;
-      
+
       if (this.targetCardIndex !== undefined && this.targetCardIndex < queue.length) {
         // Cancel the specific card
         const canceledCard = queue[this.targetCardIndex];
@@ -1121,7 +1121,7 @@ export class CancelCard implements Component {
 
 export class RevealCard implements Component {
   type = 'RevealCard';
-  
+
   apply(context: GameContext): void {
     context.targets.forEach(target => {
       if (target.isFaceDown !== undefined) {
@@ -1134,11 +1134,11 @@ export class RevealCard implements Component {
 
 export class ScanEntity implements Component {
   type = 'ScanEntity';
-  
+
   constructor(
     public revealFullInfo: boolean = false
   ) {}
-  
+
   apply(context: GameContext): void {
     context.targets.forEach(target => {
       if (this.revealFullInfo) {
@@ -1168,58 +1168,58 @@ export class ScanEntity implements Component {
 export function executeCardComponents(card: EnhancedCard, context: GameContext): void {
   // Ensure card has components array (dealing with TypeScript null checks)
   const cardComponents = card.components || [];
-  
+
   if (cardComponents.length === 0) {
     context.log(`${card.name} has no components to execute.`);
     return;
   }
-  
+
   console.log(`executeCardComponents for ${card.name}, has ${cardComponents.length} components`);
-  
+
   // Process components in order
   for (const component of cardComponents) {
     console.log(`Applying component: ${component.type}`);
-    
+
     // Skip further processing if execution is paused
     if (context.executionPaused) {
       console.log(`Execution already paused before applying ${component.type} - stopping component execution`);
       break;
     }
-    
+
     component.apply(context);
-    
+
     // Log status after each component
     console.log(`After ${component.type} - executionPaused: ${context.executionPaused}, awaitingTargetSelection: ${context.awaitingTargetSelection}`);
   }
-  
+
   // If execution completed successfully (not paused), move the card to discard
   if (!context.executionPaused && context.gameState) {
     console.log(`Card execution completed for ${card.name}, moving to discard`);
-    
+
     // Get active player
     const activePlayer = context.gameState.players[context.gameState.activePlayerIndex];
-    
+
     // If the card is in play area, move it to discard
     const cardInPlayIndex = activePlayer.inPlay.findIndex((c: any) => c.id === card.id);
     if (cardInPlayIndex >= 0) {
       // Add to discard pile
       console.log(`Moving ${card.name} from play area to discard pile`);
       const cardToDiscard = activePlayer.inPlay[cardInPlayIndex];
-      
+
       // Import cardExecutionService to use the moveCardToZone helper method
       // This will be handled by the cardExecutionService.executeNextCard method
       // since it has direct access to the moveCardToZone helper
-      
+
       console.log(`Card zone transition will be handled by cardExecutionService`);
-      
+
       activePlayer.discard.push(cardToDiscard);
-      
+
       // Update play area (without modifying the original array that could be in use)
       activePlayer.inPlay = [
         ...activePlayer.inPlay.slice(0, cardInPlayIndex),
         ...activePlayer.inPlay.slice(cardInPlayIndex + 1)
       ];
-      
+
       context.log(`${card.name} moved to discard after execution.`);
     }
   }
