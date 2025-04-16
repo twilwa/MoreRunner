@@ -21,7 +21,7 @@ export interface Player {
   };
   installedCards: Card[];  // Permanent card installations
   faceDownCards: Card[];   // Traps and ambushes
-  
+
   // Method for drawing a card from the deck
   drawCard?: () => Card | null;
 }
@@ -70,34 +70,32 @@ export function drawCards(player: Player, count: number): { player: Player, draw
       if (updatedPlayer.discard.length === 0) {
         break; // No cards to draw
       }
-      
+
       // When shuffling discard into deck, we need to apply zone transition for each card
       const shuffledCards = shuffleDeck([...updatedPlayer.discard]);
-      
+
       // Apply zone transition for each card moved from discard to deck
       updatedPlayer.discard.forEach(card => {
         // Get the enhanced version of the card with components
-        const enhancedCard = getEnhancedCard(card.id) || { 
-          ...card, 
-          components: [] 
+        const enhancedCard = getEnhancedCard(card.id) || {
+          ...card,
+          components: []
         } as EnhancedCard;
-        
+
         // Use zone transition to move the card from discard to deck
         const fromZone: CardZone = 'inDiscard';
         const toZone: CardZone = 'inDeck';
-        
+
         // Apply zone transition using the execution service
         const updatedCard = cardExecutionService.moveCardToZone(
           enhancedCard,
           fromZone,
           toZone
         );
-        // Replace in shuffledCards
-        const idx = shuffledCards.findIndex(c => c.id === card.id);
-        if (idx !== -1) shuffledCards[idx] = updatedCard;
+
         console.log(`Card ${card.name} moved from ${fromZone} to ${toZone} during shuffle`);
       });
-      
+
       updatedPlayer.deck = shuffledCards;
       updatedPlayer.discard = [];
     }
@@ -105,26 +103,28 @@ export function drawCards(player: Player, count: number): { player: Player, draw
     // Draw the top card of the deck
     if (updatedPlayer.deck.length > 0) {
       const card = updatedPlayer.deck[0];
-      
+
       // Get the enhanced version of the card with components
-      const enhancedCard = getEnhancedCard(card.id) || { 
-        ...card, 
-        components: [] 
+      const enhancedCard = getEnhancedCard(card.id) || {
+        ...card,
+        components: []
       } as EnhancedCard;
-      
+
       // Use zone transition to move the card from deck to hand
       const fromZone: CardZone = 'inDeck';
       const toZone: CardZone = 'inHand';
-      
+
       // Apply zone transition using the execution service
       const updatedCard = cardExecutionService.moveCardToZone(
         enhancedCard,
         fromZone,
         toZone
       );
+
       console.log(`Card ${card.name} drawn from ${fromZone} to ${toZone}`);
-      drawnCards.push(updatedCard);
-      updatedPlayer.hand.push(updatedCard);
+
+      drawnCards.push(card);
+      updatedPlayer.hand.push(card);
       updatedPlayer.deck = updatedPlayer.deck.slice(1);
     }
   }
@@ -141,83 +141,85 @@ export function drawHand(player: Player): Player {
 // Discard a specific card from hand
 export function discardCard(player: Player, cardIndex: number): Player {
   const updatedPlayer = { ...player };
-  
+
   if (cardIndex >= 0 && cardIndex < updatedPlayer.hand.length) {
     const card = updatedPlayer.hand[cardIndex];
-    
+
     // Get the enhanced version of the card with components
-    const enhancedCard = getEnhancedCard(card.id) || { 
-      ...card, 
-      components: [] 
+    const enhancedCard = getEnhancedCard(card.id) || {
+      ...card,
+      components: []
     } as EnhancedCard;
-    
+
     // Use zone transition to move the card from hand to discard
     const fromZone: CardZone = 'inHand';
     const toZone: CardZone = 'inDiscard';
-    
+
     // Apply zone transition using the execution service
     const updatedCard = cardExecutionService.moveCardToZone(
       enhancedCard,
       fromZone,
       toZone
     );
+
     console.log(`Card ${card.name} discarded from ${fromZone} to ${toZone}`);
-    updatedPlayer.discard.push(updatedCard);
+
+    updatedPlayer.discard.push(card);
     updatedPlayer.hand = updatedPlayer.hand.filter((_, i) => i !== cardIndex);
   }
-  
+
   return updatedPlayer;
 }
 
 // Discard the entire hand
 export function discardHand(player: Player): Player {
   const updatedPlayer = { ...player };
-  
+
   // Apply zone transition for each card in hand
   updatedPlayer.hand.forEach(card => {
     // Get the enhanced version of the card with components
-    const enhancedCard = getEnhancedCard(card.id) || { 
-      ...card, 
-      components: [] 
+    const enhancedCard = getEnhancedCard(card.id) || {
+      ...card,
+      components: []
     } as EnhancedCard;
-    
+
     // Use zone transition to move the card from hand to discard
     const fromZone: CardZone = 'inHand';
     const toZone: CardZone = 'inDiscard';
-    
+
     // Apply zone transition using the execution service
     const updatedCard = cardExecutionService.moveCardToZone(
       enhancedCard,
       fromZone,
       toZone
     );
-    console.log(`Card ${card.name} discarded from ${fromZone} to ${toZone}`);
-    updatedPlayer.discard.push(updatedCard);
-    // Remove from hand by id
-    updatedPlayer.hand = updatedPlayer.hand.filter(c => c.id !== card.id);
+
+    console.log(`Card ${card.name} discarded from ${fromZone} to ${toZone} (mass discard)`);
   });
-  
+
+  updatedPlayer.discard = [...updatedPlayer.discard, ...updatedPlayer.hand];
+  updatedPlayer.hand = [];
   return updatedPlayer;
 }
 
 // Play a card from hand
 export function playCard(player: Player, cardIndex: number): { player: Player, playedCard: Card | null } {
   const updatedPlayer = { ...player };
-  
+
   if (cardIndex >= 0 && cardIndex < updatedPlayer.hand.length) {
     const card = updatedPlayer.hand[cardIndex];
-    
+
     // Get the enhanced version of the card with components
-    const enhancedCard = getEnhancedCard(card.id) || { 
-      ...card, 
-      components: [] 
+    const enhancedCard = getEnhancedCard(card.id) || {
+      ...card,
+      components: []
     } as EnhancedCard;
-    
+
     // Use the card execution service to move the card from hand to the right zone
     // This ensures all zone components are properly applied
     let fromZone: CardZone = 'inHand';
     let toZone: CardZone;
-    
+
     // Determine target zone based on card type
     if (card.cardType === 'Install') {
       updatedPlayer.installedCards.push(card);
@@ -230,7 +232,7 @@ export function playCard(player: Player, cardIndex: number): { player: Player, p
       updatedPlayer.inPlay.push(card);
       toZone = 'inPlay';
     }
-    
+
     // Apply zone transition using the execution service
     const updatedCard = cardExecutionService.moveCardToZone(
       enhancedCard,
@@ -240,7 +242,7 @@ export function playCard(player: Player, cardIndex: number): { player: Player, p
     console.log(`Card ${card.name} played from ${fromZone} to ${toZone}`);
     updatedPlayer.inPlay.push(updatedCard);
     updatedPlayer.hand = updatedPlayer.hand.filter((_, i) => i !== cardIndex);
-    
+
     // Legacy effect handling for backward compatibility
     // Note: This is for cards that don't use the component system yet
     for (const effect of card.effects) {
@@ -266,7 +268,7 @@ export function playCard(player: Player, cardIndex: number): { player: Player, p
             updatedPlayer.deck = playerAfterLuckyDraw.deck;
             updatedPlayer.hand = playerAfterLuckyDraw.hand;
             updatedPlayer.discard = playerAfterLuckyDraw.discard;
-            
+
             // 20% chance of taking damage per card
             if (Math.random() < 0.2) {
               updatedPlayer.health -= 1;
@@ -281,72 +283,73 @@ export function playCard(player: Player, cardIndex: number): { player: Player, p
         // Other effects are now handled by the component system
       }
     }
-    
+
     return { player: updatedPlayer, playedCard: card };
   }
-  
+
   return { player: updatedPlayer, playedCard: null };
 }
 
 // Buy a card from the market (unlimited buys allowed)
 export function buyCard(player: Player, card: Card): Player {
   const updatedPlayer = { ...player };
-  
+
   if (updatedPlayer.credits >= card.cost) {
     updatedPlayer.credits -= card.cost;
     // No longer decrement buys - unlimited buys allowed
-    
+
     // Get the enhanced version of the card with components
-    const enhancedCard = getEnhancedCard(card.id) || { 
-      ...card, 
-      components: [] 
+    const enhancedCard = getEnhancedCard(card.id) || {
+      ...card,
+      components: []
     } as EnhancedCard;
-    
+
     // Use zone transition to move the card from market to discard
     // This triggers appropriate zone components
     const fromZone: CardZone = 'inMarket';
     const toZone: CardZone = 'inDiscard';
-    
+
     // Apply zone transition using the execution service
     const updatedCard = cardExecutionService.moveCardToZone(
       enhancedCard,
       fromZone,
       toZone
     );
+
     console.log(`Card ${card.name} purchased and moved from ${fromZone} to ${toZone}`);
-    
+
     // Add card to discard pile (not directly to deck)
-    updatedPlayer.discard.push(updatedCard);
-    
+    updatedPlayer.discard.push({ ...card });
+
     // Adjust faction reputation based on card purchased
     if (card.faction !== 'Neutral') {
       updatedPlayer.factionReputation[card.faction] += 2; // Small increase in reputation
     }
   }
-  
+
   return updatedPlayer;
 }
 
 // Trash (remove) a card from hand
 export function trashCard(player: Player, cardIndex: number): { player: Player, trashedCard: Card | null } {
   const updatedPlayer = { ...player };
-  
+
   if (cardIndex >= 0 && cardIndex < updatedPlayer.hand.length) {
     const card = updatedPlayer.hand[cardIndex];
-    
+
     // Get the enhanced version of the card with components
-    const enhancedCard = getEnhancedCard(card.id) || { 
-      ...card, 
-      components: [] 
+    const enhancedCard = getEnhancedCard(card.id) || {
+      ...card,
+      components: []
     } as EnhancedCard;
-    
+
     // Use zone transition to completely remove the card (trash is a special case)
     // Note: We're intentionally not assigning toZone as the card is being trashed entirely
     const fromZone: CardZone = 'inHand';
-    
+
     // Log the trash event
     console.log(`Card ${card.name} trashed from hand`);
-    
+
     // In the component system, we need to trigger any "on trash" effects
     // These would be faction specific recycling mechanics, etc.
     // Runner faction has special recycling mechanics
@@ -356,53 +359,56 @@ export function trashCard(player: Player, cardIndex: number): { player: Player, 
       // Note: Runner recycling would be handled by special recycling components
       // which will be evaluated in the game context
     }
-    
+
     // Record the card as "recently trashed" in the game context
     // This will be used by RecycleGain components
-    
+
     // Remove the card from hand
     updatedPlayer.hand = updatedPlayer.hand.filter((_, i) => i !== cardIndex);
     return { player: updatedPlayer, trashedCard: card };
   }
-  
+
   return { player: updatedPlayer, trashedCard: null };
 }
 
 // Reset player turn (move in-play cards to discard, reset actions/buys)
 export function endTurn(player: Player): Player {
   const updatedPlayer = { ...player };
-  
+
   // Process each in-play card with the zone component system
   updatedPlayer.inPlay.forEach(card => {
     // Get the enhanced version of the card with components
-    const enhancedCard = getEnhancedCard(card.id) || { 
-      ...card, 
-      components: [] 
+    const enhancedCard = getEnhancedCard(card.id) || {
+      ...card,
+      components: []
     } as EnhancedCard;
-    
+
     // Use zone transition to move the card from play to discard
     // This triggers appropriate zone components
     const fromZone: CardZone = 'inPlay';
     const toZone: CardZone = 'inDiscard';
-    
+
     // Apply zone transition using the execution service
     const updatedCard = cardExecutionService.moveCardToZone(
       enhancedCard,
       fromZone,
       toZone
     );
+
     console.log(`End turn: Card ${card.name} moved from ${fromZone} to ${toZone}`);
-    updatedPlayer.discard.push(updatedCard);
+
+    // Add to discard pile
+    updatedPlayer.discard.push(card);
   });
-  
+
   // Clear the in-play area (except installed cards and face-down cards)
   updatedPlayer.inPlay = [];
-  
+
   // Reset resources
   updatedPlayer.credits = 0;
   updatedPlayer.actions = 0;
   updatedPlayer.buys = 0;
-  
+
   // Note: Installed cards and face-down cards remain in play between turns
   return updatedPlayer;
 }
@@ -427,33 +433,35 @@ export function applyDamage(player: Player, amount: number): Player {
 export function forceDiscard(player: Player, count: number): { player: Player, discardedCards: Card[] } {
   const updatedPlayer = { ...player };
   const discardedCards: Card[] = [];
-  
+
   // Randomly select cards to discard
   for (let i = 0; i < count && updatedPlayer.hand.length > 0; i++) {
     const randomIndex = Math.floor(Math.random() * updatedPlayer.hand.length);
     const card = updatedPlayer.hand[randomIndex];
-    
+
     // Get the enhanced version of the card with components
-    const enhancedCard = getEnhancedCard(card.id) || { 
-      ...card, 
-      components: [] 
+    const enhancedCard = getEnhancedCard(card.id) || {
+      ...card,
+      components: []
     } as EnhancedCard;
-    
+
     // Use zone transition to move the card from hand to discard
     const fromZone: CardZone = 'inHand';
     const toZone: CardZone = 'inDiscard';
-    
+
     // Apply zone transition using the execution service
     const updatedCard = cardExecutionService.moveCardToZone(
       enhancedCard,
       fromZone,
       toZone
     );
+
     console.log(`Card ${card.name} force discarded from ${fromZone} to ${toZone}`);
-    discardedCards.push(updatedCard);
-    updatedPlayer.discard.push(updatedCard);
+
+    discardedCards.push(card);
+    updatedPlayer.discard.push(card);
     updatedPlayer.hand = updatedPlayer.hand.filter((_, i) => i !== randomIndex);
   }
-  
+
   return { player: updatedPlayer, discardedCards };
 }

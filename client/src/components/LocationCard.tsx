@@ -30,7 +30,7 @@ const LocationCard: React.FC<LocationCardProps> = ({
   
   if (!location) {
     return (
-      <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 text-center" data-testid="location-card">
+      <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 text-center">
         <p className="text-gray-400">No location data available.</p>
         {canDrawNextLocation && (
           <button

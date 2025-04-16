@@ -1164,15 +1164,6 @@ export class ScanEntity implements Component {
 
 // We're using the EnhancedCard interface already defined at the top of the file
 
-// Utility to check if a card is an EnhancedCard
-export function isEnhancedCard(card: unknown): card is EnhancedCard {
-  return !!card && typeof card === 'object' &&
-    'id' in card &&
-    'name' in card &&
-    'components' in card &&
-    Array.isArray((card as any).components);
-}
-
 // Function to apply all components of a card
 export function executeCardComponents(card: EnhancedCard, context: GameContext): void {
   // Ensure card has components array (dealing with TypeScript null checks)

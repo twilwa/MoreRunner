@@ -19,7 +19,7 @@ const Hand: React.FC<HandProps> = ({ cards, onCardClick, canPlayCards, title }) 
   }
 
   return (
-    <div data-testid={"hand-container"}>
+    <div>
       <div className="flex flex-wrap gap-2 justify-center">
 
         {cards.map((card) => (
@@ -32,14 +32,14 @@ const Hand: React.FC<HandProps> = ({ cards, onCardClick, canPlayCards, title }) 
             role="button"
             tabIndex={0}
           >
-            <Card 
-              card={card} 
+            <Card
+              card={card}
               disabled={!canPlayCards}
             />
           </div>
         ))}
       </div>
-      
+
       {/* Card count */}
       <div className="mt-2 text-center text-xs text-gray-500">
         {cards.length} card{cards.length !== 1 ? 's' : ''}

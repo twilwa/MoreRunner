@@ -369,21 +369,39 @@ export const useDeckBuilder = create<DeckBuilderState>()(
         return;
       }
 
-      // Enhance the card (add components, etc.)
-      const cardWithComponents = enhanceCard(card);
+        // Get the enhanced card version to use with our component system
+        // enhanceCard adds components, handling and validates costs via InQueueZone component
+        const cardWithComponents = enhanceCard(card);
+        
+        // IMPORTANT: We no longer check credit costs for cards going into the queue
+        // Credit costs are ONLY checked when buying cards from the market
+        // When queueing cards from hand, we ONLY check action costs, not credit costs
+        
+        // This is a change to how the zone system works:
+        // - InMarketZone: Validates CREDIT costs when buying cards
+        // - InHandZone: Validates ACTION availability when playing cards
+        // - InQueueZone: Validates ACTION costs during execution
+        
+        // We already checked actions above, so we don't need to do any additional cost checking here
+        // The component system will handle execution validation through the cardExecutionService
 
-      // Remove the card from hand
-      activePlayer.hand = activePlayer.hand.filter((c) => c.id !== cardId);
-
-      // Move card to inPlay (queued cards)
-      const cardWithZone = cardExecutionService.moveCardToZone(
-        cardWithComponents,
-        'inHand',  // from zone
-        'inPlay'   // to zone
-      );
-      
-      // Add transitioned card to inPlay (queued cards)
-      activePlayer.inPlay.push(cardWithZone);
+        // All checks passed - add to queue
+        // Remove the card from hand
+        activePlayer.hand.splice(cardIndex, 1);
+        
+        // Use the previously created enhanced card from line 370
+        // No need to re-enhance the card, reuse the variable
+        
+        // Move the card from hand to play zone using our zone transition system
+        // The enhanceCard method ensures it returns a proper EnhancedCard
+        const cardWithZone = cardExecutionService.moveCardToZone(
+          cardWithComponents,
+          'inHand',  // from zone
+          'inPlay'   // to zone
+        );
+        
+        // Add transitioned card to inPlay (queued cards)
+        activePlayer.inPlay.push(cardWithZone);
 
       // Log message - no longer include credit cost information in queue messages
       // This is part of separating credit costs (market only) from action costs (queue only)
@@ -759,8 +777,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
 
             // Filter out dead entities
             const aliveThreats = locationThreats.filter(
-              (threat) =>
-                !threat.isDead && threat.defenseValue > 0,
+              (threat) => !(threat.isDead || threat.defenseValue <= 0),
             );
 
             if (aliveThreats.length === 0) {
@@ -772,16 +789,23 @@ export const useDeckBuilder = create<DeckBuilderState>()(
 
             // Check which entities should fully activate
             aliveThreats.forEach((threat) => {
-              // Find current status for this threat
-              const entityStatusIndex = latestEntityStatuses.findIndex(
+              // Mark threats with defenseValue <= 0 as dead
+              if (threat.defenseValue <= 0) {
+                threat.isDead = true;
+                updatedGameState = addLog(
+                  updatedGameState,
+                  `${threat.name} has been neutralized.`,
+                );
+                return; // Skip dead threats
+              }
+
+              const entityStatus = latestEntityStatuses.find(
                 (status) => status.threatId === threat.id,
               );
 
-              if (entityStatusIndex >= 0) {
-                const currentStatus = latestEntityStatuses[entityStatusIndex];
-
+              if (entityStatus) {
                 // Check if all action potentials are active
-                const allActive = currentStatus.actionPotentials.every(
+                const allActive = entityStatus.actionPotentials.every(
                   (pot) => pot,
                 );
 
@@ -790,7 +814,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
                   activatedEntities.push(threat);
 
                   // Reset its action potentials for next cycle
-                  const resetPotentials = currentStatus.actionPotentials.map(
+                  const resetPotentials = entityStatus.actionPotentials.map(
                     () => false,
                   );
                   updatedEntityStatuses = updatedEntityStatuses.map((status) =>
@@ -854,7 +878,7 @@ export const useDeckBuilder = create<DeckBuilderState>()(
               .filter(
                 (threat) =>
                   !activatedEntities.some((ae) => ae.id === threat.id) &&
-                  !threat.isDead && threat.defenseValue > 0,
+                  !(threat.isDead || threat.defenseValue <= 0),
               )
               .forEach((threat, index) => {
                 // Only 30% chance to play a card if not fully activated
