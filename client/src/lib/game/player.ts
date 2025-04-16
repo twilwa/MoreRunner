@@ -92,7 +92,9 @@ export function drawCards(player: Player, count: number): { player: Player, draw
           fromZone,
           toZone
         );
-        
+        // Replace in shuffledCards
+        const idx = shuffledCards.findIndex(c => c.id === card.id);
+        if (idx !== -1) shuffledCards[idx] = updatedCard;
         console.log(`Card ${card.name} moved from ${fromZone} to ${toZone} during shuffle`);
       });
       
@@ -120,11 +122,9 @@ export function drawCards(player: Player, count: number): { player: Player, draw
         fromZone,
         toZone
       );
-      
       console.log(`Card ${card.name} drawn from ${fromZone} to ${toZone}`);
-      
-      drawnCards.push(card);
-      updatedPlayer.hand.push(card);
+      drawnCards.push(updatedCard);
+      updatedPlayer.hand.push(updatedCard);
       updatedPlayer.deck = updatedPlayer.deck.slice(1);
     }
   }
@@ -161,10 +161,8 @@ export function discardCard(player: Player, cardIndex: number): Player {
       fromZone,
       toZone
     );
-    
     console.log(`Card ${card.name} discarded from ${fromZone} to ${toZone}`);
-    
-    updatedPlayer.discard.push(card);
+    updatedPlayer.discard.push(updatedCard);
     updatedPlayer.hand = updatedPlayer.hand.filter((_, i) => i !== cardIndex);
   }
   
@@ -193,12 +191,12 @@ export function discardHand(player: Player): Player {
       fromZone,
       toZone
     );
-    
-    console.log(`Card ${card.name} discarded from ${fromZone} to ${toZone} (mass discard)`);
+    console.log(`Card ${card.name} discarded from ${fromZone} to ${toZone}`);
+    updatedPlayer.discard.push(updatedCard);
+    // Remove from hand by id
+    updatedPlayer.hand = updatedPlayer.hand.filter(c => c.id !== card.id);
   });
   
-  updatedPlayer.discard = [...updatedPlayer.discard, ...updatedPlayer.hand];
-  updatedPlayer.hand = [];
   return updatedPlayer;
 }
 
@@ -239,10 +237,8 @@ export function playCard(player: Player, cardIndex: number): { player: Player, p
       fromZone,
       toZone
     );
-    
-    console.log(`Card ${card.name} moved from ${fromZone} to ${toZone}`);
-    
-    // Remove the card from hand
+    console.log(`Card ${card.name} played from ${fromZone} to ${toZone}`);
+    updatedPlayer.inPlay.push(updatedCard);
     updatedPlayer.hand = updatedPlayer.hand.filter((_, i) => i !== cardIndex);
     
     // Legacy effect handling for backward compatibility
@@ -317,11 +313,10 @@ export function buyCard(player: Player, card: Card): Player {
       fromZone,
       toZone
     );
-    
     console.log(`Card ${card.name} purchased and moved from ${fromZone} to ${toZone}`);
     
     // Add card to discard pile (not directly to deck)
-    updatedPlayer.discard.push({ ...card });
+    updatedPlayer.discard.push(updatedCard);
     
     // Adjust faction reputation based on card purchased
     if (card.faction !== 'Neutral') {
@@ -396,11 +391,8 @@ export function endTurn(player: Player): Player {
       fromZone,
       toZone
     );
-    
     console.log(`End turn: Card ${card.name} moved from ${fromZone} to ${toZone}`);
-    
-    // Add to discard pile
-    updatedPlayer.discard.push(card);
+    updatedPlayer.discard.push(updatedCard);
   });
   
   // Clear the in-play area (except installed cards and face-down cards)
@@ -457,11 +449,9 @@ export function forceDiscard(player: Player, count: number): { player: Player, d
       fromZone,
       toZone
     );
-    
     console.log(`Card ${card.name} force discarded from ${fromZone} to ${toZone}`);
-    
-    discardedCards.push(card);
-    updatedPlayer.discard.push(card);
+    discardedCards.push(updatedCard);
+    updatedPlayer.discard.push(updatedCard);
     updatedPlayer.hand = updatedPlayer.hand.filter((_, i) => i !== randomIndex);
   }
   
